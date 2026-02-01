@@ -1,0 +1,34 @@
+Attempting to check user: sta99175@gmail.com
+--- DETAILED PRISMA ERROR ---
+Message: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\HomePC\Desktop\opnmart\apps\api\scripts\check-user.js:8:40
+
+  5 const email = 'sta99175@gmail.com';
+  6 console.log('Attempting to check user:', email);
+  7 try {
+→ 8     const user = await prisma.user.findUnique(
+Can't reach database server at `aws-1-eu-west-1.pooler.supabase.com:6543`
+
+Please make sure your database server is running at `aws-1-eu-west-1.pooler.supabase.com:6543`.
+Code: undefined
+Client Version: 6.2.1
+Full Error: PrismaClientInitializationError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\HomePC\Desktop\opnmart\apps\api\scripts\check-user.js:8:40
+
+  5 const email = 'sta99175@gmail.com';
+  6 console.log('Attempting to check user:', email);
+  7 try {
+→ 8     const user = await prisma.user.findUnique(
+Can't reach database server at `aws-1-eu-west-1.pooler.supabase.com:6543`
+
+Please make sure your database server is running at `aws-1-eu-west-1.pooler.supabase.com:6543`.
+    at Vn.handleRequestError (C:\Users\HomePC\Desktop\opnmart\node_modules\.pnpm\@prisma+client@6.2.1_prisma@6.2.1\node_modules\@prisma\client\runtime\library.js:121:7640)
+    at Vn.handleAndLogRequestError (C:\Users\HomePC\Desktop\opnmart\node_modules\.pnpm\@prisma+client@6.2.1_prisma@6.2.1\node_modules\@prisma\client\runtime\library.js:121:6663)
+    at Vn.request (C:\Users\HomePC\Desktop\opnmart\node_modules\.pnpm\@prisma+client@6.2.1_prisma@6.2.1\node_modules\@prisma\client\runtime\library.js:121:6370)
+    at async l (C:\Users\HomePC\Desktop\opnmart\node_modules\.pnpm\@prisma+client@6.2.1_prisma@6.2.1\node_modules\@prisma\client\runtime\library.js:130:9617)
+    at async checkUser (C:\Users\HomePC\Desktop\opnmart\apps\api\scripts\check-user.js:8:22) {
+  clientVersion: '6.2.1',
+  errorCode: undefined
+}

@@ -1,0 +1,26 @@
+
+📊 Total Stores: 3
+============================================================
+
+1. Store: samstar
+   Subdomain: 'samstar'
+   Owner: sam star (sta99175@gmail.com)
+   Products: 1
+   URL: http://samstar.localhost:3000
+   Created: 1/29/2026, 8:04:41 PM
+
+2. Store: Demo Store
+   Subdomain: 'demo'
+   Owner: Demo Seller (demo@opnmart.com)
+   Products: 0
+   URL: http://demo.localhost:3000
+   Created: 1/30/2026, 6:24:58 AM
+
+3. Store: Zor
+   Subdomain: 'Zor'
+   Owner: Success Nwauzor (biggy@gmail.com)
+   Products: 1
+   URL: http://Zor.localhost:3000
+   Created: 1/30/2026, 1:59:01 PM
+
+============================================================
