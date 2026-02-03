@@ -80,6 +80,7 @@ export class AuthService {
 
     async login(input: LoginInput) {
         try {
+            console.log(`Login attempt for email: ${input.email}`);
             const user = await this.prisma.user.findUnique({
                 where: { email: input.email },
                 include: { managedStore: true },

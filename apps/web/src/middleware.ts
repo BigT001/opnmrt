@@ -52,6 +52,11 @@ export async function middleware(request: NextRequest) {
 
     const targetPath = subdomain || customDomain;
 
+    // Prevent double rewrite if the path already starts with /store/[targetPath]
+    if (url.pathname.startsWith(`/store/${targetPath}`)) {
+        return NextResponse.next();
+    }
+
     // Rewrite to the storefront path
     // This shifts /page to /store/[subdomain]/page
     // But we want to preserve the root for the storefront

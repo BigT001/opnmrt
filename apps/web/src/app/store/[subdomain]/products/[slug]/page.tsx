@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
-import ProductDetailClient from './ProductDetailClient';
+import { getThemeComponents } from '@/components/themes/registry';
 import { headers } from 'next/headers';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 async function getProduct(id: string) {
     try {
@@ -11,7 +11,8 @@ async function getProduct(id: string) {
             { next: { revalidate: 60 } }
         );
         if (!res.ok) return null;
-        return res.json();
+        const text = await res.text();
+        return text ? JSON.parse(text) : null;
     } catch (error) {
         return null;
     }
@@ -24,7 +25,8 @@ async function getStore(subdomain: string) {
             { next: { revalidate: 60 } }
         );
         if (!res.ok) return null;
-        return res.json();
+        const text = await res.text();
+        return text ? JSON.parse(text) : null;
     } catch (error) {
         return null;
     }
@@ -43,24 +45,16 @@ export default async function ProductPage({
         notFound();
     }
 
-    const headersList = await headers();
-    const hostname = headersList.get('host') || '';
-
-    // Check if we are on a subdomain (e.g., samstar.localhost or samstar.opnmart.com)
-    // AND ensure it matches the current store's subdomain
-    const isSubdomain = hostname.includes(subdomain) && (hostname.includes('localhost') || hostname.includes('opnmart.com'));
-    const backLink = isSubdomain ? '/' : `/store/${subdomain}`;
+    const { ProductPage: ThemeProductPage } = getThemeComponents(store.theme);
 
     return (
-        <div className="bg-slate-50 min-h-screen pb-20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                <Link href={backLink} className="inline-flex items-center text-sm text-slate-500 hover:text-primary mb-8 transition-colors font-medium">
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Store
-                </Link>
-
-                <ProductDetailClient product={product} store={store} subdomain={subdomain} />
-            </div>
-        </div>
+        <ThemeProductPage
+            store={store}
+            product={{
+                ...product,
+                image: product.image || product.images?.[0] || 'https://via.placeholder.com/600'
+            }}
+            subdomain={subdomain}
+        />
     );
 }

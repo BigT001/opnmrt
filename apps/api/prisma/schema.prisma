@@ -56,7 +56,7 @@ model Store {
   accentColor   String?
   
   // Theme System
-  theme         String    @default("MODERN") // MODERN, CLASSIC, BOLD
+  theme         String    @default("DEFAULT") // DEFAULT, MINIMAL_LUXE, etc.
   themeConfig   Json?     // Stores overrides like { colors: {...}, fonts: {...} }
   
   biography     String?   @db.Text

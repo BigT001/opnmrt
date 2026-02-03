@@ -1,0 +1,165 @@
+'use client';
+
+import { NavbarProps } from '../../types';
+import { ShoppingBag, Cpu, Search, User, Zap, Menu } from 'lucide-react';
+import { useCartStore } from '@/store/useCartStore';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+
+export function StarkEdgeNavbar({ storeName, logo }: NavbarProps) {
+    const { items, toggleCart } = useCartStore();
+    const [mounted, setMounted] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+    const params = useParams<{ subdomain: string }>();
+
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    if (!mounted) return null;
+
+    const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+
+    return (
+        <nav
+            className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 font-tactical ${scrolled || isMenuOpen
+                ? 'h-16 bg-[#080808]/90 backdrop-blur-xl border-b border-[#333]'
+                : 'h-24 bg-transparent border-b border-transparent'
+                }`}
+        >
+            <div className="max-w-[1400px] mx-auto h-full px-6 md:px-10 flex items-center justify-between relative">
+
+                {/* Left: Hardware Status & Mobile Toggle */}
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        className="lg:hidden p-2 text-white/40 hover:text-[#00F0FF] transition-colors"
+                    >
+                        {isMenuOpen ? <Zap className="w-5 h-5 text-[#00F0FF]" /> : <Menu className="w-5 h-5" />}
+                    </button>
+                    <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-[#1A1A1A] border border-[#333]">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#00F0FF] animate-pulse shadow-[0_0_8px_#00F0FF]" />
+                        <span className="text-[10px] font-data text-white/40 uppercase tracking-tighter">Hardware: Secure</span>
+                    </div>
+                    <button className="p-2 text-white/40 hover:text-[#00F0FF] transition-colors hidden md:block">
+                        <Search className="w-4 h-4" />
+                    </button>
+                </div>
+
+                {/* Center: Brand Architecture */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-12">
+                    <div className="hidden lg:flex items-center gap-8">
+                        {['Mobile', 'Wearables'].map((item) => (
+                            <Link
+                                key={item}
+                                href="#"
+                                className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/40 hover:text-white transition-all relative group"
+                            >
+                                <span className="relative z-10">{item}</span>
+                                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#00F0FF] transition-all duration-300 group-hover:w-full" />
+                            </Link>
+                        ))}
+                    </div>
+
+                    <Link
+                        href={`/store/${params.subdomain}`}
+                        className="flex items-center gap-3 group px-4 md:px-6 py-2 border-x border-[#333]"
+                    >
+                        <Cpu className="w-5 h-5 text-[#00F0FF] group-hover:rotate-90 transition-transform duration-500" />
+                        {logo ? (
+                            <img
+                                src={logo}
+                                alt={storeName}
+                                className="h-4 md:h-6 w-auto object-contain brightness-0 invert"
+                            />
+                        ) : (
+                            <span className="text-sm md:text-xl font-bold uppercase tracking-tighter text-white whitespace-nowrap">
+                                {storeName}
+                            </span>
+                        )}
+                    </Link>
+
+                    <div className="hidden lg:flex items-center gap-8">
+                        {['Energy', 'Support'].map((item) => (
+                            <Link
+                                key={item}
+                                href="#"
+                                className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/40 hover:text-white transition-all relative group"
+                            >
+                                <span className="relative z-10">{item}</span>
+                                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#00F0FF] transition-all duration-300 group-hover:w-full" />
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Right: Asset Management */}
+                <div className="flex items-center gap-2 md:gap-6">
+                    <button className="p-2 text-white/40 hover:text-[#00F0FF] transition-colors hidden sm:block">
+                        <User className="w-4 h-4" />
+                    </button>
+
+                    <button
+                        onClick={toggleCart}
+                        className="group relative flex items-center gap-3 h-10 px-3 md:px-4 bg-white text-black font-bold text-[10px] uppercase tracking-widest hover:bg-[#00F0FF] transition-all active:scale-95 overflow-hidden"
+                    >
+                        <ShoppingBag className="w-4 h-4" />
+                        <span className="hidden md:block">Gear</span>
+
+                        <AnimatePresence mode="popLayout">
+                            {itemCount > 0 && (
+                                <motion.div
+                                    initial={{ y: 20 }}
+                                    animate={{ y: 0 }}
+                                    exit={{ y: -20 }}
+                                    key={itemCount}
+                                    className="px-1.5 py-0.5 bg-black text-[#00F0FF] font-data text-[10px]"
+                                >
+                                    {itemCount < 10 ? `0${itemCount}` : itemCount}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Shimmer Effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                    </button>
+                </div>
+            </div>
+
+            {/* Mobile Menu Overlay */}
+            <AnimatePresence>
+                {isMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, x: -100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -100 }}
+                        className="lg:hidden fixed inset-0 top-16 bg-[#080808] z-40 flex flex-col p-10 gap-8 border-t border-[#333]"
+                    >
+                        {['Mobile', 'Wearables', 'Energy', 'Support'].map((item, i) => (
+                            <motion.div
+                                key={item}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.1 }}
+                            >
+                                <Link
+                                    href="#"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="text-4xl font-bold uppercase tracking-tighter text-white/40 hover:text-[#00F0FF] transition-all"
+                                >
+                                    {item}
+                                </Link>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <style jsx>{`
+                @keyframes shimmer {
+                    100% { transform: translateX(100%); }
+                }
+            `}</style>
+        </nav>
+    );
+}

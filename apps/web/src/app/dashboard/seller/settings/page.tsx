@@ -18,7 +18,7 @@ export default function SettingsPage() {
         heroTitle: '',
         heroSubtitle: '',
         primaryColor: '#10b981',
-        theme: 'MODERN',
+        theme: 'MINIMAL_LUXE',
     });
 
     const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -38,7 +38,7 @@ export default function SettingsPage() {
                 heroTitle: (store as any).heroTitle || '',
                 heroSubtitle: (store as any).heroSubtitle || '',
                 primaryColor: (store as any).primaryColor || '#10b981',
-                theme: (store as any).theme || 'MODERN',
+                theme: (store as any).theme || 'MINIMAL_LUXE',
             });
             setLogoPreview((store as any).logo || null);
             setHeroPreview((store as any).heroImage || null);
@@ -267,24 +267,56 @@ export default function SettingsPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Store Theme</label>
-                                    <div className="grid grid-cols-3 gap-4">
-                                        {['MODERN', 'CLASSIC', 'BOLD'].map((theme) => (
-                                            <div
-                                                key={theme}
-                                                onClick={() => setFormData(prev => ({ ...prev, theme }))}
-                                                className={`cursor-pointer rounded-2xl border-2 p-4 flex flex-col items-center gap-2 transition-all ${formData.theme === theme ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-slate-100 hover:border-slate-200'}`}
-                                            >
-                                                <div className={`w-full h-24 rounded-xl shadow-sm ${theme === 'MODERN' ? 'bg-slate-50 flex items-center justify-center' : theme === 'CLASSIC' ? 'bg-[#fdfbf7] border border-stone-200' : 'bg-white border-2 border-black'}`}>
-                                                    {theme === 'MODERN' && <div className="w-12 h-2 bg-slate-200 rounded-full"></div>}
-                                                    {theme === 'CLASSIC' && <div className="w-full h-full p-2 flex flex-col gap-2"><div className="w-full h-px bg-stone-200"></div><div className="mx-auto w-12 h-1 bg-stone-300"></div></div>}
-                                                    {theme === 'BOLD' && <div className="w-full h-full flex flex-col"><div className="w-full h-4 bg-black"></div></div>}
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Store Theme</label>
+
+                                    <div className="space-y-12">
+                                        {[
+                                            { id: 'FASHION_ACCESSORIES', name: 'Fashion & Accessories' },
+                                            { id: 'BEAUTY_SKINCARE', name: 'Beauty & Skincare' },
+                                            { id: 'GADGETS_ACCESSORIES', name: 'Gadgets & Accessories' }
+                                        ].map((category) => (
+                                            <div key={category.id} className="space-y-4">
+                                                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter flex items-center gap-2">
+                                                    <span className="w-8 h-px bg-slate-200"></span>
+                                                    {category.name}
+                                                </h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                    {[
+                                                        { id: 'MINIMAL_LUXE', name: 'Minimal Luxe', category: 'FASHION_ACCESSORIES', preview: 'bg-slate-50 flex items-center justify-center' },
+                                                        { id: 'GLAMOUR_EVE', name: 'Glamour Eve', category: 'FASHION_ACCESSORIES', preview: 'bg-indigo-50 border border-indigo-100' },
+                                                        { id: 'CHIC_URBAN', name: 'Chic Urban', category: 'FASHION_ACCESSORIES', preview: 'bg-zinc-900 border border-zinc-800' },
+
+                                                        { id: 'VINTAGE_CHARM', name: 'Vintage Charm', category: 'BEAUTY_SKINCARE', preview: 'bg-[#fdfbf7] border border-stone-200' },
+                                                        { id: 'PURE_BOTANICAL', name: 'Pure Botanical', category: 'BEAUTY_SKINCARE', preview: 'bg-emerald-50 border border-emerald-100' },
+                                                        { id: 'RADIANT_GLOW', name: 'Radiant Glow', category: 'BEAUTY_SKINCARE', preview: 'bg-rose-50 border border-rose-100' },
+
+                                                        { id: 'STARK_EDGE', name: 'Stark Edge', category: 'GADGETS_ACCESSORIES', preview: 'bg-white border-2 border-black' },
+                                                        { id: 'TECH_SPEC', name: 'Tech Spec', category: 'GADGETS_ACCESSORIES', preview: 'bg-slate-900 border border-slate-700' },
+                                                        { id: 'NEON_STREAM', name: 'Neon Stream', category: 'GADGETS_ACCESSORIES', preview: 'bg-black border border-cyan-500/30' },
+                                                    ].filter(t => t.category === category.id).map((theme) => (
+                                                        <div
+                                                            key={theme.id}
+                                                            onClick={() => setFormData(prev => ({ ...prev, theme: theme.id }))}
+                                                            className={`group cursor-pointer rounded-3xl border-2 p-5 flex flex-col items-center gap-3 transition-all ${formData.theme === theme.id ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'}`}
+                                                        >
+                                                            <div className={`w-full h-32 rounded-2xl shadow-sm overflow-hidden transition-transform group-hover:scale-[1.02] ${theme.preview}`}>
+                                                                {theme.id === 'MINIMAL_LUXE' && <div className="w-12 h-2 bg-slate-200 rounded-full mt-14 mx-auto"></div>}
+                                                                {theme.id === 'VINTAGE_CHARM' && <div className="w-full h-full p-3 flex flex-col gap-2"><div className="w-full h-px bg-stone-200 mt-2"></div><div className="mx-auto w-12 h-1 bg-stone-300"></div></div>}
+                                                                {theme.id === 'STARK_EDGE' && <div className="w-full h-full flex flex-col"><div className="w-full h-6 bg-black"></div></div>}
+                                                            </div>
+                                                            <div className="text-center">
+                                                                <span className="text-[11px] font-black uppercase tracking-widest text-slate-900 block mb-1">{theme.name}</span>
+                                                                {theme.id !== 'MINIMAL_LUXE' && theme.id !== 'VINTAGE_CHARM' && theme.id !== 'STARK_EDGE' && (
+                                                                    <span className="text-[9px] font-medium text-slate-400">Design Coming Soon</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">{theme}</span>
                                             </div>
                                         ))}
                                     </div>
-                                    <p className="text-[10px] text-slate-400 mt-2 font-medium">Select a theme to change the visual structure of your store.</p>
+                                    <p className="text-[10px] text-slate-400 mt-10 font-medium italic">Selecting a theme will instantly update your storefront appearance across all pages.</p>
                                 </div>
                             </div>
                         </section>
@@ -316,7 +348,7 @@ export default function SettingsPage() {
                                         heroTitle: (store as any).heroTitle || '',
                                         heroSubtitle: (store as any).heroSubtitle || '',
                                         primaryColor: (store as any).primaryColor || '#10b981',
-                                        theme: (store as any).theme || 'MODERN',
+                                        theme: (store as any).theme || 'MINIMAL_LUXE',
                                     });
                                     setLogoPreview((store as any).logo || null);
                                     setHeroPreview((store as any).heroImage || null);

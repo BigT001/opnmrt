@@ -111,6 +111,14 @@ export default function SellerLayout({
                                 </nav>
                             </div>
 
+                            {/* Customization Section */}
+                            <div>
+                                {!isCollapsed && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1">Customization</p>}
+                                <nav className="space-y-0.5">
+                                    <SidebarLink href="/dashboard/seller/themes" icon="🎨" label="Themes" active={pathname.startsWith('/dashboard/seller/themes')} isCollapsed={isCollapsed} />
+                                </nav>
+                            </div>
+
                             <div>
                                 {!isCollapsed && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1">Help & Settings</p>}
                                 <nav className="space-y-0.5">
