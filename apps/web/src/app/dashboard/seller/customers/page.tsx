@@ -1,15 +1,17 @@
-import React from 'react';
+'use client';
+
+import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader2 } from 'lucide-react';
 
 export default function CustomersPage() {
     const { user, store } = useAuthStore();
-    const [customers, setCustomers] = React.useState<any[]>([]);
-    const [stats, setStats] = React.useState<any>(null);
-    const [loading, setLoading] = React.useState(true);
+    const [customers, setCustomers] = useState<any[]>([]);
+    const [stats, setStats] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
-    React.useEffect(() => {
+    useEffect(() => {
         async function fetchData() {
             if (!store?.id) return;
             try {
