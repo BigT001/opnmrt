@@ -3,14 +3,14 @@
 import { CartDrawerProps } from '../../types';
 import { X, Minus, Plus, Trash2, Zap, Terminal, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 
-export function StarkEdgeCartDrawer({ }: CartDrawerProps) {
-    const { items, isOpen, toggleCart, removeItem, updateQuantity, totalPrice } = useCartStore();
+export function StarkEdgeCartDrawer({ storeId }: CartDrawerProps) {
+    const { storeItems: items, isOpen, toggleCart, removeItem, updateQuantity, subtotal } = useStoreCart(storeId);
     const [mounted, setMounted] = useState(false);
     const params = useParams<{ subdomain: string }>();
 
@@ -99,19 +99,20 @@ export function StarkEdgeCartDrawer({ }: CartDrawerProps) {
                                                 </div>
 
                                                 <div className="flex items-center justify-between pt-4">
-                                                    <div className="flex items-center bg-[#111] border border-[#333] h-10">
+                                                    <div className="flex items-center bg-[#111] border-2 border-[#333] h-12 shadow-[0_0_20px_rgba(0,240,255,0.05)]">
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                            className="px-4 text-white/40 hover:text-[#00F0FF] transition-colors"
+                                                            className="px-5 text-white/40 hover:text-[#00F0FF] transition-all disabled:opacity-20"
+                                                            disabled={item.quantity <= 1}
                                                         >
                                                             <Minus className="w-4 h-4" />
                                                         </button>
-                                                        <span className="w-12 font-data text-sm font-bold text-white text-center border-x border-[#333]">
+                                                        <span className="w-16 font-data text-base font-black text-white text-center border-x-2 border-[#333] leading-10">
                                                             {item.quantity < 10 ? `0${item.quantity}` : item.quantity}
                                                         </span>
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="px-4 text-white/40 hover:text-[#00F0FF] transition-colors"
+                                                            className="px-5 text-white/40 hover:text-[#00F0FF] transition-all"
                                                         >
                                                             <Plus className="w-4 h-4" />
                                                         </button>
@@ -141,7 +142,7 @@ export function StarkEdgeCartDrawer({ }: CartDrawerProps) {
                                             <div className="text-2xl font-black text-white uppercase tracking-tighter">Aggregate Total</div>
                                         </div>
                                         <div className="text-4xl font-data font-black text-[#00F0FF]">
-                                            {formatPrice(totalPrice())}
+                                            {formatPrice(subtotal)}
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 text-white/20 font-data text-[9px] uppercase tracking-widest">

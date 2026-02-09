@@ -3,14 +3,14 @@
 import { CartDrawerProps } from '../../types';
 import { X, Minus, Plus, Trash2, ShoppingBag, Zap, Activity, ChevronRight, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 
-export function NeonStreamCartDrawer({ }: CartDrawerProps) {
-    const { items, isOpen, toggleCart, removeItem, updateQuantity, totalPrice } = useCartStore();
+export function NeonStreamCartDrawer({ storeId }: CartDrawerProps) {
+    const { storeItems: items, isOpen, toggleCart, removeItem, updateQuantity, subtotal } = useStoreCart(storeId);
     const [mounted, setMounted] = useState(false);
     const params = useParams<{ subdomain: string }>();
 
@@ -102,19 +102,20 @@ export function NeonStreamCartDrawer({ }: CartDrawerProps) {
                                                 </div>
 
                                                 <div className="flex items-center justify-between">
-                                                    <div className="flex items-center bg-white/5 border border-white/10 rounded-lg h-8">
+                                                    <div className="flex items-center bg-white/5 border border-white/20 rounded-xl h-10 shadow-[0_0_15px_rgba(255,255,255,0.05)]">
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                            className="w-8 h-full hover:text-[#00F5FF] text-gray-500 transition-colors"
+                                                            className="w-10 h-full hover:text-[#00F5FF] text-gray-500 hover:bg-white/5 transition-all disabled:opacity-20"
+                                                            disabled={item.quantity <= 1}
                                                         >
-                                                            -
+                                                            <Minus className="w-3.5 h-3.5 mx-auto" />
                                                         </button>
-                                                        <span className="px-3 text-[10px] font-black text-white h-full flex items-center">{item.quantity}</span>
+                                                        <span className="px-4 text-xs font-black font-syne text-white h-full flex items-center border-x border-white/10 italic">{item.quantity}</span>
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="w-8 h-full hover:text-[#00F5FF] text-gray-500 transition-colors"
+                                                            className="w-10 h-full hover:text-[#00F5FF] text-gray-500 hover:bg-white/5 transition-all"
                                                         >
-                                                            +
+                                                            <Plus className="w-3.5 h-3.5 mx-auto" />
                                                         </button>
                                                     </div>
 
@@ -139,12 +140,12 @@ export function NeonStreamCartDrawer({ }: CartDrawerProps) {
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center text-[10px] font-black font-syne uppercase tracking-widest text-gray-500 italic">
                                         <p>Aggregate_Logistics</p>
-                                        <p className="text-white text-xs not-italic">{formatPrice(totalPrice())}</p>
+                                        <p className="text-white text-xs not-italic">{formatPrice(subtotal)}</p>
                                     </div>
                                     <div className="h-[1px] bg-white/5" />
                                     <div className="flex justify-between items-center">
                                         <p className="text-xs font-black font-syne uppercase tracking-[0.3em] text-[#BF00FF] italic">Total_Stream</p>
-                                        <p className="text-2xl font-black font-syne text-white tracking-tighter italic">{formatPrice(totalPrice())}</p>
+                                        <p className="text-2xl font-black font-syne text-white tracking-tighter italic">{formatPrice(subtotal)}</p>
                                     </div>
                                 </div>
 

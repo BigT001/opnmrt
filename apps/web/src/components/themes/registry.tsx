@@ -44,6 +44,26 @@ const createBundle = (theme: any, prefix: string): ThemeComponents => {
         </div>
     );
 
+    const DynamicAboutPage: React.FC<any> = (props) => (
+        <div className="pb-20 pt-32 px-6 max-w-4xl mx-auto">
+            <h1 className="text-4xl font-bold mb-8">About Us</h1>
+            <div className="prose max-w-none">
+                <p className="text-xl text-gray-600 leading-relaxed">
+                    {props.store.biography || `Welcome to ${props.store.name}. We are dedicated to providing the best quality products for our customers.`}
+                </p>
+            </div>
+        </div>
+    );
+
+    const DynamicShopPage: React.FC<any> = (props) => (
+        <div className="pb-20 pt-32 px-6">
+            <h1 className="text-4xl font-bold mb-12 text-center">Shop All</h1>
+            <div className="max-w-[1400px] mx-auto">
+                {ProductGrid && <ProductGrid {...props} />}
+            </div>
+        </div>
+    );
+
     return {
         Navbar,
         Footer,
@@ -55,6 +75,8 @@ const createBundle = (theme: any, prefix: string): ThemeComponents => {
         Layout,
         StorefrontPage: theme[`${prefix}StorefrontPage`] || DynamicStorefrontPage,
         ProductPage: theme[`${prefix}ProductPage`] || DynamicProductPage,
+        AboutPage: theme[`${prefix}AboutPage`] || DynamicAboutPage,
+        ShopPage: theme[`${prefix}ShopPage`] || DynamicShopPage,
     };
 };
 
@@ -85,6 +107,8 @@ export const themeRegistry: Record<string, ThemeComponents> = {
         Layout: Default.DefaultLayout,
         StorefrontPage: Default.DefaultStorefrontPage,
         ProductPage: Default.DefaultProductPage,
+        AboutPage: Default.DefaultStorefrontPage, // Fallback to storefront page for now or create default
+        ShopPage: Default.DefaultStorefrontPage,    // Fallback or create default
     },
 };
 
@@ -122,7 +146,7 @@ export const getThemesByCategory = (category: ThemeCategory) => {
 
 export const getThemeComponents = (themeName: string = 'MINIMAL_LUXE'): ThemeComponents => {
     const normalizedName = themeName.toUpperCase().replace(/-/g, '_');
-    return themeRegistry[normalizedName] || themeRegistry.MINIMAL_LUXE;
+    return themeRegistry[normalizedName] || themeRegistry.DEFAULT || themeRegistry.MINIMAL_LUXE;
 };
 
 export const getThemeLayout = (themeName: string = 'MINIMAL_LUXE') => {

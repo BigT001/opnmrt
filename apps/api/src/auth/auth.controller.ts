@@ -19,6 +19,16 @@ const ExtendedRegisterSchema = RegisterSchema.extend({
 export class AuthController {
     constructor(private authService: AuthService) { }
 
+    @Post('send-otp')
+    async sendOtp(@Body() body: { email: string; phone?: string }) {
+        return this.authService.sendOtp(body.email, body.phone);
+    }
+
+    @Post('verify-otp')
+    async verifyOtp(@Body() body: { email: string; otp: string; phone?: string }) {
+        return this.authService.verifyOtp(body.email, body.otp, body.phone);
+    }
+
     @Post('register')
     @UsePipes(new ZodValidationPipe(ExtendedRegisterSchema))
     async register(@Body() body: any) {

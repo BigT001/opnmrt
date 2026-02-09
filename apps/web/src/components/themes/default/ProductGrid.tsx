@@ -15,13 +15,13 @@ export function DefaultProductGrid({ products, subdomain, storeId }: ProductGrid
             id: product.id,
             name: product.name,
             price: Number(product.price),
-            image: product.image ?? '',
+            image: product.image ?? undefined,
             storeId,
         });
     };
 
     return (
-        <div className="bg-white py-12 md:py-24">
+        <div id="products-grid" className="bg-white py-12 md:py-24">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-gray-100">
                     <div>

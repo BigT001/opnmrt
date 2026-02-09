@@ -8,7 +8,7 @@ export function DefaultHero({ store }: HeroProps) {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="bg-white rounded-[2rem] overflow-hidden shadow-2xl shadow-slate-200/50 flex flex-col lg:flex-row items-stretch min-h-[500px] border border-gray-100">
                     {/* Content */}
-                    <div className="flex-1 p-8 md:p-16 flex flex-col justify-center space-y-8 bg-gradient-to-br from-white to-gray-50">
+                    <div id="hero-content" className="flex-1 p-8 md:p-16 flex flex-col justify-center space-y-8 bg-gradient-to-br from-white to-gray-50">
                         <div className="space-y-4">
                             <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] block">
                                 Welcome to {store.name}
@@ -22,7 +22,10 @@ export function DefaultHero({ store }: HeroProps) {
                         </div>
 
                         <div className="flex flex-wrap gap-4 pt-4">
-                            <button className="px-8 py-4 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-black hover:scale-105 transition-all">
+                            <button
+                                onClick={() => document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' })}
+                                className="px-8 py-4 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-black hover:scale-105 transition-all shadow-lg active:scale-95"
+                            >
                                 Shop Collection
                             </button>
                             <button className="px-8 py-4 bg-white text-gray-900 border-2 border-gray-100 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-gray-50 transition-all">

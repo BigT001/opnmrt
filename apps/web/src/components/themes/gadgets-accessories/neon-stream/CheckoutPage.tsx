@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckoutProps } from '../../types';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, Loader2, Zap, ShieldCheck, Activity, Terminal, ChevronRight } from 'lucide-react';
@@ -9,9 +9,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
-export function NeonStreamCheckout({ }: CheckoutProps) {
+export function NeonStreamCheckout({ store }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
-    const { items, totalPrice, clearCart } = useCartStore();
+    const { storeItems: items, subtotal, clearStoreCart } = useStoreCart(store.id);
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -32,7 +32,7 @@ export function NeonStreamCheckout({ }: CheckoutProps) {
         await new Promise(resolve => setTimeout(resolve, 3000));
         setIsSubmitting(false);
         setIsSuccess(true);
-        clearCart();
+        clearStoreCart(store.id);
     };
 
     if (isSuccess) {
@@ -167,7 +167,7 @@ export function NeonStreamCheckout({ }: CheckoutProps) {
                                     </>
                                 ) : (
                                     <>
-                                        AUTHORIZE_REQUISITION {formatPrice(totalPrice())}
+                                        AUTHORIZE_REQUISITION {formatPrice(subtotal)}
                                         <Zap className="w-4 h-4 group-hover:fill-current" />
                                     </>
                                 )}
@@ -203,7 +203,7 @@ export function NeonStreamCheckout({ }: CheckoutProps) {
                                 </div>
                                 <div className="flex justify-between items-center pt-2">
                                     <span className="text-xs font-black font-syne uppercase tracking-[0.3em] text-white italic">Aggregate_Total</span>
-                                    <span className="text-2xl font-black font-syne text-white tracking-tighter italic">{formatPrice(totalPrice())}</span>
+                                    <span className="text-2xl font-black font-syne text-white tracking-tighter italic">{formatPrice(subtotal)}</span>
                                 </div>
                             </div>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckoutProps } from '../../types';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckSquare, Loader2, ShieldCheck, Terminal, Cpu, Activity, ShoppingBag } from 'lucide-react';
@@ -9,9 +9,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export function StarkEdgeCheckout({ }: CheckoutProps) {
+export function StarkEdgeCheckout({ store }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
-    const { items, totalPrice, clearCart } = useCartStore();
+    const { storeItems: items, subtotal, clearStoreCart } = useStoreCart(store.id);
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -32,7 +32,7 @@ export function StarkEdgeCheckout({ }: CheckoutProps) {
         await new Promise(resolve => setTimeout(resolve, 3000));
         setIsSubmitting(false);
         setIsSuccess(true);
-        clearCart();
+        clearStoreCart(store.id);
     };
 
     if (isSuccess) {
@@ -192,7 +192,7 @@ export function StarkEdgeCheckout({ }: CheckoutProps) {
                                     </>
                                 ) : (
                                     <>
-                                        <span>Initiate Protocol: {formatPrice(totalPrice())}</span>
+                                        <span>Initiate Protocol: {formatPrice(subtotal)}</span>
                                         <Activity className="w-6 h-6" />
                                     </>
                                 )}
@@ -238,7 +238,7 @@ export function StarkEdgeCheckout({ }: CheckoutProps) {
                             <dl className="space-y-6 pt-6 font-data uppercase tracking-widest text-[10px]">
                                 <div className="flex items-center justify-between text-white/40">
                                     <dt>Subtotal</dt>
-                                    <dd>{formatPrice(totalPrice())}</dd>
+                                    <dd>{formatPrice(subtotal)}</dd>
                                 </div>
                                 <div className="flex items-center justify-between text-white/40">
                                     <dt>Transfer Fee</dt>
@@ -246,7 +246,7 @@ export function StarkEdgeCheckout({ }: CheckoutProps) {
                                 </div>
                                 <div className="flex items-center justify-between pt-6 border-t border-[#333]">
                                     <dt className="text-lg font-black text-white italic">Aggregate</dt>
-                                    <dd className="text-2xl font-black text-[#00F0FF]">{formatPrice(totalPrice())}</dd>
+                                    <dd className="text-2xl font-black text-[#00F0FF]">{formatPrice(subtotal)}</dd>
                                 </div>
                             </dl>
 

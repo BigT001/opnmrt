@@ -3,14 +3,14 @@
 import { CartDrawerProps } from '../../types';
 import { X, Minus, Plus, Trash2, ShoppingBag, Scroll, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 
-export function VintageCharmCartDrawer({ }: CartDrawerProps) {
-    const { items, isOpen, toggleCart, removeItem, updateQuantity, totalPrice } = useCartStore();
+export function VintageCharmCartDrawer({ storeId }: CartDrawerProps) {
+    const { storeItems: items, isOpen, toggleCart, removeItem, updateQuantity, subtotal, totalCount: itemCount } = useStoreCart(storeId);
     const [mounted, setMounted] = useState(false);
     const params = useParams<{ subdomain: string }>();
 
@@ -20,7 +20,6 @@ export function VintageCharmCartDrawer({ }: CartDrawerProps) {
 
     if (!mounted) return null;
 
-    const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
         <AnimatePresence>
@@ -110,19 +109,22 @@ export function VintageCharmCartDrawer({ }: CartDrawerProps) {
                                                 </div>
 
                                                 <div className="flex items-center justify-between">
-                                                    <div className="flex items-center border border-[#1B3022]/10 bg-white/50">
+                                                    <div className="flex items-center border-2 border-[#1B3022] bg-white shadow-[3px_3px_0_rgba(27,48,34,1)] h-10">
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                            className="p-2 hover:bg-[#1B3022] hover:text-[#F9F4EE] transition-all"
+                                                            className="p-2 hover:bg-[#1B3022] hover:text-[#F9F4EE] transition-all disabled:opacity-30"
+                                                            disabled={item.quantity <= 1}
                                                         >
-                                                            <Minus className="w-3 h-3" />
+                                                            <Minus className="w-3.5 h-3.5" />
                                                         </button>
-                                                        <span className="w-10 text-center font-bold text-sm text-[#1B3022]">{item.quantity}</span>
+                                                        <span className="w-10 text-center font-black text-sm text-[#1B3022] border-x-2 border-[#1B3022] leading-10">
+                                                            {item.quantity}
+                                                        </span>
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                                             className="p-2 hover:bg-[#1B3022] hover:text-[#F9F4EE] transition-all"
                                                         >
-                                                            <Plus className="w-3 h-3" />
+                                                            <Plus className="w-3.5 h-3.5" />
                                                         </button>
                                                     </div>
                                                     <span className="font-serif italic text-lg text-[#1B3022]">{formatPrice(item.price * item.quantity)}</span>
@@ -140,7 +142,7 @@ export function VintageCharmCartDrawer({ }: CartDrawerProps) {
                                 <div className="space-y-3">
                                     <div className="flex justify-between text-[#1B3022]/40 font-mono text-[10px] uppercase tracking-widest font-black">
                                         <span>Items_Total</span>
-                                        <span className="text-[#1B3022]">{formatPrice(totalPrice())}</span>
+                                        <span className="text-[#1B3022]">{formatPrice(subtotal)}</span>
                                     </div>
                                     <div className="flex justify-between text-[#1B3022]/40 font-mono text-[10px] uppercase tracking-widest font-black">
                                         <span>Shipping_Tariff</span>
@@ -151,7 +153,7 @@ export function VintageCharmCartDrawer({ }: CartDrawerProps) {
                                             <span className="font-cursive text-2xl text-[#8B4513]">Total Allocation</span>
                                             <h3 className="text-4xl font-black text-[#1B3022] tracking-tighter uppercase italic leading-none">The Sum</h3>
                                         </div>
-                                        <span className="text-5xl font-black italic tracking-tighter text-[#1B3022]">{formatPrice(totalPrice())}</span>
+                                        <span className="text-5xl font-black italic tracking-tighter text-[#1B3022]">{formatPrice(subtotal)}</span>
                                     </div>
                                 </div>
 

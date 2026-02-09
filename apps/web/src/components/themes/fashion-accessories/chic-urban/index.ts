@@ -1,4 +1,4 @@
-export * from './Navbar';
+export { Header3 as ChicUrbanNavbar } from '../../headers';
 export * from './Footer';
 export * from './StorefrontHero';
 export * from './ProductGrid';

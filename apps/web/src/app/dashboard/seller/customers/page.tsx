@@ -1,14 +1,40 @@
-'use client';
-
 import React from 'react';
+import api from '@/lib/api';
+import { useAuthStore } from '@/store/useAuthStore';
+import { Loader2 } from 'lucide-react';
 
 export default function CustomersPage() {
-    const customers = [
-        { name: 'Sarah Jenkins', email: 's.jenkins@gmail.com', orders: 12, totalSpend: '$1,420.00', lastSeen: '2 hours ago' },
-        { name: 'Michael Chen', email: 'mchen.tech@outlook.com', orders: 4, totalSpend: '$345.50', lastSeen: '1 day ago' },
-        { name: 'Emma Wilson', email: 'emma_wil@icloud.com', orders: 24, totalSpend: '$4,520.20', lastSeen: '3 days ago' },
-        { name: 'David Miller', email: 'd.miller@gmail.com', orders: 1, totalSpend: '$45.99', lastSeen: '5 days ago' },
-    ];
+    const { user, store } = useAuthStore();
+    const [customers, setCustomers] = React.useState<any[]>([]);
+    const [stats, setStats] = React.useState<any>(null);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        async function fetchData() {
+            if (!store?.id) return;
+            try {
+                const [customersRes, statsRes] = await Promise.all([
+                    api.get(`/stores/${store.id}/customers`),
+                    api.get(`/stores/${store.id}/customer-stats`),
+                ]);
+                setCustomers(customersRes.data);
+                setStats(statsRes.data);
+            } catch (error) {
+                console.error("Failed to fetch customer data:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchData();
+    }, [store?.id]);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center p-20">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">
@@ -29,44 +55,56 @@ export default function CustomersPage() {
 
             {/* Customer Highlights */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <HighlightCard label="Total Customers" value="842" icon="👥" />
-                <HighlightCard label="Avg. Order Value" value="$45.80" icon="🛒" />
-                <HighlightCard label="Customer LTV" value="$1,290" icon="💎" />
-                <HighlightCard label="Retention Rate" value="68%" icon="📈" />
+                <HighlightCard label="Total Customers" value={stats?.totalCustomers?.toString() || "0"} icon="👥" />
+                <HighlightCard label="Avg. Order Value" value={`$${Number(stats?.avgOrderValue || 0).toFixed(2)}`} icon="🛒" />
+                <HighlightCard label="Customer LTV" value={`$${Number(stats?.customerLTV || 0).toFixed(2)}`} icon="💎" />
+                <HighlightCard label="Retention Rate" value={`${stats?.retentionRate || 0}%`} icon="📈" />
             </div>
 
             {/* Customers Table */}
-            <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
-                <table className="w-full">
-                    <thead>
-                        <tr className="text-left text-[10px] text-slate-400 uppercase tracking-widest border-b border-slate-50">
-                            <th className="pb-6 font-bold">Customer Name</th>
-                            <th className="pb-6 font-bold">Orders</th>
-                            <th className="pb-6 font-bold">Total Spent</th>
-                            <th className="pb-6 font-bold text-right">Last Seen</th>
-                        </tr>
-                    </thead>
-                    <tbody className="text-sm font-bold text-slate-900">
-                        {customers.map((customer, idx) => (
-                            <tr key={idx} className="border-t border-slate-50 group hover:bg-slate-50/50 transition-colors">
-                                <td className="py-5">
-                                    <div className="flex items-center space-x-4">
-                                        <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-sm shadow-inner text-slate-400 font-black">
-                                            {customer.name.split(' ').map(n => n[0]).join('')}
-                                        </div>
-                                        <div>
-                                            <p>{customer.name}</p>
-                                            <p className="text-[10px] text-slate-400 font-medium">{customer.email}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="py-5 text-slate-600">{customer.orders} orders</td>
-                                <td className="py-5 text-primary">{customer.totalSpend}</td>
-                                <td className="py-5 text-right text-slate-400 text-xs font-medium">{customer.lastSeen}</td>
+            <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="text-left text-[10px] text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                                <th className="pb-6 font-bold">Customer Name</th>
+                                <th className="pb-6 font-bold">Orders</th>
+                                <th className="pb-6 font-bold">Total Spent</th>
+                                <th className="pb-6 font-bold text-right">Last Seen</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="text-sm font-bold text-slate-900">
+                            {customers.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="py-20 text-center text-slate-400 font-medium">
+                                        No customers found yet.
+                                    </td>
+                                </tr>
+                            ) : (
+                                customers.map((customer, idx) => (
+                                    <tr key={customer.id || idx} className="border-t border-slate-50 group hover:bg-slate-50/50 transition-colors">
+                                        <td className="py-5">
+                                            <div className="flex items-center space-x-4">
+                                                <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-sm shadow-inner text-slate-400 font-black">
+                                                    {customer.name.split(' ').map((n: any) => n[0]).join('')}
+                                                </div>
+                                                <div>
+                                                    <p>{customer.name}</p>
+                                                    <p className="text-[10px] text-slate-400 font-medium">{customer.email}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="py-5 text-slate-600">{customer.ordersCount} orders</td>
+                                        <td className="py-5 text-primary">${Number(customer.totalSpent).toFixed(2)}</td>
+                                        <td className="py-5 text-right text-slate-400 text-xs font-medium">
+                                            {customer.lastSeen ? new Date(customer.lastSeen).toLocaleDateString() : 'Never'}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

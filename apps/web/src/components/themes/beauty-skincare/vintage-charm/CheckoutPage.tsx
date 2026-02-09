@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckoutProps } from '../../types';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ShieldCheck, Loader2, Scroll, Check } from 'lucide-react';
@@ -9,9 +9,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
-export function VintageCharmCheckout({ }: CheckoutProps) {
+export function VintageCharmCheckout({ store }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
-    const { items, totalPrice, clearCart } = useCartStore();
+    const { storeItems: items, subtotal, clearStoreCart } = useStoreCart(store.id);
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -34,7 +34,7 @@ export function VintageCharmCheckout({ }: CheckoutProps) {
         await new Promise(resolve => setTimeout(resolve, 2500));
         setIsSubmitting(false);
         setIsSuccess(true);
-        clearCart();
+        clearStoreCart(store.id);
     };
 
     if (isSuccess) {
@@ -220,7 +220,7 @@ export function VintageCharmCheckout({ }: CheckoutProps) {
                             <dl className="space-y-4 pt-10 border-t-2 border-double border-[#1B3022]/10">
                                 <div className="flex justify-between font-mono text-[10px] uppercase tracking-widest text-[#1B3022]/40 font-black">
                                     <dt>Subtotal_Aggregate</dt>
-                                    <dd className="text-[#1B3022]">{formatPrice(totalPrice())}</dd>
+                                    <dd className="text-[#1B3022]">{formatPrice(subtotal)}</dd>
                                 </div>
                                 <div className="flex justify-between font-mono text-[10px] uppercase tracking-widest text-[#1B3022]/40 font-black">
                                     <dt>Shipping_Tariff</dt>
@@ -231,7 +231,7 @@ export function VintageCharmCheckout({ }: CheckoutProps) {
                                         <span className="font-cursive text-3xl text-[#8B4513]">Grand Sum</span>
                                         <span className="block text-4xl font-black text-[#1B3022] tracking-tighter uppercase italic leading-none">Total Value</span>
                                     </dt>
-                                    <dd className="text-6xl font-black italic tracking-tighter text-[#1B3022]">{formatPrice(totalPrice())}</dd>
+                                    <dd className="text-6xl font-black italic tracking-tighter text-[#1B3022]">{formatPrice(subtotal)}</dd>
                                 </div>
                             </dl>
 

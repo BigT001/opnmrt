@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { StoreThemeProps } from '../../types';
-import { ChicUrbanNavbar } from './Navbar';
+import { Header3 as ChicUrbanNavbar } from '../../headers';
 import { ChicUrbanFooter } from './Footer';
 import { ChicUrbanCartDrawer } from './CartDrawer';
+import { CartNotification } from '@/components/storefront/CartNotification';
 
 export const ChicUrbanLayout: React.FC<StoreThemeProps> = ({ store, children }) => {
     return (
@@ -32,8 +33,9 @@ export const ChicUrbanLayout: React.FC<StoreThemeProps> = ({ store, children }) 
                     animation: glitch-skew 0.5s infinite;
                 }
             `}</style>
-            <ChicUrbanNavbar storeName={store.name} logo={store.logo} />
-            <ChicUrbanCartDrawer />
+            <ChicUrbanNavbar storeName={store.name} logo={store.logo} subdomain={store.subdomain} storeId={store.id} />
+            <ChicUrbanCartDrawer storeId={store.id} />
+            <CartNotification />
             <main className="flex-grow">{children}</main>
             <ChicUrbanFooter storeName={store.name} />
         </div>

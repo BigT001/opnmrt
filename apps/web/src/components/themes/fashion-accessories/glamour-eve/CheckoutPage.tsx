@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckoutProps } from '../../types';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, Loader2, ShieldCheck, Lock } from 'lucide-react';
@@ -9,9 +9,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export function GlamourEveCheckout({ }: CheckoutProps) {
+export function GlamourEveCheckout({ store }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
-    const { items, totalPrice, clearCart } = useCartStore();
+    const { storeItems: items, subtotal, clearStoreCart } = useStoreCart(store.id);
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -32,7 +32,7 @@ export function GlamourEveCheckout({ }: CheckoutProps) {
         await new Promise(resolve => setTimeout(resolve, 3000));
         setIsSubmitting(false);
         setIsSuccess(true);
-        clearCart();
+        clearStoreCart(store.id);
     };
 
     if (isSuccess) {
@@ -188,7 +188,7 @@ export function GlamourEveCheckout({ }: CheckoutProps) {
                                         >
                                             <span className="uppercase tracking-[0.4em] text-[11px] font-black">Verify Purchase</span>
                                             <span className="w-2 h-2 rounded-full bg-[#D4AF37] group-hover:bg-black transition-colors" />
-                                            <span className="text-sm font-bold itali">{formatPrice(totalPrice())}</span>
+                                            <span className="text-sm font-bold itali">{formatPrice(subtotal)}</span>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
@@ -229,7 +229,7 @@ export function GlamourEveCheckout({ }: CheckoutProps) {
                                 <div className="space-y-4">
                                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-[0.2em] text-black/40">
                                         <span>Subtotal</span>
-                                        <span>{formatPrice(totalPrice())}</span>
+                                        <span>{formatPrice(subtotal)}</span>
                                     </div>
                                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-[0.2em] text-black/40">
                                         <span>Est. Boutique Delivery</span>
@@ -237,7 +237,7 @@ export function GlamourEveCheckout({ }: CheckoutProps) {
                                     </div>
                                     <div className="flex justify-between text-lg font-serif italic text-black pt-6 border-t border-black/5">
                                         <span>Final Total</span>
-                                        <span className="font-bold not-italic tracking-tighter">{formatPrice(totalPrice())}</span>
+                                        <span className="font-bold not-italic tracking-tighter">{formatPrice(subtotal)}</span>
                                     </div>
                                 </div>
                                 <div className="pt-6">

@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { StoreThemeProps } from '../../types';
-import { PureBotanicalNavbar } from './Navbar';
+import { Header3 as PureBotanicalNavbar } from '../../headers';
 import { PureBotanicalFooter } from './Footer';
 import { PureBotanicalCartDrawer } from './CartDrawer';
+import { CartNotification } from '@/components/storefront/CartNotification';
 
 export const PureBotanicalLayout: React.FC<StoreThemeProps> = ({ store, children }) => {
     return (
@@ -62,8 +63,9 @@ export const PureBotanicalLayout: React.FC<StoreThemeProps> = ({ store, children
                 }
             `}</style>
 
-            <PureBotanicalNavbar storeName={store.name} logo={store.logo} />
-            <PureBotanicalCartDrawer />
+            <PureBotanicalNavbar storeName={store.name} logo={store.logo} subdomain={store.subdomain} storeId={store.id} />
+            <PureBotanicalCartDrawer storeId={store.id} />
+            <CartNotification />
             <main className="flex-grow pt-20">{children}</main>
             <PureBotanicalFooter storeName={store.name} />
         </div>

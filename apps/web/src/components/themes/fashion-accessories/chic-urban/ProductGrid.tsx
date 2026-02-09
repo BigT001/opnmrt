@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { formatPrice } from '@/lib/utils';
 
-export function ChicUrbanProductGrid({ products, subdomain }: ProductGridProps) {
+export function ChicUrbanProductGrid({ products, subdomain, storeId }: ProductGridProps) {
     const { addItem } = useCartStore();
 
     return (
@@ -79,7 +79,7 @@ export function ChicUrbanProductGrid({ products, subdomain }: ProductGridProps) 
                                                 name: product.name,
                                                 price: Number(product.price),
                                                 image: product.image || undefined,
-                                                storeId: subdomain // Using subdomain as temporary storeId fallback
+                                                storeId: storeId
                                             })}
                                             className="flex-1 bg-black text-white py-3 flex items-center justify-center gap-3 hover:bg-white hover:text-black transition-colors"
                                         >

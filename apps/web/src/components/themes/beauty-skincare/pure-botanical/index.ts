@@ -1,4 +1,4 @@
-export * from './Navbar';
+export { Header3 as PureBotanicalNavbar } from '@/components/themes/headers';
 export * from './Footer';
 export * from './StorefrontHero';
 export * from './ProductGrid';

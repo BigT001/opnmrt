@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckoutProps } from '../../types';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Leaf, ShieldCheck, Loader2, Sparkles, Check, MoveRight } from 'lucide-react';
@@ -9,9 +9,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export function PureBotanicalCheckout({ }: CheckoutProps) {
+export function PureBotanicalCheckout({ store }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
-    const { items, totalPrice, clearCart } = useCartStore();
+    const { storeItems: items, subtotal, clearStoreCart } = useStoreCart(store.id);
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -34,7 +34,7 @@ export function PureBotanicalCheckout({ }: CheckoutProps) {
         await new Promise(resolve => setTimeout(resolve, 2500));
         setIsSubmitting(false);
         setIsSuccess(true);
-        clearCart();
+        clearStoreCart(store.id);
     };
 
     if (isSuccess) {
@@ -173,7 +173,7 @@ export function PureBotanicalCheckout({ }: CheckoutProps) {
                                         </>
                                     ) : (
                                         <>
-                                            <span className="font-sans text-sm font-bold uppercase tracking-[0.4em]">Finalize Resonance ({formatPrice(totalPrice())})</span>
+                                            <span className="font-sans text-sm font-bold uppercase tracking-[0.4em]">Finalize Resonance ({formatPrice(subtotal)})</span>
                                             <ShieldCheck className="w-6 h-6" />
                                         </>
                                     )}
@@ -208,7 +208,7 @@ export function PureBotanicalCheckout({ }: CheckoutProps) {
                             <dl className="space-y-4 pt-10 border-t border-[#7C9082]/10">
                                 <div className="flex justify-between items-center">
                                     <dt className="font-sans text-[10px] uppercase tracking-[0.3em] font-black text-[#1C2B21]/40">Subtotal</dt>
-                                    <dd className="font-sans text-sm font-bold text-[#1C2B21]">{formatPrice(totalPrice())}</dd>
+                                    <dd className="font-sans text-sm font-bold text-[#1C2B21]">{formatPrice(subtotal)}</dd>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <dt className="font-sans text-[10px] uppercase tracking-[0.3em] font-black text-[#1C2B21]/40">Shipping</dt>
@@ -216,7 +216,7 @@ export function PureBotanicalCheckout({ }: CheckoutProps) {
                                 </div>
                                 <div className="flex justify-between items-end pt-6 border-t border-[#7C9082]/10 mt-6">
                                     <dt className="text-3xl font-serif text-[#1C2B21]">Total</dt>
-                                    <dd className="text-3xl font-serif text-[#1C2B21]">{formatPrice(totalPrice())}</dd>
+                                    <dd className="text-3xl font-serif text-[#1C2B21]">{formatPrice(subtotal)}</dd>
                                 </div>
                             </dl>
                         </div>

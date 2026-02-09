@@ -22,6 +22,10 @@ export interface StoreData {
     primaryColor?: string | null;
     theme?: string;
     themeConfig?: any;
+    biography?: string | null;
+    officialEmail?: string | null;
+    whatsappNumber?: string | null;
+    useWhatsAppCheckout?: boolean;
 }
 
 // Product data structure
@@ -41,6 +45,8 @@ export interface ProductData {
 export interface NavbarProps {
     storeName: string;
     logo?: string | null;
+    subdomain?: string;
+    storeId?: string;
 }
 
 export interface FooterProps {
@@ -64,7 +70,7 @@ export interface ProductDetailProps {
 }
 
 export interface CartDrawerProps {
-    // Cart drawer uses global state, no props needed
+    storeId?: string;
 }
 
 export interface CheckoutProps {
@@ -101,4 +107,6 @@ export interface ThemeComponents {
     Layout: React.FC<StoreThemeProps>;
     StorefrontPage: React.FC<PageProps>;
     ProductPage: React.FC<ProductPageProps>;
+    AboutPage: React.FC<PageProps>;
+    ShopPage: React.FC<PageProps>;
 }

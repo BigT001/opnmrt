@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { StoreThemeProps } from '../../types';
-import { NeonStreamNavbar } from './Navbar';
+import { Header4 as NeonStreamNavbar } from '../../headers';
 import { NeonStreamFooter } from './Footer';
 import { NeonStreamCartDrawer } from './CartDrawer';
+import { CartNotification } from '@/components/storefront/CartNotification';
 
 export const NeonStreamLayout: React.FC<StoreThemeProps> = ({ store, children }) => {
     return (
@@ -51,8 +52,9 @@ export const NeonStreamLayout: React.FC<StoreThemeProps> = ({ store, children })
                 }
             `}</style>
 
-            <NeonStreamNavbar storeName={store.name} logo={store.logo} />
-            <NeonStreamCartDrawer />
+            <NeonStreamNavbar storeName={store.name} logo={store.logo} subdomain={store.subdomain} storeId={store.id} />
+            <NeonStreamCartDrawer storeId={store.id} />
+            <CartNotification />
             <main className="flex-grow neon-flow">{children}</main>
             <NeonStreamFooter storeName={store.name} />
         </div>

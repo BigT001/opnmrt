@@ -1,8 +1,53 @@
 'use client';
 
+import React, { useEffect, useState } from 'react';
 import { HeroProps } from '../../types';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Play } from 'lucide-react';
+
+function Particles({ count }: { count: number }) {
+    const [particles, setParticles] = useState<any[]>([]);
+
+    useEffect(() => {
+        setParticles(
+            Array.from({ length: count }).map((_, i) => ({
+                id: i,
+                x1: Math.random() * 100,
+                x2: Math.random() * 200,
+                duration: 10 + Math.random() * 10,
+                left: Math.random() * 100,
+            }))
+        );
+    }, [count]);
+
+    if (particles.length === 0) return null;
+
+    return (
+        <>
+            {particles.map((p) => (
+                <motion.div
+                    key={p.id}
+                    animate={{
+                        y: [-10, -500],
+                        x: [p.x1, p.x2],
+                        opacity: [0, 0.4, 0]
+                    }}
+                    transition={{
+                        duration: p.duration,
+                        repeat: Infinity,
+                        delay: p.id * 2,
+                        ease: "linear"
+                    }}
+                    className="absolute w-1 h-1 bg-white rounded-full blur-[1px]"
+                    style={{
+                        left: `${p.left}%`,
+                        bottom: '-20px'
+                    }}
+                />
+            ))}
+        </>
+    );
+}
 
 export function RadiantGlowHero({ store }: HeroProps) {
     return (
@@ -28,27 +73,7 @@ export function RadiantGlowHero({ store }: HeroProps) {
 
                 {/* Luminous Dust Particles (CSS) */}
                 <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                        <motion.div
-                            key={i}
-                            animate={{
-                                y: [-10, -500],
-                                x: [Math.random() * 100, Math.random() * 200],
-                                opacity: [0, 0.4, 0]
-                            }}
-                            transition={{
-                                duration: 10 + Math.random() * 10,
-                                repeat: Infinity,
-                                delay: i * 2,
-                                ease: "linear"
-                            }}
-                            className="absolute w-1 h-1 bg-white rounded-full blur-[1px]"
-                            style={{
-                                left: `${Math.random() * 100}%`,
-                                bottom: '-20px'
-                            }}
-                        />
-                    ))}
+                    <Particles count={5} />
                 </div>
             </div>
 

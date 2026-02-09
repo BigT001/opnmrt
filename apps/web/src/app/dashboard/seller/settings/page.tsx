@@ -19,6 +19,8 @@ export default function SettingsPage() {
         heroSubtitle: '',
         primaryColor: '#10b981',
         theme: 'MINIMAL_LUXE',
+        whatsappNumber: '',
+        useWhatsAppCheckout: false,
     });
 
     const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -39,6 +41,8 @@ export default function SettingsPage() {
                 heroSubtitle: (store as any).heroSubtitle || '',
                 primaryColor: (store as any).primaryColor || '#10b981',
                 theme: (store as any).theme || 'MINIMAL_LUXE',
+                whatsappNumber: (store as any).whatsappNumber || '',
+                useWhatsAppCheckout: (store as any).useWhatsAppCheckout || false,
             });
             setLogoPreview((store as any).logo || null);
             setHeroPreview((store as any).heroImage || null);
@@ -71,11 +75,15 @@ export default function SettingsPage() {
         try {
             const submitData = new FormData();
             Object.entries(formData).forEach(([key, value]) => {
-                submitData.append(key, value);
+                submitData.append(key, String(value));
             });
 
             if (logoFile) submitData.append('logo', logoFile);
             if (heroFile) submitData.append('heroImage', heroFile);
+
+            // Ensure booleans are strings for FormData
+            submitData.set('useWhatsAppCheckout', String(formData.useWhatsAppCheckout));
+            submitData.set('whatsappNumber', formData.whatsappNumber);
 
             const response = await api.patch(`/stores/${store.id}`, submitData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -162,31 +170,47 @@ export default function SettingsPage() {
                         </>
                     )}
 
-                    {activeTab === 'store-profile' && (
-                        <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
-                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Store Contact & Bio</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <InputGroup
-                                    label="Official Email"
-                                    name="officialEmail"
-                                    value={formData.officialEmail}
-                                    onChange={handleInputChange}
-                                    placeholder="hello@samstar.com"
-                                />
-                                <InputGroup label="Customer Support Phone" placeholder="+1..." disabled />
-                                <div className="md:col-span-2">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Store Biography</label>
-                                    <textarea
-                                        name="biography"
-                                        value={formData.biography}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-medium outline-none focus:ring-2 focus:ring-primary/20 h-32"
-                                        placeholder="Tell your customers about your brand..."
-                                    ></textarea>
+                    <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Store Contact & Bio</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <InputGroup
+                                label="Official Email"
+                                name="officialEmail"
+                                value={formData.officialEmail}
+                                onChange={handleInputChange}
+                                placeholder="hello@samstar.com"
+                            />
+                            <InputGroup
+                                label="Customer Support WhatsApp"
+                                name="whatsappNumber"
+                                value={formData.whatsappNumber}
+                                onChange={handleInputChange}
+                                placeholder="+1234567890"
+                            />
+                            <div className="md:col-span-2 flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div>
+                                    <h4 className="text-xs font-black text-slate-900">Direct WhatsApp Checkout</h4>
+                                    <p className="text-[10px] text-slate-500">Customers will be redirected to WhatsApp to complete their orders.</p>
                                 </div>
+                                <button
+                                    onClick={() => setFormData(prev => ({ ...prev, useWhatsAppCheckout: !prev.useWhatsAppCheckout }))}
+                                    className={`w-12 h-6 rounded-full relative transition-colors duration-300 ${formData.useWhatsAppCheckout ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                                >
+                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${formData.useWhatsAppCheckout ? 'right-1' : 'left-1'}`}></div>
+                                </button>
                             </div>
-                        </section>
-                    )}
+                            <div className="md:col-span-2">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Store Biography</label>
+                                <textarea
+                                    name="biography"
+                                    value={formData.biography}
+                                    onChange={handleInputChange}
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-medium outline-none focus:ring-2 focus:ring-primary/20 h-32"
+                                    placeholder="Tell your customers about your brand..."
+                                ></textarea>
+                            </div>
+                        </div>
+                    </section>
 
                     {activeTab === 'appearance' && (
                         <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
@@ -349,6 +373,8 @@ export default function SettingsPage() {
                                         heroSubtitle: (store as any).heroSubtitle || '',
                                         primaryColor: (store as any).primaryColor || '#10b981',
                                         theme: (store as any).theme || 'MINIMAL_LUXE',
+                                        whatsappNumber: (store as any).whatsappNumber || '',
+                                        useWhatsAppCheckout: (store as any).useWhatsAppCheckout || false,
                                     });
                                     setLogoPreview((store as any).logo || null);
                                     setHeroPreview((store as any).heroImage || null);
@@ -404,7 +430,7 @@ function InputGroup({
     defaultValue?: string;
     disabled?: boolean;
     name?: string;
-    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+    onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
 }) {
     return (
         <div>

@@ -1,4 +1,4 @@
-export * from './Navbar';
+export { Header4 as NeonStreamNavbar } from '../../headers';
 export * from './Footer';
 export * from './StorefrontHero';
 export * from './ProductGrid';

@@ -3,14 +3,14 @@
 import { CartDrawerProps } from '../../types';
 import { X, Minus, Plus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 
-export function GlamourEveCartDrawer({ }: CartDrawerProps) {
-    const { items, isOpen, toggleCart, removeItem, updateQuantity, totalPrice } = useCartStore();
+export function GlamourEveCartDrawer({ storeId }: CartDrawerProps) {
+    const { storeItems: items, isOpen, toggleCart, removeItem, updateQuantity, subtotal } = useStoreCart(storeId);
     const [mounted, setMounted] = useState(false);
     const params = useParams<{ subdomain: string }>();
 
@@ -104,19 +104,20 @@ export function GlamourEveCartDrawer({ }: CartDrawerProps) {
                                                 </div>
 
                                                 <div className="flex items-center justify-between pt-6">
-                                                    <div className="flex items-center gap-6 border-b border-black/10 pb-2">
+                                                    <div className="flex items-center gap-6 border border-black/10 rounded-full px-4 h-12 bg-white">
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                            className="text-black/30 hover:text-black transition-colors"
+                                                            className="text-black/30 hover:text-black transition-colors disabled:opacity-20"
+                                                            disabled={item.quantity <= 1}
                                                         >
-                                                            <Minus className="w-3 h-3" />
+                                                            <Minus className="w-4 h-4" />
                                                         </button>
-                                                        <span className="text-xs font-black min-w-[20px] text-center">{item.quantity}</span>
+                                                        <span className="text-sm font-black min-w-[30px] text-center italic">{item.quantity}</span>
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="text-black/30 hover:text-black transition-colors"
+                                                            className="text-black/30 hover:text-[#D4AF37] transition-colors"
                                                         >
-                                                            <Plus className="w-3 h-3" />
+                                                            <Plus className="w-4 h-4" />
                                                         </button>
                                                     </div>
 
@@ -142,7 +143,7 @@ export function GlamourEveCartDrawer({ }: CartDrawerProps) {
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-end">
                                         <p className="text-[10px] font-black uppercase tracking-[0.4em] text-black/40">Total Estimé</p>
-                                        <p className="text-3xl font-serif text-black italic">{formatPrice(totalPrice())}</p>
+                                        <p className="text-3xl font-serif text-black italic">{formatPrice(subtotal)}</p>
                                     </div>
                                     <div className="p-4 bg-[#D4AF37]/10 border border-[#D4AF37]/20">
                                         <p className="text-[9px] text-center text-[#B8860B] uppercase tracking-[0.2em] font-black italic">

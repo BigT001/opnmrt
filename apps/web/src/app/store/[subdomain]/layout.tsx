@@ -7,7 +7,7 @@ async function getStore(subdomain: string) {
     try {
         const res = await fetch(
             url,
-            { next: { revalidate: 0 } } // Disable cache for debugging
+            { cache: 'no-store' } // Disable cache for debugging
         );
         console.log(`Store resolve status: ${res.status}`);
         if (!res.ok) {

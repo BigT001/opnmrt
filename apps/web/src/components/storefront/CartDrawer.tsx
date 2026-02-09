@@ -86,19 +86,20 @@ export function CartDrawer() {
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-1 items-end justify-between text-sm">
-                                                    <div className="flex items-center border rounded-md">
+                                                    <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50 h-10 overflow-hidden shadow-sm">
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                            className="p-1 hover:bg-gray-100 text-gray-600"
+                                                            className="w-10 h-full hover:bg-white text-gray-500 hover:text-gray-900 transition-all disabled:opacity-30"
+                                                            disabled={item.quantity <= 1}
                                                         >
-                                                            <Minus className="w-3 h-3" />
+                                                            <Minus className="w-4 h-4 mx-auto" />
                                                         </button>
-                                                        <span className="px-2 font-medium text-gray-900 min-w-[20px] text-center">{item.quantity}</span>
+                                                        <span className="px-3 font-bold text-gray-900 min-w-[40px] text-center border-x border-gray-200 h-full flex items-center justify-center bg-white">{item.quantity}</span>
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="p-1 hover:bg-gray-100 text-gray-600"
+                                                            className="w-10 h-full hover:bg-white text-gray-500 hover:text-gray-900 transition-all font-bold"
                                                         >
-                                                            <Plus className="w-3 h-3" />
+                                                            <Plus className="w-4 h-4 mx-auto" />
                                                         </button>
                                                     </div>
 

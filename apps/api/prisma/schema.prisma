@@ -20,6 +20,7 @@ enum UserRole {
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
+  phone         String?   @unique
   password      String
   name          String?
   role          UserRole  @default(BUYER)
@@ -61,6 +62,8 @@ model Store {
   
   biography     String?   @db.Text
   officialEmail String?
+  whatsappNumber String?
+  useWhatsAppCheckout Boolean @default(false)
   
   products      Product[]
   orders        Order[]
@@ -207,11 +210,17 @@ model Message {
   
   content       String    @db.Text
   
+  recipientId   String?   // For direct messages (e.g., SELLER to specific BUYER)
+  isRead        Boolean   @default(false)
+  
   createdAt     DateTime  @default(now())
 
   @@index([tenantId])
   @@index([storeId])
   @@index([orderId])
+  @@index([recipientId])
+  @@index([senderId])
+  @@index([isRead])
 }
 
 model EventLog {

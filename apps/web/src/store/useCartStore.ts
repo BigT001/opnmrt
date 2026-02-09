@@ -13,14 +13,17 @@ export interface CartItem {
 interface CartState {
     items: CartItem[];
     isOpen: boolean;
+    notification: string | null;
     addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
     removeItem: (id: string) => void;
     updateQuantity: (id: string, quantity: number) => void;
     clearCart: () => void;
+    clearStoreCart: (storeId: string) => void;
     toggleCart: () => void;
     setOpen: (open: boolean) => void;
-    totalItems: () => number;
-    totalPrice: () => number;
+    totalItems: (storeId?: string) => number;
+    totalPrice: (storeId?: string) => number;
+    clearNotification: () => void;
 }
 
 export const useCartStore = create<CartState>()(
@@ -28,6 +31,7 @@ export const useCartStore = create<CartState>()(
         (set, get) => ({
             items: [],
             isOpen: false,
+            notification: null,
 
             addItem: (item, quantity = 1) => {
                 const currentItems = get().items;
@@ -38,14 +42,19 @@ export const useCartStore = create<CartState>()(
                         items: currentItems.map((i) =>
                             i.id === item.id ? { ...i, quantity: i.quantity + quantity } : i
                         ),
-                        isOpen: true,
+                        notification: 'Successfully added to cart',
                     });
                 } else {
                     set({
                         items: [...currentItems, { ...item, quantity }],
-                        isOpen: true,
+                        notification: 'Successfully added to cart',
                     });
                 }
+
+                // Auto-clear notification after 3 seconds
+                setTimeout(() => {
+                    set({ notification: null });
+                }, 3000);
             },
 
             removeItem: (id) => {
@@ -66,13 +75,25 @@ export const useCartStore = create<CartState>()(
 
             clearCart: () => set({ items: [] }),
 
+            clearStoreCart: (storeId: string) => {
+                set({ items: get().items.filter((i) => i.storeId !== storeId) });
+            },
+
             toggleCart: () => set({ isOpen: !get().isOpen }),
 
             setOpen: (open) => set({ isOpen: open }),
 
-            totalItems: () => get().items.reduce((acc, item) => acc + item.quantity, 0),
+            clearNotification: () => set({ notification: null }),
 
-            totalPrice: () => get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),
+            totalItems: (storeId) => {
+                const items = storeId ? get().items.filter(i => i.storeId === storeId) : get().items;
+                return items.reduce((acc, item) => acc + item.quantity, 0);
+            },
+
+            totalPrice: (storeId) => {
+                const items = storeId ? get().items.filter(i => i.storeId === storeId) : get().items;
+                return items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+            },
         }),
         {
             name: 'opnmart-cart',

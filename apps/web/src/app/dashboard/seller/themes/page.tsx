@@ -25,11 +25,21 @@ export default function ThemesPage() {
         setMessage(null);
 
         try {
+            console.log(`[THEMES_PAGE] Activating theme: ${themeId} for store: ${store.id}`);
             const response = await api.patch(`/stores/${store.id}`, { theme: themeId });
+            console.log('[THEMES_PAGE] Activation response:', response.data);
             setStore(response.data);
             setMessage({ type: 'success', text: `Theme ${themeId.replace(/_/g, ' ')} activated successfully!` });
+
+            // Force a reload after a short delay to ensure everything is in sync
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } catch (error: any) {
-            console.error('Theme activation failed:', error);
+            console.error('[THEMES_PAGE] Theme activation failed:', error);
+            if (error.response) {
+                console.error('[THEMES_PAGE] Error response data:', error.response.data);
+            }
             setMessage({ type: 'error', text: 'Failed to activate theme.' });
         } finally {
             setUpdating(null);
@@ -102,8 +112,15 @@ function ThemeCard({ theme, isActive, isUpdating, onActivate, store }: {
         }
     };
 
+    const handleCardClick = () => {
+        window.location.href = `/dashboard/seller/themes/preview/${theme.id}`;
+    };
+
     return (
-        <div className={`bg-white rounded-[2.5rem] border ${isActive ? 'border-primary ring-4 ring-primary/5' : 'border-slate-100'} overflow-hidden flex flex-col transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/50 group`}>
+        <div
+            onClick={handleCardClick}
+            className={`bg-white rounded-[2.5rem] border ${isActive ? 'border-primary ring-4 ring-primary/5' : 'border-slate-100'} overflow-hidden flex flex-col transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/50 group cursor-pointer`}
+        >
             {/* Preview Section */}
             <div className={`h-48 w-full relative overflow-hidden flex ${getPreviewStyles(theme.id)}`}>
                 <div className="absolute inset-0 bg-gradient-to-b from-black/0 to-black/5 opacity-0 group-hover:opacity-100 transition-opacity z-10"></div>
@@ -122,12 +139,9 @@ function ThemeCard({ theme, isActive, isUpdating, onActivate, store }: {
 
                 {/* Live Preview Button (Overlay) */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100">
-                    <Link
-                        href={`/dashboard/seller/themes/preview/${theme.id}`}
-                        className="px-6 py-2.5 bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-2xl hover:bg-slate-50 transition-colors"
-                    >
+                    <div className="px-6 py-2.5 bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-2xl group-hover:bg-slate-50 transition-colors">
                         Live Preview
-                    </Link>
+                    </div>
                 </div>
             </div>
 
@@ -141,7 +155,10 @@ function ThemeCard({ theme, isActive, isUpdating, onActivate, store }: {
                 <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between gap-4">
                     {!isActive ? (
                         <button
-                            onClick={onActivate}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onActivate();
+                            }}
                             disabled={isUpdating}
                             className="flex-1 py-3 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-black transition-all shadow-lg shadow-slate-200 disabled:opacity-50"
                         >
@@ -152,7 +169,10 @@ function ThemeCard({ theme, isActive, isUpdating, onActivate, store }: {
                             Active
                         </div>
                     )}
-                    <button className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:text-slate-600 transition-colors">
+                    <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:text-slate-600 transition-colors"
+                    >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                         </svg>

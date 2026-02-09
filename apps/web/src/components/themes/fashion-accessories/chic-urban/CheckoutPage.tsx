@@ -2,16 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { CheckoutProps } from '../../types';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, Loader2, Zap, Shield, Terminal, Activity } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
-export function ChicUrbanCheckout({ }: CheckoutProps) {
+export function ChicUrbanCheckout({ store }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
-    const { items, totalPrice, clearCart } = useCartStore();
+    const { storeItems: items, subtotal, clearStoreCart } = useStoreCart(store.id);
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -34,7 +34,7 @@ export function ChicUrbanCheckout({ }: CheckoutProps) {
         await new Promise(resolve => setTimeout(resolve, 2500));
         setIsSubmitting(false);
         setIsSuccess(true);
-        clearCart();
+        clearStoreCart(store.id);
     };
 
     if (isSuccess) {
@@ -184,7 +184,7 @@ export function ChicUrbanCheckout({ }: CheckoutProps) {
                                         </>
                                     ) : (
                                         <>
-                                            <span>Authorize_Order // {formatPrice(totalPrice())}</span>
+                                            <span>Authorize_Order // {formatPrice(subtotal)}</span>
                                             <Zap className="w-8 h-8 fill-current" />
                                         </>
                                     )}
@@ -225,7 +225,7 @@ export function ChicUrbanCheckout({ }: CheckoutProps) {
                             <div className="border-t-4 border-black pt-8 space-y-4">
                                 <div className="flex justify-between font-mono text-[10px] font-black uppercase text-black/40">
                                     <span>Cumulative_Total</span>
-                                    <span className="text-black">{formatPrice(totalPrice())}</span>
+                                    <span className="text-black">{formatPrice(subtotal)}</span>
                                 </div>
                                 <div className="flex justify-between font-mono text-[10px] font-black uppercase text-black/40">
                                     <span>Logistics_Fee</span>
@@ -233,7 +233,7 @@ export function ChicUrbanCheckout({ }: CheckoutProps) {
                                 </div>
                                 <div className="flex justify-between items-end pt-4 border-t-2 border-black/10">
                                     <span className="text-2xl font-black uppercase italic tracking-tighter underline decoration-[#CCFF00] decoration-4 underline-offset-8">Final_Allocation</span>
-                                    <span className="text-5xl font-black italic tracking-tighter text-black">{formatPrice(totalPrice())}</span>
+                                    <span className="text-5xl font-black italic tracking-tighter text-black">{formatPrice(subtotal)}</span>
                                 </div>
                             </div>
 

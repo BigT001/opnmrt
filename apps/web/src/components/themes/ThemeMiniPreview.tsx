@@ -30,7 +30,10 @@ export function ThemeMiniPreview({ themeId, store }: ThemeMiniPreviewProps) {
                 }}
             >
                 <div className="w-full h-full border-[10px] border-slate-900/5 rounded-[40px] overflow-hidden shadow-2xl bg-white">
-                    <Navbar storeName={store.name} logo={store.logo} />
+                    <Navbar
+                        storeName={store.name}
+                        logo={store.logo}
+                    />
                     <div className="flex-1 overflow-hidden">
                         <StorefrontHero store={store} />
                     </div>

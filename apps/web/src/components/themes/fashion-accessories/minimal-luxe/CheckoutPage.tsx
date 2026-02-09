@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckoutProps } from '../../types';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, Loader2, ShieldCheck, Lock, CreditCard } from 'lucide-react';
@@ -9,9 +9,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
-export function MinimalLuxeCheckout({ }: CheckoutProps) {
+export function MinimalLuxeCheckout({ store }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
-    const { items, totalPrice, clearCart } = useCartStore();
+    const { storeItems: items, subtotal, clearStoreCart, toggleCart } = useStoreCart(store.id);
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -33,7 +33,7 @@ export function MinimalLuxeCheckout({ }: CheckoutProps) {
         await new Promise(resolve => setTimeout(resolve, 2500));
         setIsSubmitting(false);
         setIsSuccess(true);
-        clearCart();
+        clearStoreCart(store.id);
     };
 
     if (isSuccess) {
@@ -196,7 +196,7 @@ export function MinimalLuxeCheckout({ }: CheckoutProps) {
                                             Authorizing...
                                         </>
                                     ) : (
-                                        `Finalize Selection - ${formatPrice(totalPrice())}`
+                                        `Finalize Selection - ${formatPrice(subtotal)}`
                                     )}
                                 </button>
                             </div>
@@ -240,7 +240,7 @@ export function MinimalLuxeCheckout({ }: CheckoutProps) {
                             <div className="space-y-6 pt-10 border-t border-gray-900">
                                 <div className="flex items-center justify-between">
                                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Subtotal</span>
-                                    <span className="text-sm font-black text-gray-900 tracking-tightest">{formatPrice(totalPrice())}</span>
+                                    <span className="text-sm font-black text-gray-900 tracking-tightest">{formatPrice(subtotal)}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Courier</span>
@@ -249,7 +249,7 @@ export function MinimalLuxeCheckout({ }: CheckoutProps) {
                                 <div className="h-px bg-gray-100 w-full"></div>
                                 <div className="flex items-center justify-between pt-2">
                                     <span className="text-sm font-black text-gray-900 uppercase tracking-[0.2em]">Total</span>
-                                    <span className="text-2xl font-black text-gray-900 tracking-tightest">{formatPrice(totalPrice())}</span>
+                                    <span className="text-2xl font-black text-gray-900 tracking-tightest">{formatPrice(subtotal)}</span>
                                 </div>
                             </div>
 

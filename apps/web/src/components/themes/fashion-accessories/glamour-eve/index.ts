@@ -1,4 +1,4 @@
-export * from './Navbar';
+export { Header2 as GlamourEveNavbar } from '../../headers';
 export * from './Footer';
 export * from './StorefrontHero';
 export * from './ProductGrid';

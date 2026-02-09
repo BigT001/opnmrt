@@ -1,0 +1,67 @@
+﻿
+> web@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env
+
+node.exe : ΓÜá The 
+"middleware" file convention 
+is deprecated. Please use 
+"proxy" instead. Learn more: 
+https://nextjs.org/docs/messa
+ges/middleware-to-proxy
+At line:1 char:1
++ & 
+"C:\nvm4w\nodejs/node.exe" "C
+:\nvm4w\nodejs/node_modules/n
+pm/bin/np ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo          
+:     NotSpecified: (ΓÜá The 
+"mi    
+ddle...leware-to-proxy:Str   
+ ing) [], RemoteException
+    + FullyQualifiedErrorId 
+:     NativeCommandError
+ 
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 6.2s
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/16) ...
+  Generating static pages using 15 workers (4/16) 
+  Generating static pages using 15 workers (8/16) 
+  Generating static pages using 15 workers (12/16) 
+Γ£ô Generating static pages using 15 workers (16/16) in 561.0ms
+  Finalizing page optimization ...
+
+Route (app)
+Γöî Γùï /
+Γö£ Γùï /_not-found
+Γö£ Γùï /dashboard/seller
+Γö£ Γùï /dashboard/seller/analytics
+Γö£ Γùï /dashboard/seller/customers
+Γö£ Γùï /dashboard/seller/inventory
+Γö£ Γùï /dashboard/seller/messages
+Γö£ Γùï /dashboard/seller/orders
+Γö£ Γùï /dashboard/seller/products
+Γö£ Γùï /dashboard/seller/settings
+Γö£ Γùï /dashboard/seller/support
+Γö£ Γùï /dashboard/seller/themes
+Γö£ ╞Æ /dashboard/seller/themes/preview/[themeId]
+Γö£ Γùï /login
+Γö£ Γùï /register
+Γö£ ╞Æ /store/[subdomain]
+Γö£ ╞Æ /store/[subdomain]/checkout
+Γö£ ╞Æ /store/[subdomain]/dashboard
+Γöö ╞Æ /store/[subdomain]/products/[slug]
+
+
+╞Æ Proxy (Middleware)
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+

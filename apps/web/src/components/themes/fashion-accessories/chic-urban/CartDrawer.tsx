@@ -3,14 +3,14 @@
 import { CartDrawerProps } from '../../types';
 import { X, Minus, Plus, Trash2, ShoppingBag, Zap, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 
-export function ChicUrbanCartDrawer({ }: CartDrawerProps) {
-    const { items, isOpen, toggleCart, removeItem, updateQuantity, totalPrice } = useCartStore();
+export function ChicUrbanCartDrawer({ storeId }: CartDrawerProps) {
+    const { storeItems: items, isOpen, toggleCart, removeItem, updateQuantity, subtotal } = useStoreCart(storeId);
     const [mounted, setMounted] = useState(false);
     const params = useParams<{ subdomain: string }>();
 
@@ -112,22 +112,22 @@ export function ChicUrbanCartDrawer({ }: CartDrawerProps) {
                                                 </div>
 
                                                 <div className="flex items-center justify-between pt-4">
-                                                    <div className="flex items-center border-2 border-black bg-white">
+                                                    <div className="flex items-center border-4 border-black bg-white shadow-[4px_4px_0_rgba(0,0,0,1)]">
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                            className="p-2 hover:bg-black hover:text-[#CCFF00] transition-colors"
+                                                            className="p-3 hover:bg-black hover:text-[#CCFF00] transition-colors disabled:opacity-30"
                                                             disabled={item.quantity <= 1}
                                                         >
-                                                            <Minus className="w-4 h-4" />
+                                                            <Minus className="w-5 h-5" />
                                                         </button>
-                                                        <span className="w-12 text-center font-black text-sm italic tracking-tighter">
+                                                        <span className="w-16 text-center font-black text-xl italic tracking-tighter border-x-4 border-black">
                                                             {item.quantity.toString().padStart(2, '0')}
                                                         </span>
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="p-2 hover:bg-black hover:text-[#CCFF00] transition-colors"
+                                                            className="p-3 hover:bg-black hover:text-[#CCFF00] transition-colors"
                                                         >
-                                                            <Plus className="w-4 h-4" />
+                                                            <Plus className="w-5 h-5" />
                                                         </button>
                                                     </div>
 
@@ -155,7 +155,7 @@ export function ChicUrbanCartDrawer({ }: CartDrawerProps) {
                                             <span className="font-mono text-[10px] text-black/40 uppercase">Sub_Total_Value</span>
                                             <span className="text-2xl uppercase italic tracking-tighter">Verified Summary</span>
                                         </div>
-                                        <span className="text-4xl italic tracking-tighter">{formatPrice(totalPrice())}</span>
+                                        <span className="text-4xl italic tracking-tighter">{formatPrice(subtotal)}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-[10px] font-mono text-black uppercase border-y-2 border-black/10 py-2">
                                         <span>Estimated Duty: $0.00</span>

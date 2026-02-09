@@ -43,4 +43,14 @@ export class StoresController {
     async getStats(@Param('id') id: string) {
         return this.storesService.getStoreStats(id);
     }
+
+    @Get(':id/customers')
+    async getCustomers(@Param('id') id: string) {
+        return this.storesService.getCustomers(id);
+    }
+
+    @Get(':id/customer-stats')
+    async getCustomerStats(@Param('id') id: string) {
+        return this.storesService.getCustomerStats(id);
+    }
 }

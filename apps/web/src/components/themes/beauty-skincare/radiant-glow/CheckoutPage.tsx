@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckoutProps } from '../../types';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Sparkles, ShieldCheck, Loader2, Check, ArrowRight, Star, ShoppingBag } from 'lucide-react';
@@ -9,9 +9,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export function RadiantGlowCheckout({ }: CheckoutProps) {
+export function RadiantGlowCheckout({ store }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
-    const { items, totalPrice, clearCart } = useCartStore();
+    const { storeItems: items, subtotal, clearStoreCart } = useStoreCart(store.id);
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -32,7 +32,7 @@ export function RadiantGlowCheckout({ }: CheckoutProps) {
         await new Promise(resolve => setTimeout(resolve, 2500));
         setIsSubmitting(false);
         setIsSuccess(true);
-        clearCart();
+        clearStoreCart(store.id);
     };
 
     if (isSuccess) {
@@ -208,7 +208,7 @@ export function RadiantGlowCheckout({ }: CheckoutProps) {
                                     </>
                                 ) : (
                                     <>
-                                        <span className="font-sans text-[11px] uppercase tracking-[0.5em] font-black">Authorize {formatPrice(totalPrice())}</span>
+                                        <span className="font-sans text-[11px] uppercase tracking-[0.5em] font-black">Authorize {formatPrice(subtotal)}</span>
                                         <ArrowRight className="w-6 h-6 transition-transform duration-500 group-hover:translate-x-2" />
                                     </>
                                 )}
@@ -255,7 +255,7 @@ export function RadiantGlowCheckout({ }: CheckoutProps) {
                                 <div className="mt-10 pt-10 border-t border-[#C19A6B]/20 space-y-6">
                                     <div className="flex justify-between items-center">
                                         <span className="font-sans text-[10px] uppercase tracking-[0.3em] font-black text-[#2D1E1E]/40">Accumulated</span>
-                                        <span className="font-sans text-sm font-black text-[#2D1E1E]">{formatPrice(totalPrice())}</span>
+                                        <span className="font-sans text-sm font-black text-[#2D1E1E]">{formatPrice(subtotal)}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="font-sans text-[10px] uppercase tracking-[0.3em] font-black text-[#2D1E1E]/40">Passage</span>
@@ -263,7 +263,7 @@ export function RadiantGlowCheckout({ }: CheckoutProps) {
                                     </div>
                                     <div className="pt-6 border-t border-[#C19A6B]/5 flex justify-between items-end">
                                         <span className="text-2xl font-luminous text-[#2D1E1E]">Total Energy</span>
-                                        <span className="text-3xl font-sans font-black text-[#C19A6B]">{formatPrice(totalPrice())}</span>
+                                        <span className="text-3xl font-sans font-black text-[#C19A6B]">{formatPrice(subtotal)}</span>
                                     </div>
                                 </div>
                             </motion.div>

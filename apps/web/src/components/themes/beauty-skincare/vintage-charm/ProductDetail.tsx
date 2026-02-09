@@ -20,15 +20,13 @@ export function VintageCharmProductDetail({ product, store, subdomain }: Product
     if (!mounted) return null;
 
     const handleAddToCart = () => {
-        for (let i = 0; i < quantity; i++) {
-            addItem({
-                id: product.id,
-                name: product.name,
-                price: Number(product.price),
-                image: product.image || undefined,
-                storeId: store.id,
-            });
-        }
+        addItem({
+            id: product.id,
+            name: product.name,
+            price: Number(product.price),
+            image: product.image || undefined,
+            storeId: store.id,
+        }, quantity);
         setAdded(true);
         setTimeout(() => setAdded(false), 2000);
     };

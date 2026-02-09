@@ -3,14 +3,14 @@
 import { CartDrawerProps } from '../../types';
 import { X, Minus, Plus, Trash2, ShoppingBag, Leaf, ShieldCheck, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 
-export function PureBotanicalCartDrawer({ }: CartDrawerProps) {
-    const { items, isOpen, toggleCart, removeItem, updateQuantity, totalPrice } = useCartStore();
+export function PureBotanicalCartDrawer({ storeId }: CartDrawerProps) {
+    const { storeItems: items, isOpen, toggleCart, removeItem, updateQuantity, subtotal } = useStoreCart(storeId);
     const [mounted, setMounted] = useState(false);
     const params = useParams<{ subdomain: string }>();
 
@@ -113,19 +113,20 @@ export function PureBotanicalCartDrawer({ }: CartDrawerProps) {
                                                 </div>
 
                                                 <div className="flex items-center justify-between mt-4">
-                                                    <div className="flex items-center gap-6 p-1.5 bg-white rounded-full border border-[#7C9082]/10 shadow-sm">
+                                                    <div className="flex items-center gap-1.5 p-1 bg-white rounded-full border border-[#7C9082]/20 shadow-sm h-10">
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F9FAF8] text-[#1C2B21]/30 hover:text-[#1C2B21] transition-all"
+                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F2EBE9] text-[#1C2B21]/40 hover:text-[#1C2B21] transition-all disabled:opacity-30"
+                                                            disabled={item.quantity <= 1}
                                                         >
-                                                            <Minus className="w-3 h-3" />
+                                                            <Minus className="w-3.5 h-3.5" />
                                                         </button>
-                                                        <span className="font-sans font-bold text-xs text-[#1C2B21]">{item.quantity}</span>
+                                                        <span className="font-sans font-black text-xs text-[#1C2B21] min-w-[28px] text-center">{item.quantity}</span>
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F9FAF8] text-[#1C2B21]/30 hover:text-[#1C2B21] transition-all"
+                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F2EBE9] text-[#1C2B21]/40 hover:text-[#1C2B21] transition-all"
                                                         >
-                                                            <Plus className="w-3 h-3" />
+                                                            <Plus className="w-3.5 h-3.5" />
                                                         </button>
                                                     </div>
 
@@ -152,7 +153,7 @@ export function PureBotanicalCartDrawer({ }: CartDrawerProps) {
                                             <span className="font-sans text-[10px] uppercase tracking-[0.3em] font-black text-[#1C2B21]/40">Subtotal</span>
                                             <p className="font-serif italic text-lg text-[#1C2B21]/60">Delivery & taxes calculated next</p>
                                         </div>
-                                        <span className="text-3xl font-serif text-[#1C2B21]">{formatPrice(totalPrice())}</span>
+                                        <span className="text-3xl font-serif text-[#1C2B21]">{formatPrice(subtotal)}</span>
                                     </div>
                                     <div className="h-[1px] w-full bg-[#7C9082]/10 overflow-hidden">
                                         <motion.div

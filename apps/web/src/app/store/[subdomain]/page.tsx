@@ -2,31 +2,45 @@ import { notFound } from 'next/navigation';
 import { getThemeComponents } from '@/components/themes/registry';
 
 async function getStore(subdomain: string) {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
     try {
         const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/stores/resolve?subdomain=${subdomain}`,
-            { next: { revalidate: 0 } }
+            `${apiUrl}/stores/resolve?subdomain=${subdomain}`,
+            {
+                cache: 'no-store',
+                next: { revalidate: 0 }
+            }
         );
-        if (!res.ok) return null;
-        const text = await res.text();
-        return text ? JSON.parse(text) : null;
+        if (!res.ok) {
+            console.error(`Store resolve failed for ${subdomain}: ${res.status}`);
+            return null;
+        }
+        const data = await res.json();
+        return data;
     } catch (error) {
-        console.error('Failed to resolve store:', error);
+        console.error(`Failed to resolve store ${subdomain} at ${apiUrl}:`, error);
         return null;
     }
 }
 
 async function getProducts(subdomain: string) {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
     try {
         const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/products?subdomain=${subdomain}`,
-            { next: { revalidate: 0 } }
+            `${apiUrl}/products?subdomain=${subdomain}`,
+            {
+                cache: 'no-store',
+                next: { revalidate: 0 }
+            }
         );
-        if (!res.ok) return [];
-        const text = await res.text();
-        return text ? JSON.parse(text) : [];
+        if (!res.ok) {
+            console.error(`Products fetch failed for ${subdomain}: ${res.status}`);
+            return [];
+        }
+        const data = await res.json();
+        return data;
     } catch (error) {
-        console.error('Failed to fetch products:', error);
+        console.error(`Failed to fetch products for ${subdomain} at ${apiUrl}:`, error);
         return [];
     }
 }

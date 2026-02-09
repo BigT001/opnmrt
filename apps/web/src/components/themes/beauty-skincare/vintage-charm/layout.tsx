@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { StoreThemeProps } from '../../types';
-import { VintageCharmNavbar } from './Navbar';
+import { Header2 as VintageCharmNavbar } from '../../headers';
 import { VintageCharmFooter } from './Footer';
 import { VintageCharmCartDrawer } from './CartDrawer';
+import { CartNotification } from '@/components/storefront/CartNotification';
 
 export const VintageCharmLayout: React.FC<StoreThemeProps> = ({ store, children }) => {
     return (
@@ -38,8 +39,9 @@ export const VintageCharmLayout: React.FC<StoreThemeProps> = ({ store, children 
                 }
             `}</style>
 
-            <VintageCharmNavbar storeName={store.name} logo={store.logo} />
-            <VintageCharmCartDrawer />
+            <VintageCharmNavbar storeName={store.name} logo={store.logo} subdomain={store.subdomain} storeId={store.id} />
+            <VintageCharmCartDrawer storeId={store.id} />
+            <CartNotification />
             <main className="flex-grow">{children}</main>
             <VintageCharmFooter storeName={store.name} />
         </div>

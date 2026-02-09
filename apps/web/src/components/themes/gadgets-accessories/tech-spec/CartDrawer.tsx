@@ -3,14 +3,14 @@
 import { CartDrawerProps } from '../../types';
 import { X, Minus, Plus, Trash2, ShoppingBag, Terminal, Activity, ChevronRight, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 
-export function TechSpecCartDrawer({ }: CartDrawerProps) {
-    const { items, isOpen, toggleCart, removeItem, updateQuantity, totalPrice } = useCartStore();
+export function TechSpecCartDrawer({ storeId }: CartDrawerProps) {
+    const { storeItems: items, isOpen, toggleCart, removeItem, updateQuantity, subtotal } = useStoreCart(storeId);
     const [mounted, setMounted] = useState(false);
     const params = useParams<{ subdomain: string }>();
 
@@ -106,19 +106,20 @@ export function TechSpecCartDrawer({ }: CartDrawerProps) {
                                                 </div>
 
                                                 <div className="flex items-center justify-between mt-4">
-                                                    <div className="flex items-center border border-gray-100 h-8">
+                                                    <div className="flex items-center border-2 border-gray-900 bg-white h-10 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                            className="w-8 h-full hover:bg-gray-50 text-gray-400 font-bold"
+                                                            className="w-10 h-full hover:bg-gray-50 text-gray-900 transition-colors disabled:opacity-20"
+                                                            disabled={item.quantity <= 1}
                                                         >
-                                                            -
+                                                            <Minus className="w-4 h-4 mx-auto" />
                                                         </button>
-                                                        <span className="px-4 text-[10px] font-black text-gray-900 border-x border-gray-100 h-full flex items-center uppercase">{item.quantity}</span>
+                                                        <span className="w-12 text-xs font-black text-gray-900 border-x-2 border-gray-900 h-full flex items-center justify-center uppercase italic">{item.quantity}</span>
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="w-8 h-full hover:bg-gray-50 text-gray-400 font-bold"
+                                                            className="w-10 h-full hover:bg-gray-50 text-gray-900 transition-colors"
                                                         >
-                                                            +
+                                                            <Plus className="w-4 h-4 mx-auto" />
                                                         </button>
                                                     </div>
 
@@ -143,7 +144,7 @@ export function TechSpecCartDrawer({ }: CartDrawerProps) {
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest text-gray-400 italic">
                                         <p>Subtotal Logistics</p>
-                                        <p className="text-gray-900 text-sm not-italic">{formatPrice(totalPrice())}</p>
+                                        <p className="text-gray-900 text-sm not-italic">{formatPrice(subtotal)}</p>
                                     </div>
                                     <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest text-gray-400 italic">
                                         <p>Network Fee</p>
@@ -152,7 +153,7 @@ export function TechSpecCartDrawer({ }: CartDrawerProps) {
                                     <div className="h-[1px] bg-gray-200" />
                                     <div className="flex justify-between items-center">
                                         <p className="text-xs font-black uppercase tracking-[0.3em] text-[#E72E46] italic">Total Aggregate</p>
-                                        <p className="text-2xl font-black text-black tracking-tighter italic">{formatPrice(totalPrice())}</p>
+                                        <p className="text-2xl font-black text-black tracking-tighter italic">{formatPrice(subtotal)}</p>
                                     </div>
                                 </div>
 

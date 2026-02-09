@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { StoreThemeProps } from '../../types';
-import { RadiantGlowNavbar } from './Navbar';
+import { Header4 as RadiantGlowNavbar } from '../../headers';
 import { RadiantGlowFooter } from './Footer';
 import { RadiantGlowCartDrawer } from './CartDrawer';
+import { CartNotification } from '@/components/storefront/CartNotification';
 
 export const RadiantGlowLayout: React.FC<StoreThemeProps> = ({ store, children }) => {
     return (
@@ -81,8 +82,9 @@ export const RadiantGlowLayout: React.FC<StoreThemeProps> = ({ store, children }
             `}</style>
 
             <div className="aura-glow" />
-            <RadiantGlowNavbar storeName={store.name} logo={store.logo} />
-            <RadiantGlowCartDrawer />
+            <RadiantGlowNavbar storeName={store.name} logo={store.logo} subdomain={store.subdomain} storeId={store.id} />
+            <RadiantGlowCartDrawer storeId={store.id} />
+            <CartNotification />
             <main className="flex-grow pt-24 relative z-10">{children}</main>
             <RadiantGlowFooter storeName={store.name} />
         </div>

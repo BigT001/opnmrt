@@ -3,14 +3,14 @@
 import { CartDrawerProps } from '../../types';
 import { X, Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 
-export function MinimalLuxeCartDrawer({ }: CartDrawerProps) {
-    const { items, isOpen, toggleCart, removeItem, updateQuantity, totalPrice } = useCartStore();
+export function MinimalLuxeCartDrawer({ storeId }: CartDrawerProps) {
+    const { storeItems: items, isOpen, toggleCart, removeItem, updateQuantity, subtotal } = useStoreCart(storeId);
     const [mounted, setMounted] = useState(false);
     const params = useParams<{ subdomain: string }>();
 
@@ -99,19 +99,20 @@ export function MinimalLuxeCartDrawer({ }: CartDrawerProps) {
                                                 </div>
 
                                                 <div className="flex items-center justify-between pt-4">
-                                                    <div className="flex items-center bg-gray-50 p-1">
+                                                    <div className="flex items-center gap-1 border border-gray-200 p-1 bg-white h-10 shadow-sm">
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                            className="w-8 h-8 flex items-center justify-center hover:bg-white text-gray-400 hover:text-gray-900 transition-all"
+                                                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-400 hover:text-gray-900 transition-all disabled:opacity-30"
+                                                            disabled={item.quantity <= 1}
                                                         >
-                                                            <Minus className="w-2.5 h-2.5" />
+                                                            <Minus className="w-3 h-3" />
                                                         </button>
-                                                        <span className="w-8 text-center text-[11px] font-black text-gray-900">{item.quantity}</span>
+                                                        <span className="w-10 text-center text-[12px] font-black text-gray-900">{item.quantity}</span>
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="w-8 h-8 flex items-center justify-center hover:bg-white text-gray-400 hover:text-gray-900 transition-all"
+                                                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-400 hover:text-gray-900 transition-all"
                                                         >
-                                                            <Plus className="w-2.5 h-2.5" />
+                                                            <Plus className="w-3 h-3" />
                                                         </button>
                                                     </div>
 
@@ -136,7 +137,7 @@ export function MinimalLuxeCartDrawer({ }: CartDrawerProps) {
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                                         <span>Subtotal</span>
-                                        <span className="text-sm font-black text-gray-900 tracking-tightest">{formatPrice(totalPrice())}</span>
+                                        <span className="text-sm font-black text-gray-900 tracking-tightest">{formatPrice(subtotal)}</span>
                                     </div>
                                     <p className="text-[10px] text-gray-400 font-medium tracking-tight leading-relaxed uppercase">
                                         Fulfillment and duties calculated at final checkout.

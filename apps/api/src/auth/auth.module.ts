@@ -4,10 +4,12 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt/jwt.strategy';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
     PassportModule,
+    CacheModule.register(),
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET || 'fallback_secret',

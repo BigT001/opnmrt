@@ -4,15 +4,14 @@ import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ShoppingBag, Search, User, Menu } from 'lucide-react';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { NavbarProps } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export function DefaultNavbar({ storeName, logo }: NavbarProps) {
-    const { toggleCart, items } = useCartStore();
+export function DefaultNavbar({ storeName, logo, storeId }: NavbarProps) {
+    const { toggleCart, totalCount: itemCount } = useStoreCart(storeId);
     const { subdomain } = useParams<{ subdomain: string }>();
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-    const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
         <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">

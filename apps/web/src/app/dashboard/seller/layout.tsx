@@ -184,7 +184,7 @@ export default function SellerLayout({
                         <Link href="/" className="lg:hidden text-2xl font-bold text-primary mr-4">O</Link>
                         <div className="flex flex-col">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Good Morning,</span>
-                            <span className="text-sm font-bold text-slate-900 mt-1">{user.name.split(' ')[0]}</span>
+                            <span className="text-sm font-bold text-slate-900 mt-1">{user?.name?.split(' ')[0] || 'User'}</span>
                         </div>
                     </div>
 

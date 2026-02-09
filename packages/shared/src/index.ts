@@ -14,8 +14,12 @@ export type OrderStatus = z.infer<typeof OrderStatus>;
 
 export const RegisterSchema = z.object({
     email: z.string().email('Invalid email address'),
+    phone: z.string().min(10, 'Invalid phone number').optional(),
     password: z.string().min(8, 'Password must be at least 8 characters'),
-    name: z.string().min(2, 'Name must be at least 2 characters'),
+    name: z.string().refine(
+        (val) => val.trim().split(/\s+/).length >= 2,
+        { message: 'Please enter your full name (first and last name)' }
+    ),
     role: UserRole.default('SELLER'),
 });
 
@@ -24,6 +28,7 @@ export type RegisterInput = z.infer<typeof RegisterSchema>;
 export const LoginSchema = z.object({
     email: z.string().email('Invalid email address'),
     password: z.string().min(1, 'Password is required'),
+    subdomain: z.string().optional(),
 });
 
 export type LoginInput = z.infer<typeof LoginSchema>;

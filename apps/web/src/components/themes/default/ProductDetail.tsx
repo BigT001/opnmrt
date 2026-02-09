@@ -30,7 +30,7 @@ export function DefaultProductDetail({ product, store, subdomain }: ProductDetai
                             <p>{product.description || "Experience premium quality with this curated item."}</p>
                         </div>
                         <button
-                            onClick={() => addItem({ ...product, price: Number(product.price), image: product.image || '', storeId: store.id })}
+                            onClick={() => addItem({ ...product, image: product.image ?? undefined, storeId: store.id })}
                             className="w-full py-5 bg-gray-900 text-white text-xs font-black uppercase tracking-[0.2em] rounded-xl transition-all duration-300 hover:bg-black"
                         >
                             Add to Cart

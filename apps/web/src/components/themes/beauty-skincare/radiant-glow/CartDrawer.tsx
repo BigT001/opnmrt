@@ -3,14 +3,14 @@
 import { CartDrawerProps } from '../../types';
 import { X, Minus, Plus, Trash2, ShoppingBag, Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCartStore } from '@/store/useCartStore';
+import { useStoreCart } from '@/store/useStoreCart';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 
-export function RadiantGlowCartDrawer({ }: CartDrawerProps) {
-    const { items, isOpen, toggleCart, removeItem, updateQuantity, totalPrice } = useCartStore();
+export function RadiantGlowCartDrawer({ storeId }: CartDrawerProps) {
+    const { storeItems: items, isOpen, toggleCart, removeItem, updateQuantity, subtotal } = useStoreCart(storeId);
     const [mounted, setMounted] = useState(false);
     const params = useParams<{ subdomain: string }>();
 
@@ -113,19 +113,20 @@ export function RadiantGlowCartDrawer({ }: CartDrawerProps) {
                                                 </div>
 
                                                 <div className="flex items-center justify-between pt-2">
-                                                    <div className="flex items-center bg-white/40 backdrop-blur-md border border-[#C19A6B]/10 rounded-full p-1">
+                                                    <div className="flex items-center bg-white border border-[#C19A6B]/20 rounded-full p-1 shadow-sm h-10">
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white text-[#2D1E1E]/40 hover:text-[#C19A6B] transition-all"
+                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#FFF9F0] text-[#2D1E1E]/40 hover:text-[#C19A6B] transition-all disabled:opacity-30"
+                                                            disabled={item.quantity <= 1}
                                                         >
-                                                            <Minus className="w-3 h-3" />
+                                                            <Minus className="w-3.5 h-3.5" />
                                                         </button>
-                                                        <span className="w-10 text-center font-sans text-[10px] font-black text-[#2D1E1E]">{item.quantity}</span>
+                                                        <span className="w-10 text-center font-sans text-xs font-black text-[#2D1E1E]">{item.quantity}</span>
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white text-[#2D1E1E]/40 hover:text-[#C19A6B] transition-all"
+                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#FFF9F0] text-[#2D1E1E]/40 hover:text-[#C19A6B] transition-all"
                                                         >
-                                                            <Plus className="w-3 h-3" />
+                                                            <Plus className="w-3.5 h-3.5" />
                                                         </button>
                                                     </div>
 
@@ -153,7 +154,7 @@ export function RadiantGlowCartDrawer({ }: CartDrawerProps) {
                                             <span className="font-sans text-[8px] uppercase tracking-widest text-[#2D1E1E]/40 font-black">Accumulated Light</span>
                                             <p className="text-3xl font-luminous text-[#2D1E1E]">Order Total</p>
                                         </div>
-                                        <p className="text-3xl font-sans font-bold text-[#C19A6B]">{formatPrice(totalPrice())}</p>
+                                        <p className="text-3xl font-sans font-bold text-[#C19A6B]">{formatPrice(subtotal)}</p>
                                     </div>
                                     <div className="flex items-center gap-3 text-[10px] font-sans text-[#2D1E1E]/40 uppercase tracking-widest">
                                         <ShieldCheck className="w-4 h-4 text-[#C19A6B]" />

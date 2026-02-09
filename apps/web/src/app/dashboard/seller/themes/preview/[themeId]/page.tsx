@@ -42,7 +42,7 @@ export default function ThemePreviewPage() {
         try {
             const response = await api.patch(`/stores/${store.id}`, { theme: themeName });
             setStore(response.data);
-            router.push('/dashboard/seller/themes');
+            window.location.href = '/dashboard/seller/themes';
         } catch (error) {
             console.error('Activation failed:', error);
         } finally {
@@ -102,8 +102,8 @@ export default function ThemePreviewPage() {
                         onClick={handleActivate}
                         disabled={isActivating || store.theme === themeName}
                         className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] transition-all shadow-xl active:scale-95 ${store.theme === themeName
-                                ? 'bg-emerald-500 text-white opacity-50 cursor-default'
-                                : 'bg-primary text-white hover:brightness-110 shadow-emerald-900/20'
+                            ? 'bg-emerald-500 text-white opacity-50 cursor-default'
+                            : 'bg-primary text-white hover:brightness-110 shadow-emerald-900/20'
                             }`}
                     >
                         {isActivating ? 'Activating...' : store.theme === themeName ? 'Already Active' : 'Activate Theme'}

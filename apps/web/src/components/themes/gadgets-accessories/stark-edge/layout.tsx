@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { StoreThemeProps } from '../../types';
-import { StarkEdgeNavbar } from './Navbar';
+import { Header4 as StarkEdgeNavbar } from '../../headers';
 import { StarkEdgeFooter } from './Footer';
 import { StarkEdgeCartDrawer } from './CartDrawer';
+import { CartNotification } from '@/components/storefront/CartNotification';
 
 export const StarkEdgeLayout: React.FC<StoreThemeProps> = ({ store, children }) => {
     return (
@@ -48,8 +49,9 @@ export const StarkEdgeLayout: React.FC<StoreThemeProps> = ({ store, children }) 
             `}</style>
 
             <div className="relative z-10 flex flex-col min-h-screen">
-                <StarkEdgeNavbar storeName={store.name} logo={store.logo} />
-                <StarkEdgeCartDrawer />
+                <StarkEdgeNavbar storeName={store.name} logo={store.logo} subdomain={store.subdomain} storeId={store.id} />
+                <StarkEdgeCartDrawer storeId={store.id} />
+                <CartNotification />
                 <main className="flex-grow">{children}</main>
                 <StarkEdgeFooter storeName={store.name} />
             </div>
