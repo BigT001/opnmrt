@@ -26,6 +26,7 @@ export function VintageCharmProductDetail({ product, store, subdomain }: Product
             price: Number(product.price),
             image: product.image || undefined,
             storeId: store.id,
+            stock: product.stock || 0,
         }, quantity);
         setAdded(true);
         setTimeout(() => setAdded(false), 2000);
@@ -126,19 +127,29 @@ export function VintageCharmProductDetail({ product, store, subdomain }: Product
                                         {quantity.toString().padStart(2, '0')}
                                     </span>
                                     <button
-                                        onClick={() => setQuantity(quantity + 1)}
-                                        className="w-16 h-16 flex items-center justify-center text-[#1B3022] hover:bg-[#1B3022] hover:text-[#F9F4EE] transition-all"
+                                        onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                                        className="w-16 h-16 flex items-center justify-center text-[#1B3022] hover:bg-[#1B3022] hover:text-[#F9F4EE] transition-all disabled:opacity-30"
+                                        disabled={quantity >= product.stock}
                                     >
                                         <Plus className="w-5 h-5" />
                                     </button>
                                 </div>
                                 <button
                                     onClick={handleAddToCart}
-                                    disabled={added}
+                                    disabled={added || product.stock <= 0}
                                     className="flex-grow bg-[#1B3022] text-[#F9F4EE] py-6 px-12 text-2xl font-black uppercase italic tracking-tighter hover:bg-[#8B4513] transition-all active:scale-95 disabled:opacity-50 group flex items-center justify-center gap-6"
                                 >
                                     <AnimatePresence mode="wait">
-                                        {added ? (
+                                        {product.stock <= 0 ? (
+                                            <motion.div
+                                                key="outofstock"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                className="flex items-center gap-4"
+                                            >
+                                                <span>Archive Unavailable</span>
+                                            </motion.div>
+                                        ) : added ? (
                                             <motion.div
                                                 key="checked"
                                                 initial={{ scale: 0 }}

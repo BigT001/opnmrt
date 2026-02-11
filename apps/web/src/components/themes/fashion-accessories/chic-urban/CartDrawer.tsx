@@ -114,7 +114,7 @@ export function ChicUrbanCartDrawer({ storeId }: CartDrawerProps) {
                                                 <div className="flex items-center justify-between pt-4">
                                                     <div className="flex items-center border-4 border-black bg-white shadow-[4px_4px_0_rgba(0,0,0,1)]">
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 1, storeId)}
                                                             className="p-3 hover:bg-black hover:text-[#CCFF00] transition-colors disabled:opacity-30"
                                                             disabled={item.quantity <= 1}
                                                         >
@@ -124,15 +124,16 @@ export function ChicUrbanCartDrawer({ storeId }: CartDrawerProps) {
                                                             {item.quantity.toString().padStart(2, '0')}
                                                         </span>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="p-3 hover:bg-black hover:text-[#CCFF00] transition-colors"
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1, storeId)}
+                                                            className="p-3 hover:bg-black hover:text-[#CCFF00] transition-colors disabled:opacity-30"
+                                                            disabled={item.quantity >= (item.stock ?? 9999)}
                                                         >
                                                             <Plus className="w-5 h-5" />
                                                         </button>
                                                     </div>
 
                                                     <button
-                                                        onClick={() => removeItem(item.id)}
+                                                        onClick={() => removeItem(item.id, storeId)}
                                                         className="text-black/40 hover:text-black p-2 transition-colors flex items-center gap-2 font-mono text-[10px] font-black uppercase"
                                                     >
                                                         <Trash2 className="w-4 h-4" />

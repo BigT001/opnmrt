@@ -5,11 +5,8 @@ import { ChatController } from './chat.controller';
 import { ChatGateway } from './chat.gateway';
 
 @Module({
-    imports: [JwtModule.register({
-        secret: process.env.JWT_SECRET || 'secret',
-        signOptions: { expiresIn: '7d' },
-    })],
-    providers: [ChatService, ChatGateway],
-    controllers: [ChatController],
+  imports: [],
+  providers: [ChatService, ChatGateway],
+  controllers: [ChatController],
 })
 export class ChatModule { }

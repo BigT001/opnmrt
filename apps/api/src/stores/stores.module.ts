@@ -9,4 +9,4 @@ import { CloudinaryModule } from '../cloudinary/cloudinary.module';
   controllers: [StoresController],
   exports: [StoresService],
 })
-export class StoresModule { }
+export class StoresModule {}

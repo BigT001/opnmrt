@@ -7,7 +7,7 @@ import { useCartStore } from '@/store/useCartStore';
 import { ShoppingCart, Star } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 
-export function DefaultProductGrid({ products, subdomain, storeId }: ProductGridProps) {
+export function DefaultProductGrid({ products, subdomain, storeId, hideHeader }: ProductGridProps) {
     const { addItem } = useCartStore();
 
     const handleAddToCart = (product: ProductData) => {
@@ -17,22 +17,25 @@ export function DefaultProductGrid({ products, subdomain, storeId }: ProductGrid
             price: Number(product.price),
             image: product.image ?? undefined,
             storeId,
+            stock: product.stock || 0,
         });
     };
 
     return (
-        <div id="products-grid" className="bg-white py-12 md:py-24">
+        <div id="products-grid" className={`bg-white ${hideHeader ? 'py-0' : 'py-12 md:py-24'}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-gray-100">
-                    <div>
-                        <h2 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-3">Today's Picks</h2>
-                        <h3 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Featured Products</h3>
+                {!hideHeader && (
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-gray-100">
+                        <div>
+                            <h2 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-3">Today's Picks</h2>
+                            <h3 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Featured Products</h3>
+                        </div>
+                        <div className="flex gap-4">
+                            <button className="px-6 py-3 bg-gray-50 text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-gray-100 transition-all">Trending</button>
+                            <button className="px-6 py-3 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-gray-200 transition-all">Latest</button>
+                        </div>
                     </div>
-                    <div className="flex gap-4">
-                        <button className="px-6 py-3 bg-gray-50 text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-gray-100 transition-all">Trending</button>
-                        <button className="px-6 py-3 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-gray-200 transition-all">Latest</button>
-                    </div>
-                </div>
+                )}
 
                 {products.length === 0 ? (
                     <div className="text-center py-32 bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">

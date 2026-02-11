@@ -8,16 +8,18 @@ import { useStoreCart } from '@/store/useStoreCart';
 import { NavbarProps } from '../types';
 import './HeaderStyles.css';
 
+import { ThemeToggle } from '@/components/ThemeToggle';
+
 export function Header4({ storeName = 'opnmart', logo, subdomain: propSubdomain, storeId }: NavbarProps) {
     const { toggleCart, totalCount: itemCount } = useStoreCart(storeId);
     const params = useParams<{ subdomain: string }>();
     const subdomain = propSubdomain || params?.subdomain;
 
     return (
-        <nav className="header-container">
+        <nav className="header-container bg-white dark:bg-black transition-colors duration-300">
             <div className="header-content header-layout-4">
                 {/* Logo Left */}
-                <Link href={`/store/${subdomain}`} className="header-logo">
+                <Link href={`/store/${subdomain}`} className="header-logo dark:text-white">
                     {logo ? (
                         <img src={logo} alt={storeName} className="h-10 w-auto object-contain" />
                     ) : (
@@ -27,24 +29,24 @@ export function Header4({ storeName = 'opnmart', logo, subdomain: propSubdomain,
 
                 {/* Menu Left-Center */}
                 <ul className="header-menu">
-                    <li><Link href={`/store/${subdomain}`} className="header-menu-link">Home</Link></li>
-                    <li><Link href={`/store/${subdomain}/shop`} className="header-menu-link">Shop</Link></li>
-                    <li><Link href={`/store/${subdomain}/about`} className="header-menu-link">About</Link></li>
+                    <li><Link href={`/store/${subdomain}`} className="header-menu-link dark:text-gray-300 dark:hover:text-white">Home</Link></li>
+                    <li><Link href={`/store/${subdomain}/shop`} className="header-menu-link dark:text-gray-300 dark:hover:text-white">Shop</Link></li>
+                    <li><Link href={`/store/${subdomain}/about`} className="header-menu-link dark:text-gray-300 dark:hover:text-white">About</Link></li>
                 </ul>
 
                 {/* Search Bar Middle */}
-                <div className="header-search-container">
-                    <Search className="header-search-icon w-4 h-4" />
+                <div className="header-search-container dark:bg-gray-800">
+                    <Search className="header-search-icon w-4 h-4 dark:text-gray-400" />
                     <input
                         type="text"
                         placeholder="Search product..."
-                        className="header-search-input"
+                        className="header-search-input dark:text-white dark:placeholder-gray-500"
                     />
                 </div>
 
                 {/* Icons Right */}
                 <div className="header-icons">
-                    <button onClick={toggleCart} className="header-icon-button relative">
+                    <button onClick={toggleCart} className="header-icon-button relative dark:text-gray-300 dark:hover:text-white">
                         <ShoppingBag className="w-5 h-5" />
                         {itemCount > 0 && (
                             <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
@@ -53,9 +55,7 @@ export function Header4({ storeName = 'opnmart', logo, subdomain: propSubdomain,
                         )}
                     </button>
                     <AuthButtons subdomain={subdomain} />
-                    <button className="header-icon-button">
-                        <SlidersHorizontal className="w-5 h-5" />
-                    </button>
+                    <ThemeToggle />
                 </div>
             </div>
         </nav>

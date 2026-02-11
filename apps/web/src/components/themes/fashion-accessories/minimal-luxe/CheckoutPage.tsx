@@ -2,12 +2,17 @@
 
 import { CheckoutProps } from '../../types';
 import { useStoreCart } from '@/store/useStoreCart';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, Loader2, ShieldCheck, Lock, CreditCard } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Loader2, ShieldCheck, Lock, CreditCard, AlertCircle } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
+import api from '@/lib/api';
+import { useCheckoutProfile } from '@/hooks/useCheckoutProfile';
+
+const PaystackPayment = dynamic(() => import('../../PaystackPayment'), { ssr: false });
 
 export function MinimalLuxeCheckout({ store }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
@@ -15,7 +20,19 @@ export function MinimalLuxeCheckout({ store }: CheckoutProps) {
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const activeOrderId = useRef<string | null>(null);
+
+    const { formData, setFormData, syncProfile, isLoaded } = useCheckoutProfile({
+        email: '',
+        phone: '',
+        firstName: '',
+        lastName: '',
+        address: '',
+        city: '',
+        postalCode: ''
+    });
 
     useEffect(() => {
         setMounted(true);
@@ -26,14 +43,66 @@ export function MinimalLuxeCheckout({ store }: CheckoutProps) {
 
     if (!mounted) return null;
 
-    const handlePayment = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        // Simulate premium processing delay
-        await new Promise(resolve => setTimeout(resolve, 2500));
+    const config = {
+        reference: (new Date()).getTime().toString(),
+        email: formData.email,
+        amount: Math.round(subtotal * 100),
+        publicKey: store.paystackPublicKey || '',
+    };
+
+    const onPaystackSuccess = async (reference: any) => {
+        if (!activeOrderId.current) return;
+        try {
+            await api.post('/payments/verify', {
+                storeId: store.id,
+                reference: reference.reference,
+                orderId: activeOrderId.current
+            });
+            setIsSuccess(true);
+            clearStoreCart(store.id);
+        } catch (err: any) {
+            setError('Payment verification failed. Please contact support.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const onPaystackClose = () => {
         setIsSubmitting(false);
-        setIsSuccess(true);
-        clearStoreCart(store.id);
+    };
+
+    const handleProcessOrder = async (e: React.FormEvent, initializePayment: () => void) => {
+        e.preventDefault();
+
+        if (!store.paystackPublicKey) {
+            setError('This store has not configured payments yet.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setError(null);
+
+        try {
+            // Centralized profile sync
+            await syncProfile();
+
+            const orderRes = await api.post('/orders', {
+                storeId: store.id,
+                totalAmount: subtotal,
+                items: items.map(p => ({
+                    productId: p.id,
+                    quantity: p.quantity,
+                    price: p.price
+                }))
+            });
+
+            activeOrderId.current = orderRes.data.id;
+            initializePayment();
+
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to initiate order. Please try again.');
+            setIsSubmitting(false);
+        }
     };
 
     if (isSuccess) {
@@ -80,6 +149,17 @@ export function MinimalLuxeCheckout({ store }: CheckoutProps) {
         );
     }
 
+    if (!isLoaded) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <div className="flex flex-col items-center gap-6">
+                    <Loader2 className="w-10 h-10 animate-spin text-gray-900" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400">Syncing_Curation...</span>
+                </div>
+            </div>
+        );
+    }
+
     if (items.length === 0) return null;
 
     return (
@@ -116,91 +196,160 @@ export function MinimalLuxeCheckout({ store }: CheckoutProps) {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-20 items-start">
                     {/* Information Column */}
                     <div className="lg:col-span-7 space-y-16">
-                        <form onSubmit={handlePayment} className="space-y-16">
-                            {/* Contact Section */}
-                            <section className="space-y-8">
-                                <div className="flex items-center gap-4">
-                                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-[0.4em]">Contact</span>
-                                    <div className="h-px bg-gray-100 flex-1"></div>
-                                </div>
-                                <div className="space-y-4">
-                                    <input
-                                        type="email"
-                                        placeholder="EMAIL ADDRESS"
-                                        required
-                                        className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300"
-                                    />
-                                </div>
-                            </section>
-
-                            {/* Shipping Section */}
-                            <section className="space-y-8">
-                                <div className="flex items-center gap-4">
-                                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-[0.4em]">Destination</span>
-                                    <div className="h-px bg-gray-100 flex-1"></div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-x-8 gap-y-10">
-                                    <div className="col-span-1">
-                                        <input type="text" placeholder="GIVEN NAME" required className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300" />
-                                    </div>
-                                    <div className="col-span-1">
-                                        <input type="text" placeholder="FAMILY NAME" required className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300" />
-                                    </div>
-                                    <div className="col-span-2">
-                                        <input type="text" placeholder="SHIPPING ADDRESS" required className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300" />
-                                    </div>
-                                    <div className="col-span-1">
-                                        <input type="text" placeholder="CITY" required className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300" />
-                                    </div>
-                                    <div className="col-span-1">
-                                        <input type="text" placeholder="POSTAL CODE" required className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300" />
-                                    </div>
-                                </div>
-                            </section>
-
-                            {/* Secure Payment */}
-                            <section className="space-y-8">
-                                <div className="flex items-center gap-4">
-                                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-[0.4em]">Payment</span>
-                                    <div className="h-px bg-gray-100 flex-1"></div>
-                                </div>
-                                <div className="bg-gray-50/50 border border-gray-100 p-8 space-y-10 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 p-4 opacity-5">
-                                        <CreditCard className="w-24 h-24" />
-                                    </div>
-
-                                    <div className="space-y-4 relative z-10">
-                                        <input type="text" placeholder="CARD DATA" required className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300" />
-                                        <div className="grid grid-cols-2 gap-8">
-                                            <input type="text" placeholder="VALID THRU" required className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300" />
-                                            <input type="text" placeholder="CVC" required className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300" />
+                        <PaystackPayment config={config} onSuccess={onPaystackSuccess} onClose={onPaystackClose}>
+                            {(initializePayment) => (
+                                <form onSubmit={(e) => handleProcessOrder(e, initializePayment)} className="space-y-16">
+                                    {/* Contact Section */}
+                                    <section className="space-y-8">
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-[10px] font-black text-gray-900 uppercase tracking-[0.4em]">Contact</span>
+                                            <div className="h-px bg-gray-100 flex-1"></div>
                                         </div>
-                                    </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+                                            <input
+                                                type="email"
+                                                placeholder="EMAIL ADDRESS"
+                                                required
+                                                value={formData.email}
+                                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300 text-black"
+                                            />
+                                            <input
+                                                type="tel"
+                                                placeholder="PHONE NUMBER"
+                                                required
+                                                value={formData.phone}
+                                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300 text-black"
+                                            />
+                                        </div>
+                                    </section>
 
-                                    <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest relative z-10">
-                                        <Lock className="w-3 h-3" />
-                                        Encrypted Transaction
-                                    </div>
-                                </div>
-                            </section>
+                                    {/* Shipping Section */}
+                                    <section className="space-y-8">
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-[10px] font-black text-gray-900 uppercase tracking-[0.4em]">Destination</span>
+                                            <div className="h-px bg-gray-100 flex-1"></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-x-8 gap-y-10">
+                                            <div className="col-span-1">
+                                                <input
+                                                    type="text"
+                                                    placeholder="GIVEN NAME"
+                                                    required
+                                                    value={formData.firstName}
+                                                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                                    className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300 text-black"
+                                                />
+                                            </div>
+                                            <div className="col-span-1">
+                                                <input
+                                                    type="text"
+                                                    placeholder="FAMILY NAME"
+                                                    required
+                                                    value={formData.lastName}
+                                                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                                    className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300 text-black"
+                                                />
+                                            </div>
+                                            <div className="col-span-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="SHIPPING ADDRESS"
+                                                    required
+                                                    value={formData.address}
+                                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                                    className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300 text-black"
+                                                />
+                                            </div>
+                                            <div className="col-span-1">
+                                                <input
+                                                    type="text"
+                                                    placeholder="CITY"
+                                                    required
+                                                    value={formData.city}
+                                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                                    className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300 text-black"
+                                                />
+                                            </div>
+                                            <div className="col-span-1">
+                                                <input
+                                                    type="text"
+                                                    placeholder="POSTAL CODE"
+                                                    required
+                                                    value={formData.postalCode}
+                                                    onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                                                    className="w-full bg-transparent border-b border-gray-200 py-4 text-sm font-medium tracking-tight focus:outline-none focus:border-gray-900 transition-colors uppercase placeholder:text-gray-300 text-black"
+                                                />
+                                            </div>
+                                        </div>
+                                    </section>
 
-                            <div className="pt-8">
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="w-full bg-gray-900 text-white py-6 text-[10px] font-black uppercase tracking-[0.5em] transition-all hover:bg-black active:scale-[0.98] disabled:opacity-50 shadow-2xl shadow-gray-900/10 flex items-center justify-center gap-4"
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="animate-spin h-4 w-4" />
-                                            Authorizing...
-                                        </>
-                                    ) : (
-                                        `Finalize Selection - ${formatPrice(subtotal)}`
+                                    {/* Secure Payment */}
+                                    <section className="space-y-8">
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-[10px] font-black text-gray-900 uppercase tracking-[0.4em]">Payment</span>
+                                            <div className="h-px bg-gray-100 flex-1"></div>
+                                        </div>
+                                        <div className="bg-gray-50 p-8 space-y-4 border border-gray-100">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 bg-gray-900 rounded flex items-center justify-center text-white">
+                                                        <Lock className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-900">Direct Checkout</p>
+                                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Secure via Paystack Tunnel</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Active</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    {error && (
+                                        <div className="flex items-center gap-4 p-6 bg-red-50 border border-red-100 text-red-600">
+                                            <AlertCircle className="w-4 h-4" />
+                                            <p className="text-[10px] font-black uppercase tracking-widest">{error}</p>
+                                        </div>
                                     )}
-                                </button>
-                            </div>
-                        </form>
+
+                                    <div className="pt-8">
+                                        <button
+                                            type="submit"
+                                            disabled={isSubmitting}
+                                            className="w-full bg-gray-900 text-white py-6 text-[10px] font-black uppercase tracking-[0.5em] transition-all hover:bg-black active:scale-[0.98] disabled:opacity-50 shadow-2xl shadow-gray-900/10 flex items-center justify-center gap-4"
+                                        >
+                                            <AnimatePresence mode="wait">
+                                                {isSubmitting ? (
+                                                    <motion.div
+                                                        key="submitting"
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: -10 }}
+                                                        className="flex items-center gap-3"
+                                                    >
+                                                        <Loader2 className="animate-spin h-4 w-4" />
+                                                        <span>Authorizing...</span>
+                                                    </motion.div>
+                                                ) : (
+                                                    <motion.span
+                                                        key="pay"
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                    >
+                                                        Finalize Selection - {formatPrice(subtotal)}
+                                                    </motion.span>
+                                                )}
+                                            </AnimatePresence>
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+                        </PaystackPayment>
                     </div>
 
                     {/* Order Summary Column */}

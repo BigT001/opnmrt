@@ -5,8 +5,8 @@ import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-    imports: [CloudinaryModule, PrismaModule],
-    controllers: [ProductsController],
-    providers: [ProductsService],
+  imports: [CloudinaryModule, PrismaModule],
+  controllers: [ProductsController],
+  providers: [ProductsService],
 })
-export class ProductsModule { }
+export class ProductsModule {}

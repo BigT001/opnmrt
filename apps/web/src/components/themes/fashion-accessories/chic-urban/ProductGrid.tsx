@@ -8,30 +8,32 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { formatPrice } from '@/lib/utils';
 
-export function ChicUrbanProductGrid({ products, subdomain, storeId }: ProductGridProps) {
+export function ChicUrbanProductGrid({ products, subdomain, storeId, hideHeader }: ProductGridProps) {
     const { addItem } = useCartStore();
 
     return (
-        <div className="bg-white py-24">
+        <div className={`bg-white ${hideHeader ? 'py-0' : 'py-24'}`}>
             <div className="max-w-[1800px] mx-auto px-6">
                 {/* Tactical Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20 border-b-4 border-black pb-10">
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-4">
-                            <span className="bg-black text-[#CCFF00] px-3 py-1 text-[10px] font-black uppercase tracking-widest font-mono">Archive_v2.0</span>
-                            <span className="w-2 h-2 bg-black rotate-45" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-black/40">Status: Operational</span>
+                {!hideHeader && (
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20 border-b-4 border-black pb-10">
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-4">
+                                <span className="bg-black text-[#CCFF00] px-3 py-1 text-[10px] font-black uppercase tracking-widest font-mono">Archive_v2.0</span>
+                                <span className="w-2 h-2 bg-black rotate-45" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-black/40">Status: Operational</span>
+                            </div>
+                            <h2 className="text-8xl font-black uppercase italic tracking-tighter text-black leading-none">
+                                The Drop
+                            </h2>
                         </div>
-                        <h2 className="text-8xl font-black uppercase italic tracking-tighter text-black leading-none">
-                            The Drop
-                        </h2>
+                        <div className="flex items-center gap-6 font-mono text-[11px] font-black uppercase text-black italic">
+                            <span>Items: [{products.length}]</span>
+                            <Zap className="w-5 h-5 text-[#CCFF00] fill-black" />
+                            <span>Filter: Select_All</span>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-6 font-mono text-[11px] font-black uppercase text-black italic">
-                        <span>Items: [{products.length}]</span>
-                        <Zap className="w-5 h-5 text-[#CCFF00] fill-black" />
-                        <span>Filter: Select_All</span>
-                    </div>
-                </div>
+                )}
 
                 {/* Asymmetric Brutalist Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -79,7 +81,8 @@ export function ChicUrbanProductGrid({ products, subdomain, storeId }: ProductGr
                                                 name: product.name,
                                                 price: Number(product.price),
                                                 image: product.image || undefined,
-                                                storeId: storeId
+                                                storeId: storeId,
+                                                stock: product.stock || 0
                                             })}
                                             className="flex-1 bg-black text-white py-3 flex items-center justify-center gap-3 hover:bg-white hover:text-black transition-colors"
                                         >

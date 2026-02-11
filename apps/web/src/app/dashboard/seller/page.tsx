@@ -1,28 +1,82 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
+import api from '@/lib/api';
+import { formatPrice } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
+
+interface Stats {
+    totalOrders: number;
+    totalRevenue: number;
+    totalProducts: number;
+    topProducts: {
+        id: string;
+        name: string;
+        price: number;
+        stocks: number;
+        sales: number;
+        earnings: number;
+        image?: string;
+    }[];
+    funnel: {
+        sessions: number;
+        productViews: number;
+        addToCart: number;
+        checkout: number;
+    };
+}
 
 export default function SellerDashboardPage() {
     const { user, store } = useAuthStore();
+    const [stats, setStats] = useState<Stats | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!store?.id) return;
+
+        const fetchStats = async () => {
+            try {
+                setLoading(true);
+                const res = await api.get(`/stores/${store.id}/stats`);
+                setStats(res.data);
+            } catch (err) {
+                console.error('Failed to fetch stats:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, [store?.id]);
 
     if (!user) return null;
+
+    if (loading) {
+        return (
+            <div className="h-[60vh] flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+        );
+    }
+
+    const funnel = stats?.funnel || { sessions: 0, productViews: 0, addToCart: 0, checkout: 0 };
 
     return (
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
             {/* Main Content Area */}
             <div className="xl:col-span-3 space-y-8">
 
-                {/* 1. HERO SECTION (Reduced size & polished) */}
+                {/* 1. HERO SECTION */}
                 <div className="bg-gradient-to-br from-[#2E6B4E] via-[#1F4D36] to-[#153625] rounded-[2.5rem] p-8 text-white relative overflow-hidden group min-h-[220px] flex items-center shadow-2xl shadow-emerald-900/10">
                     <div className="relative z-10 max-w-md">
                         <span className="text-xs font-bold uppercase tracking-widest text-emerald-300/80 mb-2 block">Weekly Sales Performance</span>
                         <h2 className="text-3xl font-extrabold leading-tight">
-                            $8,567.00 <span className="text-sm font-medium opacity-60 ml-2">Total profit</span>
+                            {formatPrice(Number(stats?.totalRevenue || 0))} <span className="text-sm font-medium opacity-60 ml-2">Total revenue</span>
                         </h2>
                         <div className="flex items-center space-x-2 text-xs mt-3 mb-6">
-                            <span className="bg-white/10 backdrop-blur-md text-emerald-100 px-2 py-1 rounded-lg font-bold border border-white/10">2,478 Selling</span>
-                            <span className="text-emerald-300 font-medium">↑ 110% growth</span>
+                            <span className="bg-white/10 backdrop-blur-md text-emerald-100 px-2 py-1 rounded-lg font-bold border border-white/10">{stats?.totalOrders || 0} Orders</span>
+                            <span className="text-emerald-300 font-medium">Verified Growth</span>
                         </div>
                         <button className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition-all shadow-lg shadow-orange-950/20 text-xs">
                             View Detailed Report
@@ -36,11 +90,11 @@ export default function SellerDashboardPage() {
                     </div>
                 </div>
 
-                {/* 2. TOP STATS (Now below the hero) */}
+                {/* 2. TOP STATS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <InfusedStat label="Active Orders" value="0" sub="Processing" color="text-emerald-600" icon="📦" />
-                    <InfusedStat label="Products" value="0" sub="New items" color="text-primary" icon="🏷️" />
-                    <InfusedStat label="Low Stock" value="0" sub="Alerts active" color="text-rose-500" icon="⚠️" />
+                    <InfusedStat label="Active Orders" value={stats?.totalOrders.toString() || "0"} sub="Total Lifetime" color="text-emerald-600" icon="📦" />
+                    <InfusedStat label="Products" value={stats?.totalProducts.toString() || "0"} sub="Live items" color="text-primary" icon="🏷️" />
+                    <InfusedStat label="Total Stores" value="1" sub="Single Space" color="text-rose-500" icon="🏛️" />
                 </div>
 
                 {/* Sales Funnel Section */}
@@ -51,10 +105,30 @@ export default function SellerDashboardPage() {
                     </div>
 
                     <div className="grid grid-cols-4 gap-6 mb-10">
-                        <FunnelStat label="All sessions" value="289.12K" trend="+8.32%" sub="No shipping activity 48.5%" />
-                        <FunnelStat label="Product views" value="184.64K" trend="+8.32%" sub="No cart addition 24.9%" />
-                        <FunnelStat label="Add to cart" value="156.3K" trend="+8.32%" sub="Cart abandon 16.7%" />
-                        <FunnelStat label="Checkout" value="65.8K" trend="+8.32%" sub="Checkout abandon 19.2%" />
+                        <FunnelStat
+                            label="All sessions"
+                            value={funnel.sessions >= 1000 ? `${(funnel.sessions / 1000).toFixed(1)}K` : funnel.sessions.toString()}
+                            trend="+8.32%"
+                            sub={`No activity ${(100 - (funnel.productViews / (funnel.sessions || 1) * 100)).toFixed(1)}%`}
+                        />
+                        <FunnelStat
+                            label="Product views"
+                            value={funnel.productViews >= 1000 ? `${(funnel.productViews / 1000).toFixed(1)}K` : funnel.productViews.toString()}
+                            trend="+8.32%"
+                            sub={`No cart add ${(100 - (funnel.addToCart / (funnel.productViews || 1) * 100)).toFixed(1)}%`}
+                        />
+                        <FunnelStat
+                            label="Add to cart"
+                            value={funnel.addToCart >= 1000 ? `${(funnel.addToCart / 1000).toFixed(1)}K` : funnel.addToCart.toString()}
+                            trend="+8.32%"
+                            sub={`Abandoned ${(100 - (funnel.checkout / (funnel.addToCart || 1) * 100)).toFixed(1)}%`}
+                        />
+                        <FunnelStat
+                            label="Checkout"
+                            value={funnel.checkout >= 1000 ? `${(funnel.checkout / 1000).toFixed(1)}K` : funnel.checkout.toString()}
+                            trend="+8.32%"
+                            sub="Completed Orders"
+                        />
                     </div>
 
                     {/* Chart visual placeholder */}
@@ -84,10 +158,23 @@ export default function SellerDashboardPage() {
                             </tr>
                         </thead>
                         <tbody className="text-sm font-bold text-slate-900">
-                            <ProductRow name="Uniqlo T-shirt airism" stocks="12,245" price="$10.50" sales="8,983" earnings="$1,933,984" />
-                            <ProductRow name="Uniqlo Cargo pants" stocks="8,463" price="$24.00" sales="1,293" earnings="$2,433,94" />
-                            <ProductRow name="Club 1989 basic hoodies" stocks="24,432" price="$46.80" sales="120" earnings="$965,93" />
-                            <ProductRow name="Humblezing backpack" stocks="19,498" price="$105.24" sales="4,425" earnings="$14,894,93" />
+                            {stats?.topProducts && stats.topProducts.length > 0 ? (
+                                stats.topProducts.map((p) => (
+                                    <ProductRow
+                                        key={p.id}
+                                        name={p.name}
+                                        stocks={p.stocks.toLocaleString()}
+                                        price={formatPrice(p.price)}
+                                        sales={p.sales.toLocaleString()}
+                                        earnings={formatPrice(p.earnings)}
+                                        image={p.image}
+                                    />
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={5} className="py-10 text-center text-slate-400 italic">No products sold yet</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -160,11 +247,17 @@ function FunnelStat({ label, value, trend, sub }: { label: string; value: string
     );
 }
 
-function ProductRow({ name, stocks, price, sales, earnings }: { name: string; stocks: string; price: string; sales: string; earnings: string }) {
+function ProductRow({ name, stocks, price, sales, earnings, image }: { name: string; stocks: string; price: string; sales: string; earnings: string; image?: string }) {
     return (
         <tr className="border-t border-slate-50 group hover:bg-slate-50/50 transition-colors">
             <td className="py-5 flex items-center space-x-3">
-                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-lg">👕</div>
+                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center overflow-hidden">
+                    {image ? (
+                        <img src={image} alt={name} className="w-full h-full object-cover" />
+                    ) : (
+                        <span className="text-lg">👕</span>
+                    )}
+                </div>
                 <span className="truncate max-w-[150px]">{name}</span>
             </td>
             <td className="py-5 text-slate-500">{stocks}</td>

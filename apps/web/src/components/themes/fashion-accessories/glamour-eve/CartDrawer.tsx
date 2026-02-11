@@ -106,7 +106,7 @@ export function GlamourEveCartDrawer({ storeId }: CartDrawerProps) {
                                                 <div className="flex items-center justify-between pt-6">
                                                     <div className="flex items-center gap-6 border border-black/10 rounded-full px-4 h-12 bg-white">
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 1, storeId)}
                                                             className="text-black/30 hover:text-black transition-colors disabled:opacity-20"
                                                             disabled={item.quantity <= 1}
                                                         >
@@ -114,8 +114,9 @@ export function GlamourEveCartDrawer({ storeId }: CartDrawerProps) {
                                                         </button>
                                                         <span className="text-sm font-black min-w-[30px] text-center italic">{item.quantity}</span>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="text-black/30 hover:text-[#D4AF37] transition-colors"
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1, storeId)}
+                                                            className="text-black/30 hover:text-[#D4AF37] transition-colors disabled:opacity-20"
+                                                            disabled={item.quantity >= (item.stock ?? 9999)}
                                                         >
                                                             <Plus className="w-4 h-4" />
                                                         </button>
@@ -123,7 +124,7 @@ export function GlamourEveCartDrawer({ storeId }: CartDrawerProps) {
 
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeItem(item.id)}
+                                                        onClick={() => removeItem(item.id, storeId)}
                                                         className="text-[9px] font-black uppercase tracking-[0.2em] text-red-400 hover:text-red-500 transition-colors flex items-center gap-2"
                                                     >
                                                         <Trash2 className="w-3 h-3" />

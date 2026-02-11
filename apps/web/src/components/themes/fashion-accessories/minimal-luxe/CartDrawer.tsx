@@ -101,7 +101,7 @@ export function MinimalLuxeCartDrawer({ storeId }: CartDrawerProps) {
                                                 <div className="flex items-center justify-between pt-4">
                                                     <div className="flex items-center gap-1 border border-gray-200 p-1 bg-white h-10 shadow-sm">
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 1, storeId)}
                                                             className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-400 hover:text-gray-900 transition-all disabled:opacity-30"
                                                             disabled={item.quantity <= 1}
                                                         >
@@ -109,8 +109,9 @@ export function MinimalLuxeCartDrawer({ storeId }: CartDrawerProps) {
                                                         </button>
                                                         <span className="w-10 text-center text-[12px] font-black text-gray-900">{item.quantity}</span>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-400 hover:text-gray-900 transition-all"
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1, storeId)}
+                                                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-400 hover:text-gray-900 transition-all disabled:opacity-30"
+                                                            disabled={item.quantity >= (item.stock ?? 9999)}
                                                         >
                                                             <Plus className="w-3 h-3" />
                                                         </button>
@@ -118,7 +119,7 @@ export function MinimalLuxeCartDrawer({ storeId }: CartDrawerProps) {
 
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeItem(item.id)}
+                                                        onClick={() => removeItem(item.id, storeId)}
                                                         className="text-[9px] font-black text-rose-400 uppercase tracking-widest hover:text-rose-600 transition-colors py-1"
                                                     >
                                                         Remove

@@ -17,8 +17,22 @@ import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, UsersModule, StoresModule, ProductsModule, OrdersModule, InventoryModule, PaymentsModule, AnalyticsModule, AiModule, ChatModule, AdminModule, PrismaModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule,
+    UsersModule,
+    StoresModule,
+    ProductsModule,
+    OrdersModule,
+    InventoryModule,
+    PaymentsModule,
+    AnalyticsModule,
+    AiModule,
+    ChatModule,
+    AdminModule,
+    PrismaModule,
+  ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
-export class AppModule { }
+export class AppModule {}

@@ -8,7 +8,7 @@ import { formatPrice } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
-export function TechSpecProductGrid({ products, subdomain, storeId }: ProductGridProps) {
+export function TechSpecProductGrid({ products, subdomain, storeId, hideHeader }: ProductGridProps) {
     const { addItem } = useCartStore();
     const [activeTab, setActiveTab] = useState('ALL');
 
@@ -19,6 +19,7 @@ export function TechSpecProductGrid({ products, subdomain, storeId }: ProductGri
             price: Number(product.price),
             image: product.image,
             storeId,
+            stock: product.stock || 0,
         });
     };
 
@@ -35,108 +36,110 @@ export function TechSpecProductGrid({ products, subdomain, storeId }: ProductGri
     const bestSellers = products.slice(0, 4);
 
     return (
-        <div className="max-w-[1400px] mx-auto px-10 py-24">
+        <div className={`max-w-[1400px] mx-auto px-10 ${hideHeader ? 'py-0' : 'py-24'}`}>
             <div className="flex flex-col lg:flex-row gap-12">
-
                 {/* Sidebar (As seen in screenshot) */}
-                <aside className="lg:w-80 flex-shrink-0 space-y-12">
-
-                    {/* Bestsellers Block */}
-                    <div className="border border-gray-200 rounded-sm overflow-hidden">
-                        <div className="bg-[#E72E46] text-white px-6 py-4 font-black text-xs uppercase tracking-widest italic flex items-center gap-2">
-                            <Zap className="w-4 h-4" />
-                            Bestsellers
-                        </div>
-                        <div className="divide-y divide-gray-100 bg-white">
-                            {bestSellers.map((product) => (
-                                <Link
-                                    key={product.id}
-                                    href={`/store/${subdomain}/products/${product.slug || product.id}`}
-                                    className="p-6 flex gap-4 hover:bg-gray-50 transition-colors group"
-                                >
-                                    <div className="w-16 h-16 bg-gray-50 rounded-sm overflow-hidden flex-shrink-0 border border-gray-100">
-                                        <img
-                                            src={product.image || 'https://via.placeholder.com/400'}
-                                            alt={product.name}
-                                            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <h4 className="text-[10px] font-bold text-gray-900 uppercase leading-tight line-clamp-2">
-                                            {product.name}
-                                        </h4>
-                                        <p className="text-[#E72E46] font-black text-xs tracking-tighter">
-                                            {formatPrice(product.price)}
-                                        </p>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Promo Banner 1: Asus Laptop */}
-                    <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        className="relative h-96 rounded-sm overflow-hidden bg-black text-white p-8 flex flex-col justify-end group shadow-xl"
-                    >
-                        <div className="absolute inset-0 z-0">
-                            <img
-                                src="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&q=80&w=2000"
-                                alt="Promo 1"
-                                className="w-full h-full object-cover opacity-50 grayscale group-hover:scale-110 transition-transform duration-1000"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                        </div>
-                        <div className="relative z-10 space-y-4">
-                            <div className="bg-[#E72E46] text-white px-3 py-1 font-black text-[10px] uppercase tracking-widest w-fit">
-                                50% OFF
+                {!hideHeader && (
+                    <aside className="lg:w-80 flex-shrink-0 space-y-12">
+                        {/* Bestsellers Block */}
+                        <div className="border border-gray-200 rounded-sm overflow-hidden">
+                            <div className="bg-[#E72E46] text-white px-6 py-4 font-black text-xs uppercase tracking-widest italic flex items-center gap-2">
+                                <Zap className="w-4 h-4" />
+                                Bestsellers
                             </div>
-                            <h3 className="text-3xl font-black uppercase italic tracking-tighter leading-none">
-                                ASUS LAPTOP<br />PRO SERIES
-                            </h3>
-                            <button className="text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2 group-hover:text-[#E72E46] transition-colors">
-                                Shop Now <ArrowRight className="w-3 h-3" />
-                            </button>
-                        </div>
-                    </motion.div>
-
-                    {/* Promo Banner 2: Camera */}
-                    <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        className="relative h-72 rounded-sm overflow-hidden bg-white border border-gray-200 p-8 flex flex-col justify-center group shadow-sm text-center items-center"
-                    >
-                        <div className="absolute inset-x-0 top-0 h-1 bg-[#E72E46]" />
-                        <div className="space-y-4 relative z-10 text-center">
-                            <h3 className="text-xl font-black uppercase tracking-tighter leading-tight italic text-gray-900">
-                                CAMERA WIFI<br /><span className="text-[#E72E46]">25% OFF</span>
-                            </h3>
-                            <div className="w-32 h-32 mx-auto">
-                                <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80" alt="Camera" className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
+                            <div className="divide-y divide-gray-100 bg-white">
+                                {bestSellers.map((product) => (
+                                    <Link
+                                        key={product.id}
+                                        href={`/store/${subdomain}/products/${product.slug || product.id}`}
+                                        className="p-6 flex gap-4 hover:bg-gray-50 transition-colors group"
+                                    >
+                                        <div className="w-16 h-16 bg-gray-50 rounded-sm overflow-hidden flex-shrink-0 border border-gray-100">
+                                            <img
+                                                src={product.image || 'https://via.placeholder.com/400'}
+                                                alt={product.name}
+                                                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <h4 className="text-[10px] font-bold text-gray-900 uppercase leading-tight line-clamp-2">
+                                                {product.name}
+                                            </h4>
+                                            <p className="text-[#E72E46] font-black text-xs tracking-tighter">
+                                                {formatPrice(product.price)}
+                                            </p>
+                                        </div>
+                                    </Link>
+                                ))}
                             </div>
                         </div>
-                    </motion.div>
-                </aside>
+
+                        {/* Promo Banner 1: Asus Laptop */}
+                        <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            className="relative h-96 rounded-sm overflow-hidden bg-black text-white p-8 flex flex-col justify-end group shadow-xl"
+                        >
+                            <div className="absolute inset-0 z-0">
+                                <img
+                                    src="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&q=80&w=2000"
+                                    alt="Promo 1"
+                                    className="w-full h-full object-cover opacity-50 grayscale group-hover:scale-110 transition-transform duration-1000"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                            </div>
+                            <div className="relative z-10 space-y-4">
+                                <div className="bg-[#E72E46] text-white px-3 py-1 font-black text-[10px] uppercase tracking-widest w-fit">
+                                    50% OFF
+                                </div>
+                                <h3 className="text-3xl font-black uppercase italic tracking-tighter leading-none">
+                                    ASUS LAPTOP<br />PRO SERIES
+                                </h3>
+                                <button className="text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2 group-hover:text-[#E72E46] transition-colors">
+                                    Shop Now <ArrowRight className="w-3 h-3" />
+                                </button>
+                            </div>
+                        </motion.div>
+
+                        {/* Promo Banner 2: Camera */}
+                        <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            className="relative h-72 rounded-sm overflow-hidden bg-white border border-gray-200 p-8 flex flex-col justify-center group shadow-sm text-center items-center"
+                        >
+                            <div className="absolute inset-x-0 top-0 h-1 bg-[#E72E46]" />
+                            <div className="space-y-4 relative z-10 text-center">
+                                <h3 className="text-xl font-black uppercase tracking-tighter leading-tight italic text-gray-900">
+                                    CAMERA WIFI<br /><span className="text-[#E72E46]">25% OFF</span>
+                                </h3>
+                                <div className="w-32 h-32 mx-auto">
+                                    <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80" alt="Camera" className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
+                                </div>
+                            </div>
+                        </motion.div>
+                    </aside>
+                )}
 
                 {/* Main Content Area */}
                 <main className="flex-1 space-y-12">
                     {/* Tabs / Filters */}
-                    <div className="flex flex-wrap items-center justify-between gap-6 border-b border-gray-200 pb-4">
-                        <h2 className="text-2xl font-black uppercase italic tracking-tighter text-gray-900">New Arrivals</h2>
-                        <div className="flex items-center gap-8 overflow-x-auto no-scrollbar">
-                            {['ALL', 'SMARTPHONES', 'LAPTOPS', 'AUDIO', 'TELEVISIONS'].map((tab) => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab)}
-                                    className={`text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all relative ${activeTab === tab ? 'text-[#E72E46]' : 'text-gray-400 hover:text-black'}`}
-                                >
-                                    {tab}
-                                    {activeTab === tab && (
-                                        <motion.div layoutId="tab-underline" className="absolute -bottom-[17px] left-0 right-0 h-[3px] bg-[#E72E46]" />
-                                    )}
-                                </button>
-                            ))}
+                    {!hideHeader && (
+                        <div className="flex flex-wrap items-center justify-between gap-6 border-b border-gray-200 pb-4">
+                            <h2 className="text-2xl font-black uppercase italic tracking-tighter text-gray-900">New Arrivals</h2>
+                            <div className="flex items-center gap-8 overflow-x-auto no-scrollbar">
+                                {['ALL', 'SMARTPHONES', 'LAPTOPS', 'AUDIO', 'TELEVISIONS'].map((tab) => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={`text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all relative ${activeTab === tab ? 'text-[#E72E46]' : 'text-gray-400 hover:text-black'}`}
+                                    >
+                                        {tab}
+                                        {activeTab === tab && (
+                                            <motion.div layoutId="tab-underline" className="absolute -bottom-[17px] left-0 right-0 h-[3px] bg-[#E72E46]" />
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Product Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">

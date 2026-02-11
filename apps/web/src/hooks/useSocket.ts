@@ -8,13 +8,23 @@ export const useSocket = (userId: string | undefined) => {
         if (!userId) return;
 
         const token = localStorage.getItem('token');
+        if (!token) {
+            console.debug('No auth token found, skipping socket connection');
+            return;
+        }
+
         // Extract origin to avoid connecting to /api namespace
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
         const socketUrl = new URL(apiUrl).origin;
 
+        console.log(`Connecting to socket at: ${socketUrl} for user: ${userId}`);
+
         const socket = io(socketUrl, {
             auth: { token: `Bearer ${token}` },
-            transports: ['websocket'],
+            transports: ['polling', 'websocket'], // Allow fallback to polling
+            path: '/socket.io/', // Explicitly set default path
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
         });
 
         socketRef.current = socket;

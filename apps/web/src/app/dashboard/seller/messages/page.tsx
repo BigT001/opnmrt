@@ -51,22 +51,28 @@ export default function SellerMessagesPage() {
 
             setConversations(prev => {
                 const otherId = message.senderRole === 'BUYER' ? message.senderId : message.recipientId;
-                const existing = prev.find(c => c.userId === otherId);
+                const existingIndex = prev.findIndex(c => c.userId === otherId);
 
-                if (existing) {
-                    return prev.map(c => c.userId === otherId ? {
-                        ...c,
+                if (existingIndex !== -1) {
+                    const existing = prev[existingIndex];
+                    const updated = {
+                        ...existing,
                         lastMessage: message.content,
                         time: message.createdAt,
-                        unread: isFromSelected ? false : (message.senderRole === 'BUYER' ? true : c.unread)
-                    } : c).sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+                        unreadCount: (selectedUserId === otherId || message.senderRole === 'SELLER')
+                            ? 0
+                            : (existing.unreadCount || 0) + 1
+                    };
+
+                    const filtered = prev.filter(c => c.userId !== otherId);
+                    return [updated, ...filtered];
                 } else {
                     return [{
                         userId: otherId,
                         userName: message.senderRole === 'BUYER' ? message.sender.name : 'Customer',
                         lastMessage: message.content,
                         time: message.createdAt,
-                        unread: message.senderRole === 'BUYER'
+                        unreadCount: message.senderRole === 'BUYER' ? 1 : 0
                     }, ...prev];
                 }
             });
@@ -89,7 +95,7 @@ export default function SellerMessagesPage() {
                 await api.post('/chat/read', { otherUserId: selectedUserId, storeId: store!.id });
 
                 // Update local conversation list to remove unread badge
-                setConversations(prev => prev.map(c => c.userId === selectedUserId ? { ...c, unread: false } : c));
+                setConversations(prev => prev.map(c => c.userId === selectedUserId ? { ...c, unreadCount: 0 } : c));
             } catch (error) {
                 console.error("Failed to fetch messages:", error);
             } finally {
@@ -170,8 +176,10 @@ export default function SellerMessagesPage() {
                                     className={`p-4 rounded-2xl cursor-pointer transition-all relative ${selectedUserId === chat.userId ? 'bg-slate-900 text-white shadow-lg' : 'hover:bg-slate-50 text-slate-500'
                                         }`}
                                 >
-                                    {chat.unread && selectedUserId !== chat.userId && (
-                                        <div className="absolute top-4 right-4 w-2 h-2 bg-emerald-500 rounded-full ring-4 ring-white shadow-sm" />
+                                    {chat.unreadCount > 0 && selectedUserId !== chat.userId && (
+                                        <div className="absolute top-4 right-4 h-5 px-1.5 min-w-[20px] bg-emerald-500 text-white text-[10px] font-black rounded-full flex items-center justify-center ring-4 ring-white shadow-lg animate-in zoom-in duration-300">
+                                            {chat.unreadCount}
+                                        </div>
                                     )}
                                     <div className="flex justify-between items-start mb-1">
                                         <span className={`text-xs font-black truncate max-w-[120px] ${selectedUserId === chat.userId ? 'text-white' : 'text-slate-900'}`}>
@@ -181,7 +189,7 @@ export default function SellerMessagesPage() {
                                             {new Date(chat.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                     </div>
-                                    <p className={`text-[11px] line-clamp-1 italic ${chat.unread ? 'font-black text-slate-900 opacity-90' : 'opacity-70'}`}>
+                                    <p className={`text-[11px] line-clamp-1 italic ${chat.unreadCount > 0 ? 'font-black text-slate-900 opacity-90' : 'opacity-70'}`}>
                                         {chat.lastMessage}
                                     </p>
                                 </div>
@@ -196,7 +204,10 @@ export default function SellerMessagesPage() {
                         <>
                             {/* Chat Header */}
                             <div className="p-4 lg:p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4" onClick={() => {
+                                    // Reset unread locally
+                                    setConversations(prev => prev.map(c => c.userId === selectedUserId ? { ...c, unreadCount: 0 } : c));
+                                }}>
                                     <button onClick={() => setSelectedUserId(null)} className="lg:hidden p-2 -ml-2 text-slate-400 hover:text-slate-900">
                                         <ArrowRight className="w-5 h-5 rotate-180" />
                                     </button>

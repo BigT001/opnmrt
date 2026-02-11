@@ -115,7 +115,7 @@ export function RadiantGlowCartDrawer({ storeId }: CartDrawerProps) {
                                                 <div className="flex items-center justify-between pt-2">
                                                     <div className="flex items-center bg-white border border-[#C19A6B]/20 rounded-full p-1 shadow-sm h-10">
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 1, storeId)}
                                                             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#FFF9F0] text-[#2D1E1E]/40 hover:text-[#C19A6B] transition-all disabled:opacity-30"
                                                             disabled={item.quantity <= 1}
                                                         >
@@ -123,8 +123,9 @@ export function RadiantGlowCartDrawer({ storeId }: CartDrawerProps) {
                                                         </button>
                                                         <span className="w-10 text-center font-sans text-xs font-black text-[#2D1E1E]">{item.quantity}</span>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#FFF9F0] text-[#2D1E1E]/40 hover:text-[#C19A6B] transition-all"
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1, storeId)}
+                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#FFF9F0] text-[#2D1E1E]/40 hover:text-[#C19A6B] transition-all disabled:opacity-30"
+                                                            disabled={item.quantity >= (item.stock ?? 9999)}
                                                         >
                                                             <Plus className="w-3.5 h-3.5" />
                                                         </button>
@@ -132,7 +133,7 @@ export function RadiantGlowCartDrawer({ storeId }: CartDrawerProps) {
 
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeItem(item.id)}
+                                                        onClick={() => removeItem(item.id, storeId)}
                                                         className="p-3 text-[#2D1E1E]/20 hover:text-[#E2AFA2] transition-colors"
                                                     >
                                                         <Trash2 className="w-4 h-4" />

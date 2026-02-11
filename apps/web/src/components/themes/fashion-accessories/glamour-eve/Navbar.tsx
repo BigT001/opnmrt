@@ -7,10 +7,14 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { useParams } from 'next/navigation';
+
 export function GlamourEveNavbar({ storeName, logo }: NavbarProps) {
     const { items, toggleCart } = useCartStore();
     const [mounted, setMounted] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const { subdomain } = useParams<{ subdomain: string }>();
 
     useEffect(() => {
         setMounted(true);
@@ -31,8 +35,8 @@ export function GlamourEveNavbar({ storeName, logo }: NavbarProps) {
             animate={{ y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
-                    ? 'bg-black/95 backdrop-blur-md py-4'
-                    : 'bg-transparent py-6'
+                ? 'bg-black/95 backdrop-blur-md py-4'
+                : 'bg-transparent py-6'
                 }`}
         >
             <div className="max-w-[1800px] mx-auto px-6 sm:px-10 lg:px-16">
@@ -49,7 +53,7 @@ export function GlamourEveNavbar({ storeName, logo }: NavbarProps) {
                     </div>
 
                     {/* Logo (Center) */}
-                    <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center">
+                    <Link href={`/store/${subdomain}`} className="absolute left-1/2 -translate-x-1/2 flex items-center">
                         {logo ? (
                             <img
                                 src={logo}
@@ -58,15 +62,18 @@ export function GlamourEveNavbar({ storeName, logo }: NavbarProps) {
                                     }`}
                             />
                         ) : (
-                            <span className="text-2xl md:text-3xl font-serif text-white tracking-[0.1em] uppercase bg-clip-text text-transparent bg-gradient-to-r from-white via-[#D4AF37] to-white bg-[length:200%_auto] animate-shimmer">
+                            <span className="text-2xl md:text-3xl font-serif text-white tracking-[0.1em] uppercase bg-clip-text text-transparent bg-gradient-to-r from-white via-[#D4AF37] to-white bg-[length:200%_auto] animate-shimmer text-center">
                                 {storeName}
                             </span>
                         )}
                     </Link>
 
                     {/* Right: Cart/Account */}
-                    <div className="flex items-center space-x-6 sm:space-x-8">
-                        <Link href="/login" className="hidden sm:block text-white/70 hover:text-[#D4AF37] transition-colors uppercase tracking-[0.2em] text-[10px] font-bold">
+                    <div className="flex items-center space-x-4 sm:space-x-8">
+                        <div className="hidden sm:block">
+                            <ThemeToggle />
+                        </div>
+                        <Link href={`/store/${subdomain}/customer/login`} className="hidden sm:block text-white/70 hover:text-[#D4AF37] transition-colors uppercase tracking-[0.2em] text-[10px] font-bold">
                             Account
                         </Link>
                         <button

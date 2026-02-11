@@ -1,17 +1,21 @@
 'use client';
 
 import { NavbarProps } from '../../types';
-import { ShoppingBag, Menu, Search, X } from 'lucide-react';
+import { ShoppingBag, Menu, Search, X, User } from 'lucide-react';
 import { useCartStore } from '@/store/useCartStore';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { useParams } from 'next/navigation';
 
 export function ChicUrbanNavbar({ storeName, logo }: NavbarProps) {
     const { items, toggleCart } = useCartStore();
     const [mounted, setMounted] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const { subdomain } = useParams<{ subdomain: string }>();
 
     useEffect(() => {
         setMounted(true);
@@ -45,7 +49,7 @@ export function ChicUrbanNavbar({ storeName, logo }: NavbarProps) {
             </div>
 
             {/* Main Nav Layer */}
-            <nav className={`bg-black border-b-2 border-black transition-all duration-300 ${scrolled ? 'py-2' : 'py-4'}`}>
+            <nav className={`bg-black dark:bg-zinc-950 border-b-2 border-black transition-all duration-300 ${scrolled ? 'py-2' : 'py-4'}`}>
                 <div className="max-w-[1800px] mx-auto px-6 flex items-center justify-between">
                     {/* Left: Tactical Menu */}
                     <div className="flex items-center gap-8">
@@ -56,20 +60,24 @@ export function ChicUrbanNavbar({ storeName, logo }: NavbarProps) {
                             {isMenuOpen ? <X className="w-5 h-5 text-black" /> : <Menu className="w-5 h-5 text-black" />}
                         </button>
                         <div className="hidden lg:flex gap-6">
-                            {['Catalogue', 'Archive', 'Drops'].map((item) => (
+                            {[
+                                { label: 'Home', href: `/store/${subdomain}` },
+                                { label: 'Shop', href: `/store/${subdomain}/shop` },
+                                { label: 'About', href: `/store/${subdomain}/about` }
+                            ].map((item) => (
                                 <Link
-                                    key={item}
-                                    href="#"
+                                    key={item.label}
+                                    href={item.href}
                                     className="text-[11px] font-black uppercase tracking-tighter text-white hover:text-[#CCFF00] transition-colors font-mono"
                                 >
-                                    [{item}]
+                                    [{item.label}]
                                 </Link>
                             ))}
                         </div>
                     </div>
 
                     {/* Center: Brutalist Branding */}
-                    <Link href="/" className="absolute left-1/2 -translate-x-1/2 group">
+                    <Link href={`/store/${subdomain}`} className="absolute left-1/2 -translate-x-1/2 group">
                         {logo ? (
                             <img src={logo} alt={storeName} className="h-10 w-auto invert brightness-0" />
                         ) : (
@@ -81,9 +89,12 @@ export function ChicUrbanNavbar({ storeName, logo }: NavbarProps) {
 
                     {/* Right: Interface Controls */}
                     <div className="flex items-center gap-4">
-                        <button className="hidden md:flex bg-white/10 p-2 text-white hover:bg-white hover:text-black transition-all border border-transparent hover:border-black">
-                            <Search className="w-5 h-5" />
-                        </button>
+                        <div className="bg-white hover:bg-[#CCFF00] border-2 border-white hover:border-[#CCFF00] transition-colors overflow-hidden h-10 w-10 flex items-center justify-center">
+                            <ThemeToggle />
+                        </div>
+                        <Link href={`/store/${subdomain}/customer/login`} className="hidden md:flex bg-white/10 p-2 text-white hover:bg-white hover:text-black transition-all border border-transparent hover:border-black">
+                            <User className="w-5 h-5" />
+                        </Link>
                         <button
                             onClick={toggleCart}
                             className="relative bg-white p-2 border-2 border-white hover:bg-[#CCFF00] hover:border-[#CCFF00] transition-colors group"
@@ -116,19 +127,24 @@ export function ChicUrbanNavbar({ storeName, logo }: NavbarProps) {
                         className="fixed inset-0 top-[105px] bg-[#CCFF00] text-black z-40 p-10 lg:w-[400px]"
                     >
                         <div className="flex flex-col gap-8">
-                            {['Shop All', 'New Arrivals', 'Hardware', 'About System'].map((item, i) => (
+                            {[
+                                { label: 'Storefront', href: `/store/${subdomain}` },
+                                { label: 'Catalogue', href: `/store/${subdomain}/shop` },
+                                { label: 'Brand Story', href: `/store/${subdomain}/about` },
+                                { label: 'Customer Login', href: `/store/${subdomain}/customer/login` }
+                            ].map((item, i) => (
                                 <motion.div
-                                    key={item}
+                                    key={item.label}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: i * 0.1 }}
                                 >
                                     <Link
-                                        href="#"
+                                        href={item.href}
                                         className="text-5xl font-black uppercase italic tracking-tighter hover:tracking-normal transition-all duration-300 hover:text-white"
                                         onClick={() => setIsMenuOpen(false)}
                                     >
-                                        {item}
+                                        {item.label}
                                     </Link>
                                 </motion.div>
                             ))}

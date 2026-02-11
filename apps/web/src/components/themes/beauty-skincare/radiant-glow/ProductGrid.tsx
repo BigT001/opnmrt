@@ -7,7 +7,7 @@ import { ShoppingBag, Star, Eye, Sparkles } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
-export function RadiantGlowProductGrid({ products, subdomain, storeId }: ProductGridProps) {
+export function RadiantGlowProductGrid({ products, subdomain, storeId, hideHeader }: ProductGridProps) {
     const { addItem } = useCartStore();
 
     const handleAddToCart = (product: any) => {
@@ -17,12 +17,13 @@ export function RadiantGlowProductGrid({ products, subdomain, storeId }: Product
             price: Number(product.price),
             image: product.image,
             storeId,
+            stock: product.stock || 0,
         });
     };
 
     if (products.length === 0) {
         return (
-            <div className="max-w-[1400px] mx-auto px-10 py-32">
+            <div className={`max-w-[1400px] mx-auto px-10 ${hideHeader ? 'py-0' : 'py-32'}`}>
                 <div className="text-center py-32 bg-white/40 backdrop-blur-xl rounded-[48px] border border-[#C19A6B]/10">
                     <p className="font-sans text-sm tracking-widest text-[#2D1E1E]/40 italic">The collection is currently gathering its light.</p>
                 </div>
@@ -31,15 +32,17 @@ export function RadiantGlowProductGrid({ products, subdomain, storeId }: Product
     }
 
     return (
-        <section className="max-w-[1400px] mx-auto px-10 py-32">
-            <div className="flex flex-col items-center gap-4 mb-20 text-center">
-                <div className="flex items-center gap-3 text-[#C19A6B]">
-                    <Sparkles className="w-4 h-4" />
-                    <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold">Curated Luminosity</span>
+        <section className={`max-w-[1400px] mx-auto px-10 ${hideHeader ? 'py-0' : 'py-32'}`}>
+            {!hideHeader && (
+                <div className="flex flex-col items-center gap-4 mb-20 text-center">
+                    <div className="flex items-center gap-3 text-[#C19A6B]">
+                        <Sparkles className="w-4 h-4" />
+                        <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold">Curated Luminosity</span>
+                    </div>
+                    <h2 className="text-5xl font-luminous text-[#2D1E1E]">Treasures of the <span className="italic">Aura</span></h2>
+                    <div className="w-12 h-[1px] bg-[#C19A6B]/30 mt-2" />
                 </div>
-                <h2 className="text-5xl font-luminous text-[#2D1E1E]">Treasures of the <span className="italic">Aura</span></h2>
-                <div className="w-12 h-[1px] bg-[#C19A6B]/30 mt-2" />
-            </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
                 {products.map((product, idx) => (
@@ -109,13 +112,15 @@ export function RadiantGlowProductGrid({ products, subdomain, storeId }: Product
                 ))}
             </div>
 
-            <div className="mt-32 flex justify-center">
-                <button className="group flex items-center gap-6 font-sans text-[10px] uppercase tracking-[0.5em] font-black text-[#C19A6B] hover:text-[#2D1E1E] transition-colors duration-500">
-                    <div className="h-[1px] w-12 bg-[#C19A6B]/30 group-hover:w-20 group-hover:bg-[#2D1E1E] transition-all duration-700" />
-                    Reveal Full Journey
-                    <div className="h-[1px] w-12 bg-[#C19A6B]/30 group-hover:w-20 group-hover:bg-[#2D1E1E] transition-all duration-700" />
-                </button>
-            </div>
+            {!hideHeader && (
+                <div className="mt-32 flex justify-center">
+                    <button className="group flex items-center gap-6 font-sans text-[10px] uppercase tracking-[0.5em] font-black text-[#C19A6B] hover:text-[#2D1E1E] transition-colors duration-500">
+                        <div className="h-[1px] w-12 bg-[#C19A6B]/30 group-hover:w-20 group-hover:bg-[#2D1E1E] transition-all duration-700" />
+                        Reveal Full Journey
+                        <div className="h-[1px] w-12 bg-[#C19A6B]/30 group-hover:w-20 group-hover:bg-[#2D1E1E] transition-all duration-700" />
+                    </button>
+                </div>
+            )}
         </section>
     );
 }

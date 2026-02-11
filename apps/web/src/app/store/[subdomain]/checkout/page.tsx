@@ -21,6 +21,13 @@ export default function CheckoutPage() {
                     const text = await res.text();
                     const data = text ? JSON.parse(text) : null;
                     setStore(data);
+
+                    // Track Checkout Start
+                    if (data?.id) {
+                        import('@/lib/analytics').then(({ trackEvent, ANALYTICS_EVENTS }) => {
+                            trackEvent(data.id, ANALYTICS_EVENTS.CHECKOUT_START);
+                        });
+                    }
                 }
             } catch (error) {
                 console.error("Failed to fetch store for checkout:", error);

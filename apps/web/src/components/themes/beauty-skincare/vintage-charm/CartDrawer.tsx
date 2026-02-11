@@ -99,7 +99,7 @@ export function VintageCharmCartDrawer({ storeId }: CartDrawerProps) {
                                                             {item.name}
                                                         </h3>
                                                         <button
-                                                            onClick={() => removeItem(item.id)}
+                                                            onClick={() => removeItem(item.id, storeId)}
                                                             className="text-stone-400 hover:text-red-800 transition-colors"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
@@ -111,7 +111,7 @@ export function VintageCharmCartDrawer({ storeId }: CartDrawerProps) {
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center border-2 border-[#1B3022] bg-white shadow-[3px_3px_0_rgba(27,48,34,1)] h-10">
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 1, storeId)}
                                                             className="p-2 hover:bg-[#1B3022] hover:text-[#F9F4EE] transition-all disabled:opacity-30"
                                                             disabled={item.quantity <= 1}
                                                         >
@@ -121,8 +121,9 @@ export function VintageCharmCartDrawer({ storeId }: CartDrawerProps) {
                                                             {item.quantity}
                                                         </span>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="p-2 hover:bg-[#1B3022] hover:text-[#F9F4EE] transition-all"
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1, storeId)}
+                                                            className="p-2 hover:bg-[#1B3022] hover:text-[#F9F4EE] transition-all disabled:opacity-30"
+                                                            disabled={item.quantity >= (item.stock ?? 9999)}
                                                         >
                                                             <Plus className="w-3.5 h-3.5" />
                                                         </button>

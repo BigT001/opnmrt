@@ -8,7 +8,7 @@ import { ShoppingBag, Truck, Clock, RefreshCcw, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatPrice } from '@/lib/utils';
 
-export function MinimalLuxeProductGrid({ products, subdomain, storeId }: ProductGridProps) {
+export function MinimalLuxeProductGrid({ products, subdomain, storeId, hideHeader }: ProductGridProps) {
     const { addItem } = useCartStore();
 
     const handleAddToCart = (product: any) => {
@@ -18,54 +18,59 @@ export function MinimalLuxeProductGrid({ products, subdomain, storeId }: Product
             price: Number(product.price),
             image: product.image,
             storeId,
+            stock: product.stock || 0,
         });
     };
 
     return (
         <div className="bg-white">
             {/* Features Section */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-b border-gray-100">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
-                    <FeatureItem
-                        icon={<Truck className="w-8 h-8 text-gray-900 stroke-[1.5]" />}
-                        title="Global Shipping"
-                        desc="Premium door-to-door delivery on all seasonal collections"
-                    />
-                    <FeatureItem
-                        icon={<Clock className="w-8 h-8 text-gray-900 stroke-[1.5]" />}
-                        title="Full Concierge"
-                        desc="Dedicated support for a seamless luxury experience"
-                    />
-                    <FeatureItem
-                        icon={<RefreshCcw className="w-8 h-8 text-gray-900 stroke-[1.5]" />}
-                        title="Safe Returns"
-                        desc="Flexible 30-day exchange policy for all items"
-                    />
+            {!hideHeader && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-b border-gray-100">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+                        <FeatureItem
+                            icon={<Truck className="w-8 h-8 text-gray-900 stroke-[1.5]" />}
+                            title="Global Shipping"
+                            desc="Premium door-to-door delivery on all seasonal collections"
+                        />
+                        <FeatureItem
+                            icon={<Clock className="w-8 h-8 text-gray-900 stroke-[1.5]" />}
+                            title="Full Concierge"
+                            desc="Dedicated support for a seamless luxury experience"
+                        />
+                        <FeatureItem
+                            icon={<RefreshCcw className="w-8 h-8 text-gray-900 stroke-[1.5]" />}
+                            title="Safe Returns"
+                            desc="Flexible 30-day exchange policy for all items"
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Products Section */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
-                <div className="text-center mb-24">
-                    <motion.span
-                        initial={{ opacity: 0, y: 10 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="text-[10px] font-black uppercase tracking-[0.4em] text-primary mb-4 block"
-                    >
-                        Collections
-                    </motion.span>
-                    <motion.h2
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.2 }}
-                        className="text-5xl font-black text-gray-900 tracking-tighter uppercase relative inline-block"
-                    >
-                        New Arrival
-                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-16 h-[2px] bg-gray-900"></div>
-                    </motion.h2>
-                </div>
+            <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${hideHeader ? 'py-0' : 'py-32'}`}>
+                {!hideHeader && (
+                    <div className="text-center mb-24">
+                        <motion.span
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="text-[10px] font-black uppercase tracking-[0.4em] text-primary mb-4 block"
+                        >
+                            Collections
+                        </motion.span>
+                        <motion.h2
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.2 }}
+                            className="text-5xl font-black text-gray-900 tracking-tighter uppercase relative inline-block"
+                        >
+                            New Arrival
+                            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-16 h-[2px] bg-gray-900"></div>
+                        </motion.h2>
+                    </div>
+                )}
 
                 {products.length === 0 ? (
                     <div className="text-center py-32 bg-gray-50/50 border border-dashed border-gray-200 rounded-3xl">

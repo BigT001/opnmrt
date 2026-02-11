@@ -1,4 +1,11 @@
-import { Controller, Post, Get, Body, UsePipes, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  UsePipes,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { RegisterSchema, LoginSchema } from '@opnmart/shared';
@@ -11,39 +18,41 @@ import { GetUser } from '../common/decorators/get-user.decorator';
 import { z } from 'zod';
 
 const ExtendedRegisterSchema = RegisterSchema.extend({
-    subdomain: z.string().optional(),
-    storeName: z.string().optional(),
+  subdomain: z.string().optional(),
+  storeName: z.string().optional(),
 });
 
 @Controller('auth')
 export class AuthController {
-    constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
-    @Post('send-otp')
-    async sendOtp(@Body() body: { email: string; phone?: string }) {
-        return this.authService.sendOtp(body.email, body.phone);
-    }
+  @Post('send-otp')
+  async sendOtp(@Body() body: { email: string; phone?: string }) {
+    return this.authService.sendOtp(body.email, body.phone);
+  }
 
-    @Post('verify-otp')
-    async verifyOtp(@Body() body: { email: string; otp: string; phone?: string }) {
-        return this.authService.verifyOtp(body.email, body.otp, body.phone);
-    }
+  @Post('verify-otp')
+  async verifyOtp(
+    @Body() body: { email: string; otp: string; phone?: string },
+  ) {
+    return this.authService.verifyOtp(body.email, body.otp, body.phone);
+  }
 
-    @Post('register')
-    @UsePipes(new ZodValidationPipe(ExtendedRegisterSchema))
-    async register(@Body() body: any) {
-        return this.authService.register(body);
-    }
+  @Post('register')
+  @UsePipes(new ZodValidationPipe(ExtendedRegisterSchema))
+  async register(@Body() body: any) {
+    return this.authService.register(body);
+  }
 
-    @Post('login')
-    @UsePipes(new ZodValidationPipe(LoginSchema))
-    async login(@Body() body: LoginInput) {
-        return this.authService.login(body);
-    }
+  @Post('login')
+  @UsePipes(new ZodValidationPipe(LoginSchema))
+  async login(@Body() body: LoginInput) {
+    return this.authService.login(body);
+  }
 
-    @Get('me')
-    @UseGuards(AuthGuard('jwt'))
-    async getMe(@GetUser('userId') userId: string) {
-        return this.authService.getMe(userId);
-    }
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  async getMe(@GetUser('userId') userId: string) {
+    return this.authService.getMe(userId);
+  }
 }

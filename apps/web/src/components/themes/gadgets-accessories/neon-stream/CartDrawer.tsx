@@ -104,23 +104,24 @@ export function NeonStreamCartDrawer({ storeId }: CartDrawerProps) {
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center bg-white/5 border border-white/20 rounded-xl h-10 shadow-[0_0_15px_rgba(255,255,255,0.05)]">
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 1, storeId)}
                                                             className="w-10 h-full hover:text-[#00F5FF] text-gray-500 hover:bg-white/5 transition-all disabled:opacity-20"
                                                             disabled={item.quantity <= 1}
                                                         >
                                                             <Minus className="w-3.5 h-3.5 mx-auto" />
                                                         </button>
-                                                        <span className="px-4 text-xs font-black font-syne text-white h-full flex items-center border-x border-white/10 italic">{item.quantity}</span>
+                                                        <span className="px-6 text-xs font-black font-syne text-white h-full flex items-center border-x border-white/10 italic">{item.quantity}</span>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="w-10 h-full hover:text-[#00F5FF] text-gray-500 hover:bg-white/5 transition-all"
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1, storeId)}
+                                                            className="w-10 h-full hover:text-[#00F5FF] text-gray-500 hover:bg-white/5 transition-all disabled:opacity-20"
+                                                            disabled={item.quantity >= (item.stock ?? 9999)}
                                                         >
                                                             <Plus className="w-3.5 h-3.5 mx-auto" />
                                                         </button>
                                                     </div>
 
                                                     <button
-                                                        onClick={() => removeItem(item.id)}
+                                                        onClick={() => removeItem(item.id, storeId)}
                                                         className="text-[9px] font-black uppercase text-gray-600 hover:text-red-500 transition-colors flex items-center gap-1"
                                                     >
                                                         <Trash2 className="w-3.5 h-3.5" />

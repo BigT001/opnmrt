@@ -2,12 +2,17 @@
 
 import { CheckoutProps } from '../../types';
 import { useStoreCart } from '@/store/useStoreCart';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Leaf, ShieldCheck, Loader2, Sparkles, Check, MoveRight } from 'lucide-react';
+import { ArrowLeft, Leaf, ShieldCheck, Loader2, Sparkles, Check, MoveRight, AlertCircle, Lock } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
+import api from '@/lib/api';
+import { useCheckoutProfile } from '@/hooks/useCheckoutProfile';
+
+const PaystackPayment = dynamic(() => import('../../PaystackPayment'), { ssr: false });
 
 export function PureBotanicalCheckout({ store }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
@@ -15,8 +20,20 @@ export function PureBotanicalCheckout({ store }: CheckoutProps) {
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [orderId, setOrderId] = useState('');
     const router = useRouter();
+    const activeOrderId = useRef<string | null>(null);
+
+    const { formData, setFormData, syncProfile, isLoaded } = useCheckoutProfile({
+        email: '',
+        phone: '',
+        firstName: '',
+        lastName: '',
+        address: '',
+        city: '',
+        postalCode: ''
+    });
 
     useEffect(() => {
         setMounted(true);
@@ -26,21 +43,73 @@ export function PureBotanicalCheckout({ store }: CheckoutProps) {
         }
     }, [items.length, params?.subdomain, router, isSuccess]);
 
-    if (!mounted) return null;
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        await new Promise(resolve => setTimeout(resolve, 2500));
-        setIsSubmitting(false);
-        setIsSuccess(true);
-        clearStoreCart(store.id);
+    const config = {
+        reference: (new Date()).getTime().toString(),
+        email: formData.email,
+        amount: Math.round(subtotal * 100),
+        publicKey: store.paystackPublicKey || '',
     };
+
+    const onPaystackSuccess = async (reference: any) => {
+        if (!activeOrderId.current) return;
+        try {
+            await api.post('/payments/verify', {
+                storeId: store.id,
+                reference: reference.reference,
+                orderId: activeOrderId.current
+            });
+            setIsSuccess(true);
+            clearStoreCart(store.id);
+        } catch (err: any) {
+            setError('Verification ritual failed. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const onPaystackClose = () => {
+        setIsSubmitting(false);
+    };
+
+    const handleProcessOrder = async (e: React.FormEvent, initializePayment: () => void) => {
+        e.preventDefault();
+
+        if (!store.paystackPublicKey) {
+            setError('Sanctuary gateway not configured.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setError(null);
+
+        try {
+            // Centralized profile sync
+            await syncProfile();
+
+            const orderRes = await api.post('/orders', {
+                storeId: store.id,
+                totalAmount: subtotal,
+                items: items.map(p => ({
+                    productId: p.id,
+                    quantity: p.quantity,
+                    price: p.price
+                }))
+            });
+
+            activeOrderId.current = orderRes.data.id;
+            initializePayment();
+
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to initiate ritual order.');
+            setIsSubmitting(false);
+        }
+    };
+
+    if (!mounted) return null;
 
     if (isSuccess) {
         return (
             <div className="min-h-screen bg-[#F9FAF8] flex flex-col items-center justify-center p-10 relative overflow-hidden">
-                {/* Background Decor */}
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] opacity-5 pointer-events-none">
                     <Leaf className="w-full h-full fill-[#7C9082] rotate-45" />
                 </div>
@@ -84,13 +153,22 @@ export function PureBotanicalCheckout({ store }: CheckoutProps) {
         );
     }
 
+    if (!isLoaded) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#F9FAF8]">
+                <div className="flex flex-col items-center gap-8">
+                    <Loader2 className="w-12 h-12 animate-spin text-[#7C9082]" />
+                    <span className="font-sans text-[10px] uppercase tracking-[0.5em] text-[#1C2B21]/40 font-bold italic animate-pulse">Syncing Ritual Profile...</span>
+                </div>
+            </div>
+        );
+    }
+
     if (items.length === 0) return null;
 
     return (
         <div className="min-h-screen bg-[#F9FAF8] py-32">
             <div className="max-w-[1400px] mx-auto px-10">
-
-                {/* Header: Focused Navigation */}
                 <div className="flex flex-col md:flex-row items-center justify-between mb-20 gap-8">
                     <Link href={`/store/${params.subdomain}`} className="group flex items-center gap-4 text-[#1C2B21]/40 hover:text-[#1C2B21] transition-colors">
                         <div className="w-10 h-10 rounded-full border border-[#7C9082]/20 flex items-center justify-center group-hover:bg-white transition-all">
@@ -111,79 +189,169 @@ export function PureBotanicalCheckout({ store }: CheckoutProps) {
                 </div>
 
                 <div className="lg:grid lg:grid-cols-12 lg:gap-24 items-start">
-
-                    {/* Information Form: Clean & Therapeutic */}
                     <div className="lg:col-span-7">
-                        <form onSubmit={handleSubmit} className="space-y-12">
+                        <PaystackPayment config={config} onSuccess={onPaystackSuccess} onClose={onPaystackClose}>
+                            {(initializePayment) => (
+                                <form onSubmit={(e) => handleProcessOrder(e, initializePayment)} className="space-y-12">
+                                    <div className="space-y-8">
+                                        <div className="flex items-center gap-3 text-[#7C9082]/60">
+                                            <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold">01. Identity</span>
+                                            <div className="h-[1px] flex-1 bg-[#7C9082]/10" />
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40 ml-4 font-black">First Name</label>
+                                                <input
+                                                    required
+                                                    value={formData.firstName}
+                                                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                                    className="w-full bg-white border border-[#7C9082]/10 rounded-[24px] px-8 py-4 focus:ring-2 focus:ring-[#7C9082]/20 focus:border-[#7C9082] transition-all outline-none font-serif text-lg text-slate-900"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40 ml-4 font-black">Last Name</label>
+                                                <input
+                                                    required
+                                                    value={formData.lastName}
+                                                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                                    className="w-full bg-white border border-[#7C9082]/10 rounded-[24px] px-8 py-4 focus:ring-2 focus:ring-[#7C9082]/20 focus:border-[#7C9082] transition-all outline-none font-serif text-lg text-slate-900"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40 ml-4 font-black">Electronic Mail</label>
+                                                <input
+                                                    type="email"
+                                                    required
+                                                    value={formData.email}
+                                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                    className="w-full bg-white border border-[#7C9082]/10 rounded-[24px] px-8 py-4 focus:ring-2 focus:ring-[#7C9082]/20 focus:border-[#7C9082] transition-all outline-none font-serif text-lg text-slate-900"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40 ml-4 font-black">Phone Number</label>
+                                                <input
+                                                    type="tel"
+                                                    required
+                                                    value={formData.phone}
+                                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                    className="w-full bg-white border border-[#7C9082]/10 rounded-[24px] px-8 py-4 focus:ring-2 focus:ring-[#7C9082]/20 focus:border-[#7C9082] transition-all outline-none font-serif text-lg text-slate-900"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            {/* Section: Identity */}
-                            <div className="space-y-8">
-                                <div className="flex items-center gap-3 text-[#7C9082]/60">
-                                    <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold">01. Identity</span>
-                                    <div className="h-[1px] flex-1 bg-[#7C9082]/10" />
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40 ml-4 font-black">First Name</label>
-                                        <input required className="w-full bg-white border border-[#7C9082]/10 rounded-[24px] px-8 py-4 focus:ring-2 focus:ring-[#7C9082]/20 focus:border-[#7C9082] transition-all outline-none font-serif text-lg" />
+                                    <div className="space-y-8">
+                                        <div className="flex items-center gap-3 text-[#7C9082]/60">
+                                            <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold">02. Sourcing</span>
+                                            <div className="h-[1px] flex-1 bg-[#7C9082]/10" />
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="md:col-span-2 space-y-2">
+                                                <label className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40 ml-4 font-black">Sanctuary Address</label>
+                                                <input
+                                                    required
+                                                    value={formData.address}
+                                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                                    className="w-full bg-white border border-[#7C9082]/10 rounded-[24px] px-8 py-4 focus:ring-2 focus:ring-[#7C9082]/20 focus:border-[#7C9082] transition-all outline-none font-serif text-lg text-slate-900"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40 ml-4 font-black">City</label>
+                                                <input
+                                                    required
+                                                    value={formData.city}
+                                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                                    className="w-full bg-white border border-[#7C9082]/10 rounded-[24px] px-8 py-4 focus:ring-2 focus:ring-[#7C9082]/20 focus:border-[#7C9082] transition-all outline-none font-serif text-lg text-slate-900"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40 ml-4 font-black">Postal Code</label>
+                                                <input
+                                                    required
+                                                    value={formData.postalCode}
+                                                    onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                                                    className="w-full bg-white border border-[#7C9082]/10 rounded-[24px] px-8 py-4 focus:ring-2 focus:ring-[#7C9082]/20 focus:border-[#7C9082] transition-all outline-none font-serif text-lg text-slate-900"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40 ml-4 font-black">Last Name</label>
-                                        <input required className="w-full bg-white border border-[#7C9082]/10 rounded-[24px] px-8 py-4 focus:ring-2 focus:ring-[#7C9082]/20 focus:border-[#7C9082] transition-all outline-none font-serif text-lg" />
-                                    </div>
-                                    <div className="md:col-span-2 space-y-2">
-                                        <label className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40 ml-4 font-black">Electronic Mail</label>
-                                        <input type="email" required className="w-full bg-white border border-[#7C9082]/10 rounded-[24px] px-8 py-4 focus:ring-2 focus:ring-[#7C9082]/20 focus:border-[#7C9082] transition-all outline-none font-serif text-lg" />
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Section: Sourcing (Delivery) */}
-                            <div className="space-y-8">
-                                <div className="flex items-center gap-3 text-[#7C9082]/60">
-                                    <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold">02. Sourcing</span>
-                                    <div className="h-[1px] flex-1 bg-[#7C9082]/10" />
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="md:col-span-2 space-y-2">
-                                        <label className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40 ml-4 font-black">Sanctuary Address</label>
-                                        <input required className="w-full bg-white border border-[#7C9082]/10 rounded-[24px] px-8 py-4 focus:ring-2 focus:ring-[#7C9082]/20 focus:border-[#7C9082] transition-all outline-none font-serif text-lg" />
+                                    {/* Section: Resonance (Payment) */}
+                                    <div className="space-y-8">
+                                        <div className="flex items-center gap-3 text-[#7C9082]/60">
+                                            <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold">03. Resonance</span>
+                                            <div className="h-[1px] flex-1 bg-[#7C9082]/10" />
+                                        </div>
+                                        <div className="bg-white border border-[#7C9082]/10 rounded-[32px] p-8 space-y-6">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-6">
+                                                    <div className="w-14 h-14 rounded-full bg-[#1C2B21] flex items-center justify-center text-white">
+                                                        <Lock className="w-6 h-6" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-serif text-xl text-[#1C2B21]">Paystack Gateway</h4>
+                                                        <p className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40">Secure Organic Transaction</p>
+                                                    </div>
+                                                </div>
+                                                <div className="hidden md:flex flex-col items-end">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                                        <span className="font-sans text-[9px] uppercase tracking-widest text-[#1C2B21]/40">Secured resonance</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40 ml-4 font-black">City</label>
-                                        <input required className="w-full bg-white border border-[#7C9082]/10 rounded-[24px] px-8 py-4 focus:ring-2 focus:ring-[#7C9082]/20 focus:border-[#7C9082] transition-all outline-none font-serif text-lg" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="font-sans text-[10px] uppercase tracking-widest text-[#1C2B21]/40 ml-4 font-black">Postal Code</label>
-                                        <input required className="w-full bg-white border border-[#7C9082]/10 rounded-[24px] px-8 py-4 focus:ring-2 focus:ring-[#7C9082]/20 focus:border-[#7C9082] transition-all outline-none font-serif text-lg" />
-                                    </div>
-                                </div>
-                            </div>
 
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="w-full group relative h-24 bg-[#1C2B21] text-white rounded-[32px] overflow-hidden shadow-2xl shadow-[#1C2B21]/20 transition-all duration-700 disabled:opacity-50"
-                            >
-                                <div className="relative z-10 flex items-center justify-center gap-6">
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="animate-spin w-6 h-6" />
-                                            <span className="font-sans text-sm font-bold uppercase tracking-[0.4em]">Submitting Ritual...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span className="font-sans text-sm font-bold uppercase tracking-[0.4em]">Finalize Resonance ({formatPrice(subtotal)})</span>
-                                            <ShieldCheck className="w-6 h-6" />
-                                        </>
+                                    {error && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="p-6 bg-red-50 border border-red-100 rounded-[24px] text-red-600 flex items-center gap-4"
+                                        >
+                                            <AlertCircle className="w-6 h-6 shrink-0" />
+                                            <p className="font-serif italic">{error}</p>
+                                        </motion.div>
                                     )}
-                                </div>
-                                <div className="absolute inset-0 bg-[#7C9082] -translate-x-full group-hover:translate-x-0 transition-transform duration-700 ease-[0.16,1,0.3,1]" />
-                            </button>
-                        </form>
+
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="w-full group relative h-24 bg-[#1C2B21] text-white rounded-[32px] overflow-hidden shadow-2xl shadow-[#1C2B21]/20 transition-all duration-700 disabled:opacity-50"
+                                    >
+                                        <div className="relative z-10 flex items-center justify-center gap-6">
+                                            <AnimatePresence mode="wait">
+                                                {isSubmitting ? (
+                                                    <motion.div
+                                                        key="submitting"
+                                                        initial={{ y: 20, opacity: 0 }}
+                                                        animate={{ y: 0, opacity: 1 }}
+                                                        exit={{ y: -20, opacity: 0 }}
+                                                        className="flex items-center gap-4"
+                                                    >
+                                                        <Loader2 className="animate-spin w-6 h-6" />
+                                                        <span className="font-sans text-sm font-bold uppercase tracking-[0.4em]">Submitting Ritual...</span>
+                                                    </motion.div>
+                                                ) : (
+                                                    <motion.div
+                                                        key="pay"
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        className="flex items-center gap-4"
+                                                    >
+                                                        <span className="font-sans text-sm font-bold uppercase tracking-[0.4em]">Finalize Resonance ({formatPrice(subtotal)})</span>
+                                                        <ShieldCheck className="w-6 h-6" />
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                        <div className="absolute inset-0 bg-[#7C9082] -translate-x-full group-hover:translate-x-0 transition-transform duration-700 ease-[0.16,1,0.3,1]" />
+                                    </button>
+                                </form>
+                            )}
+                        </PaystackPayment>
                     </div>
 
-                    {/* Order Summary: Minimalist Review */}
                     <div className="lg:col-span-5 space-y-12">
                         <div className="bg-white p-12 rounded-[48px] border border-[#7C9082]/10 space-y-10 lg:sticky lg:top-32 shadow-sm">
                             <h3 className="font-serif text-2xl text-[#1C2B21]">Selection Review</h3>

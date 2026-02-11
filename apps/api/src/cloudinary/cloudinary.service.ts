@@ -6,26 +6,32 @@ const streamifier = require('streamifier');
 
 @Injectable()
 export class CloudinaryService {
-    async uploadFile(file: Express.Multer.File, folder: string = 'opnmart-products'): Promise<CloudinaryResponse> {
-        // ... previous optimization logic ...
+  async uploadFile(
+    file: Express.Multer.File,
+    folder: string = 'opnmart-products',
+  ): Promise<CloudinaryResponse> {
+    // ... previous optimization logic ...
 
-        // Fallback to original buffer for now to restore server
-        const bufferToUpload = file.buffer;
+    // Fallback to original buffer for now to restore server
+    const bufferToUpload = file.buffer;
 
-        return new Promise<CloudinaryResponse>((resolve, reject) => {
-            const uploadStream = cloudinary.uploader.upload_stream(
-                {
-                    folder: folder,
-                    resource_type: 'auto',
-                },
-                (error, result) => {
-                    if (error) return reject(error);
-                    if (!result) return reject(new Error('Cloudinary upload failed: No result returned'));
-                    resolve(result);
-                },
+    return new Promise<CloudinaryResponse>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: folder,
+          resource_type: 'auto',
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          if (!result)
+            return reject(
+              new Error('Cloudinary upload failed: No result returned'),
             );
+          resolve(result);
+        },
+      );
 
-            streamifier.createReadStream(bufferToUpload).pipe(uploadStream);
-        });
-    }
+      streamifier.createReadStream(bufferToUpload).pipe(uploadStream);
+    });
+  }
 }

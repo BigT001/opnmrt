@@ -12,6 +12,7 @@ interface Product {
     description: string;
     images: string[];
     category?: string;
+    stock?: number;
 }
 
 interface ProductCardProps {
@@ -46,6 +47,7 @@ export function ProductCard({ product, storeId, subdomain }: ProductCardProps) {
             price: product.price,
             image: product.images[0],
             storeId,
+            stock: product.stock || 0,
         });
     };
 

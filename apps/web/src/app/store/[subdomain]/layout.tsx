@@ -21,6 +21,8 @@ async function getStore(subdomain: string) {
     }
 }
 
+import { TrackSession } from '@/components/analytics/TrackSession';
+
 export default async function StoreLayout({
     children,
     params,
@@ -39,6 +41,7 @@ export default async function StoreLayout({
 
     return (
         <ThemeLayout store={store}>
+            <TrackSession storeId={store.id} />
             {children}
         </ThemeLayout>
     );

@@ -32,6 +32,8 @@ async function getStore(subdomain: string) {
     }
 }
 
+import { TrackProductView } from '@/components/analytics/TrackProductView';
+
 export default async function ProductPage({
     params,
 }: {
@@ -48,13 +50,16 @@ export default async function ProductPage({
     const { ProductPage: ThemeProductPage } = getThemeComponents(store.theme);
 
     return (
-        <ThemeProductPage
-            store={store}
-            product={{
-                ...product,
-                image: product.image || product.images?.[0] || 'https://via.placeholder.com/600'
-            }}
-            subdomain={subdomain}
-        />
+        <>
+            <TrackProductView storeId={store.id} productId={product.id} />
+            <ThemeProductPage
+                store={store}
+                product={{
+                    ...product,
+                    image: product.image || product.images?.[0] || 'https://via.placeholder.com/600'
+                }}
+                subdomain={subdomain}
+            />
+        </>
     );
 }

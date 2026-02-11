@@ -108,7 +108,7 @@ export function TechSpecCartDrawer({ storeId }: CartDrawerProps) {
                                                 <div className="flex items-center justify-between mt-4">
                                                     <div className="flex items-center border-2 border-gray-900 bg-white h-10 shadow-[4px_4px_0_rgba(0,0,0,0.1)]">
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 1, storeId)}
                                                             className="w-10 h-full hover:bg-gray-50 text-gray-900 transition-colors disabled:opacity-20"
                                                             disabled={item.quantity <= 1}
                                                         >
@@ -116,15 +116,16 @@ export function TechSpecCartDrawer({ storeId }: CartDrawerProps) {
                                                         </button>
                                                         <span className="w-12 text-xs font-black text-gray-900 border-x-2 border-gray-900 h-full flex items-center justify-center uppercase italic">{item.quantity}</span>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="w-10 h-full hover:bg-gray-50 text-gray-900 transition-colors"
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1, storeId)}
+                                                            className="w-10 h-full hover:bg-gray-50 text-gray-900 transition-colors disabled:opacity-20"
+                                                            disabled={item.quantity >= (item.stock ?? 9999)}
                                                         >
                                                             <Plus className="w-4 h-4 mx-auto" />
                                                         </button>
                                                     </div>
 
                                                     <button
-                                                        onClick={() => removeItem(item.id)}
+                                                        onClick={() => removeItem(item.id, storeId)}
                                                         className="text-[9px] font-black uppercase text-gray-300 hover:text-[#E72E46] transition-colors flex items-center gap-1"
                                                     >
                                                         <Trash2 className="w-3.5 h-3.5" />

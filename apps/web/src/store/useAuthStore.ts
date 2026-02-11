@@ -16,6 +16,8 @@ interface Store {
     heroImage?: string | null;
     theme?: string;
     themeConfig?: any;
+    paystackPublicKey?: string | null;
+    // NOTE: Secret key is NEVER sent to frontend for security reasons
 }
 
 interface AuthState {

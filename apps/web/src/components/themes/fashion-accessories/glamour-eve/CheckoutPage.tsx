@@ -2,12 +2,17 @@
 
 import { CheckoutProps } from '../../types';
 import { useStoreCart } from '@/store/useStoreCart';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import api from '@/lib/api';
+import { useCheckoutProfile } from '@/hooks/useCheckoutProfile';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, Loader2, ShieldCheck, Lock } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Loader2, ShieldCheck, Lock, AlertCircle } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
+
+const PaystackPayment = dynamic(() => import('../../PaystackPayment'), { ssr: false });
 
 export function GlamourEveCheckout({ store }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
@@ -15,7 +20,19 @@ export function GlamourEveCheckout({ store }: CheckoutProps) {
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const activeOrderId = useRef<string | null>(null);
+
+    const { formData, setFormData, syncProfile, isLoaded } = useCheckoutProfile({
+        email: '',
+        phone: '',
+        firstName: '',
+        lastName: '',
+        address: '',
+        city: '',
+        postalCode: ''
+    });
 
     useEffect(() => {
         setMounted(true);
@@ -24,15 +41,68 @@ export function GlamourEveCheckout({ store }: CheckoutProps) {
         }
     }, [items.length, params?.subdomain, router, isSuccess]);
 
+    const config = {
+        reference: (new Date()).getTime().toString(),
+        email: formData.email,
+        amount: Math.round(subtotal * 100), // Paystack amount is in kobo
+        publicKey: store.paystackPublicKey || '',
+    };
+
+    const onPaystackSuccess = async (reference: any) => {
+        if (!activeOrderId.current) return;
+        try {
+            await api.post('/payments/verify', {
+                storeId: store.id,
+                reference: reference.reference,
+                orderId: activeOrderId.current
+            });
+            setIsSuccess(true);
+            clearStoreCart(store.id);
+        } catch (err: any) {
+            setError('Payment verification failed. Please contact support.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const onPaystackClose = () => {
+        setIsSubmitting(false);
+    };
+
     if (!mounted) return null;
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleProcessOrder = async (e: React.FormEvent, initializePayment: () => void) => {
         e.preventDefault();
+
+        if (!store.paystackPublicKey) {
+            setError('This store has not configured payments yet.');
+            return;
+        }
+
         setIsSubmitting(true);
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        setIsSubmitting(false);
-        setIsSuccess(true);
-        clearStoreCart(store.id);
+        setError(null);
+
+        try {
+            // Centralized profile sync
+            await syncProfile();
+
+            const orderRes = await api.post('/orders', {
+                storeId: store.id,
+                totalAmount: subtotal,
+                items: items.map(p => ({
+                    productId: p.id,
+                    quantity: p.quantity,
+                    price: p.price
+                }))
+            });
+
+            activeOrderId.current = orderRes.data.id;
+            initializePayment();
+
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to initiate order. Please try again.');
+            setIsSubmitting(false);
+        }
     };
 
     if (isSuccess) {
@@ -64,6 +134,17 @@ export function GlamourEveCheckout({ store }: CheckoutProps) {
         );
     }
 
+    if (!isLoaded) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <div className="flex flex-col items-center gap-8">
+                    <Loader2 className="w-12 h-12 animate-spin text-[#D4AF37]" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/40 italic">Syncing Boutique Profile...</span>
+                </div>
+            </div>
+        );
+    }
+
     if (items.length === 0) return null;
 
     return (
@@ -89,111 +170,165 @@ export function GlamourEveCheckout({ store }: CheckoutProps) {
 
                     {/* Left: Forms */}
                     <div className="lg:col-span-7">
-                        <form onSubmit={handleSubmit} className="space-y-16">
+                        <PaystackPayment config={config} onSuccess={onPaystackSuccess} onClose={onPaystackClose}>
+                            {(initializePayment) => (
+                                <form onSubmit={(e) => handleProcessOrder(e, initializePayment)} className="space-y-16">
 
-                            {/* Information Sections */}
-                            <section className="space-y-10">
-                                <div className="space-y-8">
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-[10px] font-black text-black bg-black/5 w-8 h-8 flex items-center justify-center rounded-full">01</span>
-                                        <h2 className="text-[11px] font-black text-black uppercase tracking-[0.4em]">Client Details</h2>
-                                    </div>
-                                    <div className="grid grid-cols-1 gap-8">
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">Email Address</label>
-                                            <input type="email" required className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all placeholder:text-black/10" placeholder="excellence@noir.com" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-8 pt-10">
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-[10px] font-black text-black bg-black/5 w-8 h-8 flex items-center justify-center rounded-full">02</span>
-                                        <h2 className="text-[11px] font-black text-black uppercase tracking-[0.4em]">Shipping Destination</h2>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">First Name</label>
-                                            <input type="text" required className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">Last Name</label>
-                                            <input type="text" required className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all" />
-                                        </div>
-                                        <div className="md:col-span-2 space-y-2">
-                                            <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">Street Address</label>
-                                            <input type="text" required className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">City</label>
-                                            <input type="text" required className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">Postal Code</label>
-                                            <input type="text" required className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-8 pt-10">
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-[10px] font-black text-black bg-black/5 w-8 h-8 flex items-center justify-center rounded-full">03</span>
-                                        <h2 className="text-[11px] font-black text-black uppercase tracking-[0.4em]">Vault Payment</h2>
-                                    </div>
-                                    <div className="space-y-8">
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">Card Details</label>
-                                            <div className="relative">
-                                                <input type="text" placeholder="#### #### #### ####" required className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all" />
-                                                <Lock className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20" />
+                                    {/* Information Sections */}
+                                    <section className="space-y-10">
+                                        <div className="space-y-8">
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-[10px] font-black text-black bg-black/5 w-8 h-8 flex items-center justify-center rounded-full">01</span>
+                                                <h2 className="text-[11px] font-black text-black uppercase tracking-[0.4em]">Client Details</h2>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div className="space-y-2">
+                                                    <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">Email Address</label>
+                                                    <input
+                                                        type="email"
+                                                        required
+                                                        value={formData.email}
+                                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                        className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all placeholder:text-black/10 text-black"
+                                                        placeholder="excellence@noir.com"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">Phone Number</label>
+                                                    <input
+                                                        type="tel"
+                                                        required
+                                                        value={formData.phone}
+                                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                        className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all text-black"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-8">
-                                            <div className="space-y-2">
-                                                <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">Expiry</label>
-                                                <input type="text" placeholder="MM / YY" required className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all" />
+
+                                        <div className="space-y-8 pt-10">
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-[10px] font-black text-black bg-black/5 w-8 h-8 flex items-center justify-center rounded-full">02</span>
+                                                <h2 className="text-[11px] font-black text-black uppercase tracking-[0.4em]">Shipping Destination</h2>
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">CVC</label>
-                                                <input type="text" placeholder="###" required className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all" />
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div className="space-y-2">
+                                                    <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">First Name</label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        value={formData.firstName}
+                                                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                                        className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all text-black"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">Last Name</label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        value={formData.lastName}
+                                                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                                        className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all text-black"
+                                                    />
+                                                </div>
+                                                <div className="md:col-span-2 space-y-2">
+                                                    <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">Street Address</label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        value={formData.address}
+                                                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                                        className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all text-black"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">City</label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        value={formData.city}
+                                                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                                        className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all text-black"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[9px] uppercase tracking-[0.2em] font-bold text-black/40">Postal Code</label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        value={formData.postalCode}
+                                                        onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                                                        className="w-full bg-transparent border-b border-black text-sm py-4 focus:outline-none focus:border-[#D4AF37] transition-all text-black"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </section>
 
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="group relative w-full h-24 overflow-hidden bg-black text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_20px_40px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_rgba(212,175,55,0.2)] transition-all flex items-center justify-center overflow-hidden"
-                            >
-                                <AnimatePresence mode="wait">
-                                    {isSubmitting ? (
-                                        <motion.div
-                                            key="submitting"
-                                            initial={{ y: 20, opacity: 0 }}
-                                            animate={{ y: 0, opacity: 1 }}
-                                            exit={{ y: -20, opacity: 0 }}
-                                            className="flex items-center gap-4"
-                                        >
-                                            <Loader2 className="animate-spin w-5 h-5 text-[#D4AF37]" />
-                                            <span className="uppercase tracking-[0.4em] text-[11px] font-black">Authorizing...</span>
-                                        </motion.div>
-                                    ) : (
-                                        <motion.div
-                                            key="pay"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            className="flex items-center justify-center gap-6 group-hover:bg-[#D4AF37] group-hover:text-black absolute inset-0 transition-colors duration-500"
-                                        >
-                                            <span className="uppercase tracking-[0.4em] text-[11px] font-black">Verify Purchase</span>
-                                            <span className="w-2 h-2 rounded-full bg-[#D4AF37] group-hover:bg-black transition-colors" />
-                                            <span className="text-sm font-bold itali">{formatPrice(subtotal)}</span>
-                                        </motion.div>
+                                        <div className="space-y-8 pt-10">
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-[10px] font-black text-black bg-black/5 w-8 h-8 flex items-center justify-center rounded-full">03</span>
+                                                <h2 className="text-[11px] font-black text-black uppercase tracking-[0.4em]">Vault Payment</h2>
+                                            </div>
+                                            <div className="p-10 border border-black/10 rounded-3xl bg-black/[0.02] flex items-center justify-between">
+                                                <div className="flex items-center gap-6">
+                                                    <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center">
+                                                        <Lock className="w-6 h-6 text-[#D4AF37]" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-xs font-black uppercase tracking-widest text-black">Paystack Checkout</h3>
+                                                        <p className="text-[10px] font-bold text-black/40 uppercase tracking-[0.2em] mt-1">Cards, Bank Transfer, USSD, Apple Pay</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Active</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    {error && (
+                                        <div className="flex items-center gap-4 p-6 bg-red-50 border border-red-100 rounded-2xl text-red-600">
+                                            <AlertCircle className="w-5 h-5 shrink-0" />
+                                            <p className="text-xs font-black uppercase tracking-[0.2em]">{error}</p>
+                                        </div>
                                     )}
-                                </AnimatePresence>
-                            </button>
-                        </form>
+
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="group relative w-full h-24 overflow-hidden bg-black text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_20px_40px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_rgba(212,175,55,0.2)] transition-all flex items-center justify-center overflow-hidden"
+                                    >
+                                        <AnimatePresence mode="wait">
+                                            {isSubmitting ? (
+                                                <motion.div
+                                                    key="submitting"
+                                                    initial={{ y: 20, opacity: 0 }}
+                                                    animate={{ y: 0, opacity: 1 }}
+                                                    exit={{ y: -20, opacity: 0 }}
+                                                    className="flex items-center gap-4"
+                                                >
+                                                    <Loader2 className="animate-spin w-5 h-5 text-[#D4AF37]" />
+                                                    <span className="uppercase tracking-[0.4em] text-[11px] font-black">Authorizing...</span>
+                                                </motion.div>
+                                            ) : (
+                                                <motion.div
+                                                    key="pay"
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    className="flex items-center justify-center gap-6 group-hover:bg-[#D4AF37] group-hover:text-black absolute inset-0 transition-colors duration-500"
+                                                >
+                                                    <span className="uppercase tracking-[0.4em] text-[11px] font-black">Finalize Purchase</span>
+                                                    <span className="w-2 h-2 rounded-full bg-[#D4AF37] group-hover:bg-black transition-colors" />
+                                                    <span className="text-sm font-bold tracking-tight">{formatPrice(subtotal)}</span>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </button>
+                                </form>
+                            )}
+                        </PaystackPayment>
                     </div>
 
                     {/* Right: Summary */}
@@ -243,7 +378,7 @@ export function GlamourEveCheckout({ store }: CheckoutProps) {
                                 <div className="pt-6">
                                     <p className="text-[9px] text-center text-black/30 uppercase tracking-[0.2em] leading-loose">
                                         All transactions are final upon artisan commencement. <br />
-                                        Certified authentic Noir curation.
+                                        Direct Checkout via Paystack Secure Tunnel.
                                     </p>
                                 </div>
                             </div>

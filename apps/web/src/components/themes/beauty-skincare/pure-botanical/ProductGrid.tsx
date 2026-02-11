@@ -7,7 +7,7 @@ import { ShoppingBag, Heart, Eye } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
-export function PureBotanicalProductGrid({ products, subdomain, storeId }: ProductGridProps) {
+export function PureBotanicalProductGrid({ products, subdomain, storeId, hideHeader }: ProductGridProps) {
     const { addItem } = useCartStore();
 
     const handleAddToCart = (product: any) => {
@@ -17,12 +17,13 @@ export function PureBotanicalProductGrid({ products, subdomain, storeId }: Produ
             price: Number(product.price),
             image: product.image,
             storeId,
+            stock: product.stock || 0,
         });
     };
 
     if (products.length === 0) {
         return (
-            <div className="max-w-[1400px] mx-auto px-10 py-32">
+            <div className={`max-w-[1400px] mx-auto px-10 ${hideHeader ? 'py-0' : 'py-32'}`}>
                 <div className="text-center py-32 rounded-[40px] border-2 border-dashed border-[#7C9082]/20 bg-white/50">
                     <p className="font-serif italic text-2xl text-[#1C2B21]/40">No botanicals available in the collection yet.</p>
                 </div>
@@ -31,12 +32,14 @@ export function PureBotanicalProductGrid({ products, subdomain, storeId }: Produ
     }
 
     return (
-        <div className="max-w-[1400px] mx-auto px-10 py-32 space-y-20">
-            <div className="flex flex-col items-center gap-4 text-center">
-                <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-[#7C9082] font-bold">Curated Selection</span>
-                <h2 className="text-5xl md:text-6xl font-serif text-[#1C2B21] tracking-tight">Hand-picked <span className="italic text-[#7C9082]">Formations</span></h2>
-                <div className="w-24 h-[1px] bg-[#7C9082]/30 mt-4" />
-            </div>
+        <div className={`max-w-[1400px] mx-auto px-10 ${hideHeader ? 'py-0' : 'py-32'} space-y-20`}>
+            {!hideHeader && (
+                <div className="flex flex-col items-center gap-4 text-center">
+                    <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-[#7C9082] font-bold">Curated Selection</span>
+                    <h2 className="text-5xl md:text-6xl font-serif text-[#1C2B21] tracking-tight">Hand-picked <span className="italic text-[#7C9082]">Formations</span></h2>
+                    <div className="w-24 h-[1px] bg-[#7C9082]/30 mt-4" />
+                </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
                 {products.map((product, index) => (
@@ -105,11 +108,13 @@ export function PureBotanicalProductGrid({ products, subdomain, storeId }: Produ
                 ))}
             </div>
 
-            <div className="flex justify-center pt-20">
-                <button className="px-16 py-5 rounded-full border border-[#1C2B21]/10 font-sans text-[11px] uppercase tracking-[0.3em] text-[#1C2B21] hover:bg-[#1C2B21] hover:text-white transition-all duration-700">
-                    Discover More Botanicals
-                </button>
-            </div>
+            {!hideHeader && (
+                <div className="flex justify-center pt-20">
+                    <button className="px-16 py-5 rounded-full border border-[#1C2B21]/10 font-sans text-[11px] uppercase tracking-[0.3em] text-[#1C2B21] hover:bg-[#1C2B21] hover:text-white transition-all duration-700">
+                        Discover More Botanicals
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

@@ -2,12 +2,17 @@
 
 import { CheckoutProps } from '../../types';
 import { useStoreCart } from '@/store/useStoreCart';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles, ShieldCheck, Loader2, Check, ArrowRight, Star, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Sparkles, ShieldCheck, Loader2, Check, ArrowRight, Star, ShoppingBag, Lock, AlertCircle } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
+import api from '@/lib/api';
+import { useCheckoutProfile } from '@/hooks/useCheckoutProfile';
+
+const PaystackPayment = dynamic(() => import('../../PaystackPayment'), { ssr: false });
 
 export function RadiantGlowCheckout({ store }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
@@ -15,7 +20,18 @@ export function RadiantGlowCheckout({ store }: CheckoutProps) {
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const activeOrderId = useRef<string | null>(null);
+
+    const { formData, setFormData, syncProfile, isLoaded } = useCheckoutProfile({
+        email: '',
+        phone: '',
+        fullName: '',
+        address: '',
+        city: '',
+        postalCode: ''
+    });
 
     useEffect(() => {
         setMounted(true);
@@ -24,21 +40,73 @@ export function RadiantGlowCheckout({ store }: CheckoutProps) {
         }
     }, [items.length, params?.subdomain, router, isSuccess]);
 
-    if (!mounted) return null;
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        await new Promise(resolve => setTimeout(resolve, 2500));
-        setIsSubmitting(false);
-        setIsSuccess(true);
-        clearStoreCart(store.id);
+    const config = {
+        reference: (new Date()).getTime().toString(),
+        email: formData.email,
+        amount: Math.round(subtotal * 100),
+        publicKey: store.paystackPublicKey || '',
     };
+
+    const onPaystackSuccess = async (reference: any) => {
+        if (!activeOrderId.current) return;
+        try {
+            await api.post('/payments/verify', {
+                storeId: store.id,
+                reference: reference.reference,
+                orderId: activeOrderId.current
+            });
+            setIsSuccess(true);
+            clearStoreCart(store.id);
+        } catch (err: any) {
+            setError('Verification ritual failed. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const onPaystackClose = () => {
+        setIsSubmitting(false);
+    };
+
+    const handleProcessOrder = async (e: React.FormEvent, initializePayment: () => void) => {
+        e.preventDefault();
+
+        if (!store.paystackPublicKey) {
+            setError('Energy gateway not configured.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setError(null);
+
+        try {
+            // Centralized profile sync
+            await syncProfile();
+
+            const orderRes = await api.post('/orders', {
+                storeId: store.id,
+                totalAmount: subtotal,
+                items: items.map(p => ({
+                    productId: p.id,
+                    quantity: p.quantity,
+                    price: p.price
+                }))
+            });
+
+            activeOrderId.current = orderRes.data.id;
+            initializePayment();
+
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to initiate exchange ritual.');
+            setIsSubmitting(false);
+        }
+    };
+
+    if (!mounted) return null;
 
     if (isSuccess) {
         return (
             <div className="min-h-screen bg-[#FFF9F0] flex flex-col items-center justify-center p-8 overflow-hidden relative">
-                {/* Background Glows */}
                 <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#C19A6B]/10 rounded-full blur-[100px] pointer-events-none" />
                 <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#E2AFA2]/10 rounded-full blur-[100px] pointer-events-none" />
 
@@ -80,11 +148,21 @@ export function RadiantGlowCheckout({ store }: CheckoutProps) {
         );
     }
 
+    if (!isLoaded) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#FFF9F0]">
+                <div className="flex flex-col items-center gap-8">
+                    <Loader2 className="w-12 h-12 animate-spin text-[#C19A6B]" />
+                    <span className="font-sans text-[10px] uppercase tracking-[0.5em] font-black text-[#2D1E1E]/40">Syncing Aura...</span>
+                </div>
+            </div>
+        );
+    }
+
     if (items.length === 0) return null;
 
     return (
         <div className="min-h-screen bg-[#FFF9F0] py-24 relative overflow-hidden">
-            {/* Background Decor */}
             <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-[#C19A6B]/5 via-transparent to-transparent pointer-events-none" />
 
             <div className="max-w-[1400px] mx-auto px-10 relative z-10">
@@ -108,115 +186,179 @@ export function RadiantGlowCheckout({ store }: CheckoutProps) {
                 </header>
 
                 <div className="lg:grid lg:grid-cols-12 lg:gap-16">
-                    {/* Left Column: Details */}
                     <div className="lg:col-span-12 xl:col-span-8 space-y-12">
-                        <form onSubmit={handleSubmit} className="space-y-12">
-                            {/* Personal Details */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-white/40 backdrop-blur-xl p-12 rounded-[50px] border border-[#C19A6B]/10 space-y-10 shadow-sm"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full border border-[#C19A6B]/20 flex items-center justify-center font-sans text-[10px] font-black text-[#C19A6B]">01</div>
-                                    <h2 className="text-3xl font-luminous text-[#2D1E1E]">Personal Information</h2>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                    <div className="space-y-3">
-                                        <label className="font-sans text-[10px] uppercase tracking-widest text-[#2D1E1E]/40 font-black pl-2">Email Identity</label>
-                                        <input required type="email" placeholder="aura@example.com" className="w-full h-16 bg-white border border-[#C19A6B]/10 rounded-3xl px-8 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/20 transition-all shadow-sm" />
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="font-sans text-[10px] uppercase tracking-widest text-[#2D1E1E]/40 font-black pl-2">Full Name</label>
-                                        <input required type="text" placeholder="Luminous Soul" className="w-full h-16 bg-white border border-[#C19A6B]/10 rounded-3xl px-8 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/20 transition-all shadow-sm" />
-                                    </div>
-                                </div>
-                            </motion.div>
-
-                            {/* Shipping Details */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
-                                className="bg-white/40 backdrop-blur-xl p-12 rounded-[50px] border border-[#C19A6B]/10 space-y-10 shadow-sm"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full border border-[#C19A6B]/20 flex items-center justify-center font-sans text-[10px] font-black text-[#C19A6B]">02</div>
-                                    <h2 className="text-3xl font-luminous text-[#2D1E1E]">Destination of Delivery</h2>
-                                </div>
-
-                                <div className="space-y-10">
-                                    <div className="space-y-3">
-                                        <label className="font-sans text-[10px] uppercase tracking-widest text-[#2D1E1E]/40 font-black pl-2">Street Residence</label>
-                                        <input required type="text" placeholder="123 Radiant Blvd" className="w-full h-16 bg-white border border-[#C19A6B]/10 rounded-3xl px-8 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/20 transition-all shadow-sm" />
-                                    </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-10">
-                                        <div className="space-y-3 md:col-span-2">
-                                            <label className="font-sans text-[10px] uppercase tracking-widest text-[#2D1E1E]/40 font-black pl-2">City Oasis</label>
-                                            <input required type="text" placeholder="Glow City" className="w-full h-16 bg-white border border-[#C19A6B]/10 rounded-3xl px-8 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/20 transition-all shadow-sm" />
+                        <PaystackPayment config={config} onSuccess={onPaystackSuccess} onClose={onPaystackClose}>
+                            {(initializePayment) => (
+                                <form onSubmit={(e) => handleProcessOrder(e, initializePayment)} className="space-y-12">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="bg-white/40 backdrop-blur-xl p-12 rounded-[50px] border border-[#C19A6B]/10 space-y-10 shadow-sm"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-full border border-[#C19A6B]/20 flex items-center justify-center font-sans text-[10px] font-black text-[#C19A6B]">01</div>
+                                            <h2 className="text-3xl font-luminous text-[#2D1E1E]">Personal Information</h2>
                                         </div>
-                                        <div className="space-y-3">
-                                            <label className="font-sans text-[10px] uppercase tracking-widest text-[#2D1E1E]/40 font-black pl-2">Postal Code</label>
-                                            <input required type="text" placeholder="10001" className="w-full h-16 bg-white border border-[#C19A6B]/10 rounded-3xl px-8 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/20 transition-all shadow-sm" />
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                            <div className="space-y-3">
+                                                <label className="font-sans text-[10px] uppercase tracking-widest text-[#2D1E1E]/40 font-black pl-2">Email Identity</label>
+                                                <input
+                                                    required
+                                                    type="email"
+                                                    placeholder="aura@example.com"
+                                                    value={formData.email}
+                                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                    className="w-full h-16 bg-white border border-[#C19A6B]/10 rounded-3xl px-8 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/20 transition-all shadow-sm text-[#2D1E1E]"
+                                                />
+                                            </div>
+                                            <div className="space-y-3">
+                                                <label className="font-sans text-[10px] uppercase tracking-widest text-[#2D1E1E]/40 font-black pl-2">Phone Number</label>
+                                                <input
+                                                    required
+                                                    type="tel"
+                                                    placeholder="Phone Link"
+                                                    value={formData.phone}
+                                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                    className="w-full h-16 bg-white border border-[#C19A6B]/10 rounded-3xl px-8 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/20 transition-all shadow-sm text-[#2D1E1E]"
+                                                />
+                                            </div>
+                                            <div className="space-y-3 md:col-span-2">
+                                                <label className="font-sans text-[10px] uppercase tracking-widest text-[#2D1E1E]/40 font-black pl-2">Full Name</label>
+                                                <input
+                                                    required
+                                                    type="text"
+                                                    placeholder="Luminous Soul"
+                                                    value={formData.fullName}
+                                                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                                                    className="w-full h-16 bg-white border border-[#C19A6B]/10 rounded-3xl px-8 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/20 transition-all shadow-sm text-[#2D1E1E]"
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </motion.div>
+                                    </motion.div>
 
-                            {/* Payment */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="bg-[#2D1E1E] p-12 rounded-[50px] space-y-10 shadow-2xl relative overflow-hidden"
-                            >
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-[#C19A6B]/20 rounded-full blur-[80px] pointer-events-none" />
-
-                                <div className="relative z-10 flex items-center gap-4 text-white">
-                                    <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center font-sans text-[10px] font-black">03</div>
-                                    <h2 className="text-3xl font-luminous italic">Exchange of Energy</h2>
-                                </div>
-
-                                <div className="relative z-10 space-y-10">
-                                    <div className="space-y-3">
-                                        <label className="font-sans text-[10px] uppercase tracking-widest text-white/40 font-black pl-2">Card Signature</label>
-                                        <input required type="text" placeholder="0000 0000 0000 0000" className="w-full h-16 bg-white/10 border border-white/20 rounded-3xl px-8 font-sans text-sm text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/40 transition-all" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-10">
-                                        <div className="space-y-3">
-                                            <label className="font-sans text-[10px] uppercase tracking-widest text-white/40 font-black pl-2">Expiration</label>
-                                            <input required type="text" placeholder="MM / YY" className="w-full h-16 bg-white/10 border border-white/20 rounded-3xl px-8 font-sans text-sm text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/40 transition-all" />
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.1 }}
+                                        className="bg-white/40 backdrop-blur-xl p-12 rounded-[50px] border border-[#C19A6B]/10 space-y-10 shadow-sm"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-full border border-[#C19A6B]/20 flex items-center justify-center font-sans text-[10px] font-black text-[#C19A6B]">02</div>
+                                            <h2 className="text-3xl font-luminous text-[#2D1E1E]">Destination of Delivery</h2>
                                         </div>
-                                        <div className="space-y-3">
-                                            <label className="font-sans text-[10px] uppercase tracking-widest text-white/40 font-black pl-2">Security Code</label>
-                                            <input required type="text" placeholder="123" className="w-full h-16 bg-white/10 border border-white/20 rounded-3xl px-8 font-sans text-sm text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/40 transition-all" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
 
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="group relative w-full h-24 bg-[#C19A6B] text-white rounded-[45px] overflow-hidden flex items-center justify-center gap-6 shadow-[0_20px_50px_rgba(193,154,107,0.3)] transition-all duration-700 disabled:opacity-50"
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <Loader2 className="animate-spin w-6 h-6" />
-                                        <span className="font-sans text-[11px] uppercase tracking-[0.5em] font-black">Transferring Aura...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span className="font-sans text-[11px] uppercase tracking-[0.5em] font-black">Authorize {formatPrice(subtotal)}</span>
-                                        <ArrowRight className="w-6 h-6 transition-transform duration-500 group-hover:translate-x-2" />
-                                    </>
-                                )}
-                            </button>
-                        </form>
+                                        <div className="space-y-10">
+                                            <div className="space-y-3">
+                                                <label className="font-sans text-[10px] uppercase tracking-widest text-[#2D1E1E]/40 font-black pl-2">Street Residence</label>
+                                                <input
+                                                    required
+                                                    type="text"
+                                                    placeholder="123 Radiant Blvd"
+                                                    value={formData.address}
+                                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                                    className="w-full h-16 bg-white border border-[#C19A6B]/10 rounded-3xl px-8 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/20 transition-all shadow-sm text-[#2D1E1E]"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-10">
+                                                <div className="space-y-3 md:col-span-2">
+                                                    <label className="font-sans text-[10px] uppercase tracking-widest text-[#2D1E1E]/40 font-black pl-2">City Oasis</label>
+                                                    <input
+                                                        required
+                                                        type="text"
+                                                        placeholder="Glow City"
+                                                        value={formData.city}
+                                                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                                        className="w-full h-16 bg-white border border-[#C19A6B]/10 rounded-3xl px-8 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/20 transition-all shadow-sm text-[#2D1E1E]"
+                                                    />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <label className="font-sans text-[10px] uppercase tracking-widest text-[#2D1E1E]/40 font-black pl-2">Postal Code</label>
+                                                    <input
+                                                        required
+                                                        type="text"
+                                                        placeholder="10001"
+                                                        value={formData.postalCode}
+                                                        onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                                                        className="w-full h-16 bg-white border border-[#C19A6B]/10 rounded-3xl px-8 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-[#C19A6B]/20 transition-all shadow-sm text-[#2D1E1E]"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.2 }}
+                                        className="bg-[#2D1E1E] p-12 rounded-[50px] space-y-10 shadow-2xl relative overflow-hidden"
+                                    >
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#C19A6B]/20 rounded-full blur-[80px] pointer-events-none" />
+
+                                        <div className="relative z-10 flex items-center justify-between text-white">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center font-sans text-[10px] font-black">03</div>
+                                                <h2 className="text-3xl font-luminous italic">Exchange of Energy</h2>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <Lock className="w-5 h-5 text-[#C19A6B]" />
+                                                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-white/40">Secured Exchange</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="relative z-10 p-10 bg-white/5 border border-white/10 rounded-[40px] flex items-center justify-between">
+                                            <div className="space-y-1">
+                                                <h4 className="font-sans text-sm font-bold text-white">Paystack Secure Gateway</h4>
+                                                <p className="font-sans text-[9px] uppercase tracking-widest text-white/40 leading-relaxed font-black">
+                                                    Your energy flow is protected by standard encrypted protocols.
+                                                </p>
+                                            </div>
+                                            <div className="hidden md:block">
+                                                <ShieldCheck className="w-12 h-12 text-[#C19A6B] opacity-50" />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+
+                                    {error && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            className="p-8 bg-black/5 rounded-[40px] border border-red-500/20 text-red-500 flex items-center gap-6"
+                                        >
+                                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                                                <Star className="w-6 h-6 rotate-45" />
+                                            </div>
+                                            <p className="font-sans text-[10px] uppercase tracking-widest font-black leading-relaxed">
+                                                Interruption in exchange: {error}
+                                            </p>
+                                        </motion.div>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="group relative w-full h-24 bg-[#C19A6B] text-white rounded-[45px] overflow-hidden flex items-center justify-center gap-6 shadow-[0_20px_50px_rgba(193,154,107,0.3)] transition-all duration-700 disabled:opacity-50"
+                                    >
+                                        <div className="absolute inset-0 bg-[#2D1E1E] -translate-x-full group-hover:translate-x-0 transition-transform duration-700 ease-[0.16,1,0.3,1]" />
+                                        <div className="relative z-10 flex items-center gap-6">
+                                            {isSubmitting ? (
+                                                <>
+                                                    <Loader2 className="animate-spin w-6 h-6" />
+                                                    <span className="font-sans text-[11px] uppercase tracking-[0.5em] font-black">Transferring Aura...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="font-sans text-[11px] uppercase tracking-[0.5em] font-black">Authorize {formatPrice(subtotal)}</span>
+                                                    <ArrowRight className="w-6 h-6 transition-transform duration-500 group-hover:translate-x-2" />
+                                                </>
+                                            )}
+                                        </div>
+                                    </button>
+                                </form>
+                            )}
+                        </PaystackPayment>
                     </div>
 
-                    {/* Right Column: Floating Summary */}
                     <div className="lg:hidden xl:block xl:col-span-4 mt-16 xl:mt-0">
                         <div className="sticky top-32 space-y-10">
                             <motion.div

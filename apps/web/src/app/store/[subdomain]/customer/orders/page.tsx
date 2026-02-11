@@ -121,7 +121,7 @@ export default function CustomerOrdersPage() {
                                             {selectedOrder.status}
                                         </span>
                                     </div>
-                                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter">#{selectedOrder.id.toUpperCase()}</h2>
+                                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter">#{selectedOrder.id.slice(-8).toUpperCase()}</h2>
                                     <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-2">Placed on {new Date(selectedOrder.createdAt).toLocaleString()}</p>
                                 </div>
                                 <button

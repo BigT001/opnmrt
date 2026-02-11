@@ -2,12 +2,17 @@
 
 import { CheckoutProps } from '../../types';
 import { useStoreCart } from '@/store/useStoreCart';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, CheckSquare, Loader2, ShieldCheck, Terminal, Cpu, Activity, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, CheckSquare, Loader2, ShieldCheck, Terminal, Cpu, Activity, ShoppingBag, AlertCircle, Lock } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
+import api from '@/lib/api';
+import { useCheckoutProfile } from '@/hooks/useCheckoutProfile';
+
+const PaystackPayment = dynamic(() => import('../../PaystackPayment'), { ssr: false });
 
 export function StarkEdgeCheckout({ store }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
@@ -15,7 +20,19 @@ export function StarkEdgeCheckout({ store }: CheckoutProps) {
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const activeOrderId = useRef<string | null>(null);
+
+    const { formData, setFormData, syncProfile, isLoaded } = useCheckoutProfile({
+        email: '',
+        phone: '',
+        firstName: '',
+        lastName: '',
+        address: '',
+        city: '',
+        postalCode: ''
+    });
 
     useEffect(() => {
         setMounted(true);
@@ -24,16 +41,69 @@ export function StarkEdgeCheckout({ store }: CheckoutProps) {
         }
     }, [items.length, params?.subdomain, router, isSuccess]);
 
-    if (!mounted) return null;
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        setIsSubmitting(false);
-        setIsSuccess(true);
-        clearStoreCart(store.id);
+    const config = {
+        reference: (new Date()).getTime().toString(),
+        email: formData.email,
+        amount: Math.round(subtotal * 100),
+        publicKey: store.paystackPublicKey || '',
     };
+
+    const onPaystackSuccess = async (reference: any) => {
+        if (!activeOrderId.current) return;
+        try {
+            await api.post('/payments/verify', {
+                storeId: store.id,
+                reference: reference.reference,
+                orderId: activeOrderId.current
+            });
+            setIsSuccess(true);
+            clearStoreCart(store.id);
+        } catch (err: any) {
+            setError('PROTOCOL VERIFICATION FAILED. NODE TIMEOUT.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const onPaystackClose = () => {
+        setIsSubmitting(false);
+    };
+
+    const handleProcessOrder = async (e: React.FormEvent, initializePayment: () => void) => {
+        e.preventDefault();
+
+        if (!store.paystackPublicKey) {
+            setError('PAYMENT GATEWAY NOT CONFIGURED.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setError(null);
+
+        try {
+            // Centralized profile sync
+            await syncProfile();
+
+            const orderRes = await api.post('/orders', {
+                storeId: store.id,
+                totalAmount: subtotal,
+                items: items.map(p => ({
+                    productId: p.id,
+                    quantity: p.quantity,
+                    price: p.price
+                }))
+            });
+
+            activeOrderId.current = orderRes.data.id;
+            initializePayment();
+
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'PROTOCOL INITIATION FAILURE.');
+            setIsSubmitting(false);
+        }
+    };
+
+    if (!mounted) return null;
 
     if (isSuccess) {
         return (
@@ -45,8 +115,8 @@ export function StarkEdgeCheckout({ store }: CheckoutProps) {
                 >
                     <div className="absolute top-0 left-0 w-full h-1 bg-[#00F0FF] shadow-[0_0_15px_#00F0FF]" />
 
-                    <div className="w-24 h-24 bg-[#00F0FF]/10 text-[#00F0FF] border border-[#00F0FF]/30 flex items-center justify-center mx-auto mb-10">
-                        <ShieldCheck className="w-12 h-12" />
+                    <div className="w-24 h-24 bg-[#00F0FF]/10 text-[#00F0FF] border border-[#00F0FF]/30 flex items-center justify-center mx-auto mb-10 text-[0px]">
+                        <ShieldCheck size={48} className="text-[#00F0FF]" />
                     </div>
 
                     <div className="space-y-4 mb-12 text-center">
@@ -72,7 +142,6 @@ export function StarkEdgeCheckout({ store }: CheckoutProps) {
                         <div className="absolute inset-0 bg-[#00F0FF] -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-[0.16,1,0.3,1] -z-10" />
                     </Link>
 
-                    {/* Industrial Decor */}
                     <div className="mt-12 pt-8 border-t border-[#333] flex justify-center gap-6 text-[8px] font-data text-white/20 uppercase tracking-[0.4em]">
                         <span>SECURE_LINK: YES</span>
                         <span>NODE: EDGE_01</span>
@@ -82,13 +151,22 @@ export function StarkEdgeCheckout({ store }: CheckoutProps) {
         );
     }
 
+    if (!isLoaded) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#080808]">
+                <div className="flex flex-col items-center gap-8 border-l-4 border-[#00F0FF] pl-10">
+                    <Loader2 className="w-12 h-12 animate-spin text-[#00F0FF]" />
+                    <span className="font-data text-[10px] uppercase tracking-[0.5em] text-white/40 animate-pulse">Synchronizing_Neural_Link...</span>
+                </div>
+            </div>
+        );
+    }
+
     if (items.length === 0) return null;
 
     return (
         <div className="min-h-screen bg-[#080808] py-32 font-tactical">
             <div className="max-w-[1400px] mx-auto px-10">
-
-                {/* Tactical Header */}
                 <div className="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-12 border-l-4 border-[#00F0FF] pl-10">
                     <div className="space-y-2">
                         <div className="flex items-center gap-4 text-[#00F0FF]">
@@ -99,109 +177,186 @@ export function StarkEdgeCheckout({ store }: CheckoutProps) {
                     </div>
 
                     <div className="flex gap-4">
-                        {[1, 2, 3].map((step) => (
+                        {[1, 2].map((step) => (
                             <div key={step} className={`w-16 h-1 ${step === 1 ? 'bg-[#00F0FF]' : 'bg-[#333]'}`} />
                         ))}
                     </div>
                 </div>
 
                 <div className="lg:grid lg:grid-cols-12 lg:gap-20 items-start">
-                    {/* Access Form */}
                     <div className="lg:col-span-7">
-                        <form onSubmit={handleSubmit} className="space-y-12">
-                            {/* Level 01: Identification */}
-                            <div className="space-y-8 bg-[#111] border border-[#333] p-10 relative">
-                                <div className="absolute top-4 right-4 text-[8px] font-data text-white/20 uppercase">Auth_Level_01</div>
-                                <h2 className="text-2xl font-bold text-white uppercase tracking-widest flex items-center gap-3">
-                                    <Terminal className="w-5 h-5 text-[#00F0FF]" />
-                                    Identity Verification
-                                </h2>
-                                <div className="space-y-6">
-                                    <div>
-                                        <label htmlFor="email" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Transmission Endpoint (Email)</label>
-                                        <input type="email" id="email" required className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors" placeholder="user@node.edge" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Level 02: Logistics */}
-                            <div className="space-y-8 bg-[#111] border border-[#333] p-10 relative">
-                                <div className="absolute top-4 right-4 text-[8px] font-data text-white/20 uppercase">Auth_Level_02</div>
-                                <h2 className="text-2xl font-bold text-white uppercase tracking-widest flex items-center gap-3">
-                                    <Box className="w-5 h-5 text-[#00F0FF]" />
-                                    Deployment Logistics
-                                </h2>
-                                <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-                                    <div>
-                                        <label htmlFor="firstName" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Operator First Name</label>
-                                        <input type="text" id="firstName" required className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors" />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="lastName" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Operator Last Name</label>
-                                        <input type="text" id="lastName" required className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors" />
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <label htmlFor="address" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Target Coordinate (Address)</label>
-                                        <input type="text" id="address" required className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors" />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="city" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Node City</label>
-                                        <input type="text" id="city" required className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors" />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="postalCode" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Sector Code (Postal)</label>
-                                        <input type="text" id="postalCode" required className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Level 03: Protocol */}
-                            <div className="space-y-8 bg-[#111] border border-[#333] p-10 relative">
-                                <div className="absolute top-4 right-4 text-[8px] font-data text-white/20 uppercase">Auth_Level_03</div>
-                                <h2 className="text-2xl font-bold text-white uppercase tracking-widest flex items-center gap-3">
-                                    <ShieldCheck className="w-5 h-5 text-[#00F0FF]" />
-                                    Currency Protocol
-                                </h2>
-                                <div className="space-y-8">
-                                    <div>
-                                        <label htmlFor="cardNumber" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Hardware Access Code (Card Number)</label>
-                                        <input type="text" id="cardNumber" placeholder="XXXX XXXX XXXX XXXX" required className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-8">
-                                        <div>
-                                            <label htmlFor="expiry" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Index Expiry</label>
-                                            <input type="text" id="expiry" placeholder="MM / YY" required className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors" />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="cvc" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Vector Key (CVC)</label>
-                                            <input type="text" id="cvc" placeholder="XXX" required className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors" />
+                        <PaystackPayment config={config} onSuccess={onPaystackSuccess} onClose={onPaystackClose}>
+                            {(initializePayment) => (
+                                <form onSubmit={(e) => handleProcessOrder(e, initializePayment)} className="space-y-12">
+                                    <div className="space-y-8 bg-[#111] border border-[#333] p-10 relative">
+                                        <div className="absolute top-4 right-4 text-[8px] font-data text-white/20 uppercase">Auth_Level_01</div>
+                                        <h2 className="text-2xl font-bold text-white uppercase tracking-widest flex items-center gap-3">
+                                            <Terminal className="w-5 h-5 text-[#00F0FF]" />
+                                            Identity Verification
+                                        </h2>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <div>
+                                                <label htmlFor="email" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Transmission Endpoint (Email)</label>
+                                                <input
+                                                    type="email"
+                                                    id="email"
+                                                    required
+                                                    className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors"
+                                                    placeholder="user@node.edge"
+                                                    value={formData.email}
+                                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="phone" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">COMMS_LINK (PHONE)</label>
+                                                <input
+                                                    type="tel"
+                                                    id="phone"
+                                                    required
+                                                    className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors"
+                                                    placeholder="+234..."
+                                                    value={formData.phone}
+                                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="group relative w-full h-24 bg-white text-black font-black uppercase tracking-[0.5em] text-sm overflow-hidden flex items-center justify-center gap-4 transition-all active:scale-95 disabled:opacity-50"
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <Loader2 className="animate-spin w-6 h-6 text-[#00F0FF]" />
-                                        <span>Encrypting...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span>Initiate Protocol: {formatPrice(subtotal)}</span>
-                                        <Activity className="w-6 h-6" />
-                                    </>
-                                )}
-                                <div className="absolute inset-0 bg-[#00F0FF] -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-[0.16,1,0.3,1] -z-10" />
-                            </button>
-                        </form>
+                                    <div className="space-y-8 bg-[#111] border border-[#333] p-10 relative">
+                                        <div className="absolute top-4 right-4 text-[8px] font-data text-white/20 uppercase">Auth_Level_02</div>
+                                        <h2 className="text-2xl font-bold text-white uppercase tracking-widest flex items-center gap-3">
+                                            <Box className="w-5 h-5 text-[#00F0FF]" />
+                                            Deployment Logistics
+                                        </h2>
+                                        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+                                            <div>
+                                                <label htmlFor="firstName" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Operator First Name</label>
+                                                <input
+                                                    type="text"
+                                                    id="firstName"
+                                                    required
+                                                    className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors"
+                                                    value={formData.firstName}
+                                                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="lastName" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Operator Last Name</label>
+                                                <input
+                                                    type="text"
+                                                    id="lastName"
+                                                    required
+                                                    className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors"
+                                                    value={formData.lastName}
+                                                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="sm:col-span-2">
+                                                <label htmlFor="address" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Target Coordinate (Address)</label>
+                                                <input
+                                                    type="text"
+                                                    id="address"
+                                                    required
+                                                    className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors"
+                                                    value={formData.address}
+                                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="city" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Node City</label>
+                                                <input
+                                                    type="text"
+                                                    id="city"
+                                                    required
+                                                    className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors"
+                                                    value={formData.city}
+                                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="postalCode" className="block font-data text-[10px] text-white/30 uppercase tracking-widest mb-3">Sector Code (Postal)</label>
+                                                <input
+                                                    type="text"
+                                                    id="postalCode"
+                                                    required
+                                                    className="block w-full h-16 bg-black border border-[#333] text-white font-data text-sm p-4 focus:border-[#00F0FF] focus:outline-none transition-colors"
+                                                    value={formData.postalCode}
+                                                    onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Secured Currency Protocol (Paystack) */}
+                                    <div className="space-y-8 bg-[#111] border border-[#333] p-10 relative">
+                                        <div className="absolute top-4 right-4 text-[8px] font-data text-white/20 uppercase">Auth_Level_03</div>
+                                        <h2 className="text-2xl font-bold text-white uppercase tracking-widest flex items-center gap-3">
+                                            <ShieldCheck className="w-5 h-5 text-[#00F0FF]" />
+                                            Currency Protocol
+                                        </h2>
+                                        <div className="p-8 border border-[#333] bg-black/40 flex items-center justify-between hover:border-[#00F0FF]/40 transition-all group">
+                                            <div className="flex items-center gap-6">
+                                                <div className="w-16 h-16 bg-[#111] border border-[#333] flex items-center justify-center text-[#00F0FF]">
+                                                    <Lock className="w-8 h-8 group-hover:scale-110 transition-transform" />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="font-black text-white text-xs uppercase tracking-widest">Paystack Secured</p>
+                                                    <p className="font-data text-[9px] text-white/40 uppercase tracking-widest max-w-[200px]">End-to-end encrypted protocol node initialization.</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-1">
+                                                <span className="text-[10px] font-data text-[#00F0FF] uppercase tracking-widest font-black">Ready</span>
+                                                <div className="w-12 h-0.5 bg-[#00F0FF] shadow-[0_0_10px_#00F0FF]" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {error && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="bg-red-500/10 border border-red-500/50 p-6 flex items-center gap-4"
+                                        >
+                                            <AlertCircle className="w-6 h-6 text-red-500" />
+                                            <p className="font-black text-red-500 font-data text-[10px] uppercase tracking-widest italic">{error}</p>
+                                        </motion.div>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="group relative w-full h-24 bg-white text-black font-black uppercase tracking-[0.5em] text-sm overflow-hidden flex items-center justify-center gap-4 transition-all active:scale-95 disabled:opacity-50"
+                                    >
+                                        <AnimatePresence mode="wait">
+                                            {isSubmitting ? (
+                                                <motion.div
+                                                    key="submitting"
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    className="flex items-center gap-3"
+                                                >
+                                                    <Loader2 className="animate-spin w-6 h-6 text-[#00F0FF]" />
+                                                    <span>Encrypting Protocol...</span>
+                                                </motion.div>
+                                            ) : (
+                                                <motion.div
+                                                    key="pay"
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    className="flex items-center gap-3"
+                                                >
+                                                    <span>Initiate Protocol: {formatPrice(subtotal)}</span>
+                                                    <Activity className="w-6 h-6" />
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                        <div className="absolute inset-0 bg-[#00F0FF] -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-[0.16,1,0.3,1] -z-10" />
+                                    </button>
+                                </form>
+                            )}
+                        </PaystackPayment>
                     </div>
 
-                    {/* Queue Manifest */}
                     <div className="lg:col-span-5 mt-20 lg:mt-0">
                         <div className="bg-[#111] border border-[#333] p-10 lg:sticky lg:top-32 space-y-10">
                             <div className="flex items-center justify-between border-b border-[#333] pb-6">
@@ -209,18 +364,16 @@ export function StarkEdgeCheckout({ store }: CheckoutProps) {
                                 <ShoppingBag className="w-5 h-5 text-[#00F0FF]/40" />
                             </div>
 
-                            <ul className="space-y-px bg-[#333] border border-[#333]">
+                            <ul className="space-y-px bg-[#333] border border-[#333] max-h-[400px] overflow-y-auto custom-scrollbar">
                                 {items.map((item) => (
                                     <li key={item.id} className="flex bg-[#080808] p-4 gap-4 group">
-                                        {item.image && (
-                                            <div className="h-16 w-16 bg-[#111] border border-[#333] overflow-hidden flex-shrink-0">
-                                                <img
-                                                    src={item.image}
-                                                    alt={item.name}
-                                                    className="h-full w-full object-cover grayscale opacity-60 group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-500"
-                                                />
-                                            </div>
-                                        )}
+                                        <div className="h-16 w-16 bg-[#111] border border-[#333] overflow-hidden flex-shrink-0">
+                                            <img
+                                                src={item.image || 'https://via.placeholder.com/200'}
+                                                alt={item.name}
+                                                className="h-full w-full object-cover grayscale opacity-60 group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-500"
+                                            />
+                                        </div>
                                         <div className="flex-1 space-y-1">
                                             <div className="flex justify-between items-start">
                                                 <h3 className="font-bold text-white uppercase text-xs tracking-tighter line-clamp-1">{item.name}</h3>

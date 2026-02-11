@@ -19,6 +19,7 @@ export function TechSpecProductDetail({ product, store, subdomain }: ProductDeta
             price: Number(product.price),
             image: product.image || undefined,
             storeId: store.id,
+            stock: product.stock || 0,
         }, quantity);
         setAdded(true);
         setTimeout(() => setAdded(false), 2000);

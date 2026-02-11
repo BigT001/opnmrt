@@ -114,8 +114,12 @@ export default function CustomerDashboardLayout({
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-100 z-50 flex items-center justify-between px-6">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold text-xs uppercase">
-                        {user?.name?.[0] || 'U'}
+                    <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold text-xs uppercase overflow-hidden">
+                        {user?.image ? (
+                            <img src={user.image} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                            user?.name?.[0] || 'U'
+                        )}
                     </div>
                     <span className="font-black text-slate-900 text-sm uppercase tracking-tight">Dashboard</span>
                 </div>
@@ -129,15 +133,21 @@ export default function CustomerDashboardLayout({
 
             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-10 py-6 lg:py-10 flex-grow relative">
                 {/* Sidebar - Desktop */}
-                <aside className="hidden lg:block lg:col-span-1 space-y-6">
+                <aside className="hidden lg:block lg:col-span-1 space-y-6 xl:pl-8">
                     <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm sticky top-28">
                         <div className="flex items-center gap-4 mb-8">
-                            <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-bold text-lg">
-                                {user?.name ? user.name.trim().split(/\s+/).map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) : '??'}
+                            <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+                                {user?.image ? (
+                                    <img src={user.image} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    user?.name ? user.name.trim().split(/\s+/).map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) : '??'
+                                )}
                             </div>
                             <div>
                                 <h2 className="font-black text-slate-900 leading-tight">{user?.name || 'Customer'}</h2>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Customer Account</p>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
+                                    ID: {user?.id ? `CUST-${user.id.slice(-6).toUpperCase()}` : `${subdomain.toUpperCase()}-USR`}
+                                </p>
                             </div>
                         </div>
 

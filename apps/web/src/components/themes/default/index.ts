@@ -1,4 +1,4 @@
-export { Header1 as DefaultNavbar } from '../headers';
+export * from './Navbar';
 export * from './Footer';
 export * from './StorefrontHero';
 export * from './ProductGrid';

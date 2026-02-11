@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { ThemeToggle } from '@/components/ThemeToggle';
+
 export function MinimalLuxeNavbar({ storeName, logo }: NavbarProps) {
     const { items, toggleCart } = useCartStore();
     const [mounted, setMounted] = useState(false);
@@ -29,15 +31,15 @@ export function MinimalLuxeNavbar({ storeName, logo }: NavbarProps) {
     return (
         <nav
             className={`sticky top-0 left-0 right-0 z-[100] transition-all duration-500 ${isScrolled || isMenuOpen
-                ? 'bg-white/80 backdrop-blur-xl border-b border-gray-100 h-20 shadow-sm'
-                : 'bg-white h-24 md:h-28'
+                ? 'bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 h-20 shadow-sm'
+                : 'bg-white dark:bg-black h-24 md:h-28'
                 }`}
         >
             <div className="max-w-7xl mx-auto px-6 lg:px-12 h-full flex items-center justify-between">
                 {/* Mobile: Hamburger (Left) */}
                 <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="lg:hidden p-2 text-gray-900"
+                    className="lg:hidden p-2 text-gray-900 dark:text-white"
                 >
                     {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6 stroke-[1.5]" />}
                 </button>
@@ -51,7 +53,7 @@ export function MinimalLuxeNavbar({ storeName, logo }: NavbarProps) {
                             className="h-7 md:h-9 w-auto object-contain transition-transform duration-500 group-hover:scale-105"
                         />
                     ) : (
-                        <span className="text-xl md:text-3xl font-black text-gray-900 tracking-tighter uppercase whitespace-nowrap">
+                        <span className="text-xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tighter uppercase whitespace-nowrap">
                             {storeName}<span className="text-primary italic font-light serif text-2xl md:text-4xl">.</span>
                         </span>
                     )}
@@ -68,15 +70,18 @@ export function MinimalLuxeNavbar({ storeName, logo }: NavbarProps) {
                 {/* Icons (Right) - Simplified and refined */}
                 <div className="flex items-center space-x-1 md:space-x-2">
                     <IconButton icon={<Search className="w-5 h-5 stroke-[1.5]" />} className="hidden sm:flex" />
-                    <IconButton icon={<User className="w-5 h-5 stroke-[1.5]" />} className="hidden sm:flex" />
+                    <Link href={`/store/${subdomain}/customer/login`} className="hidden sm:flex p-2 text-gray-900 dark:text-white hover:text-primary transition-colors">
+                        <User className="w-5 h-5 stroke-[1.5]" />
+                    </Link>
+                    <ThemeToggle />
 
                     <button
                         onClick={toggleCart}
-                        className="group relative p-2 md:p-3 text-gray-900"
+                        className="group relative p-2 md:p-3 text-gray-900 dark:text-white"
                         aria-label="Shopping cart"
                     >
                         <ShoppingBag className="w-5 h-5 stroke-[1.5] transition-transform duration-300 group-hover:-translate-y-1" />
-                        <span className="absolute top-1 md:top-2 right-1 md:right-2 bg-gray-900 text-white text-[8px] font-black rounded-full h-4 w-4 flex items-center justify-center">
+                        <span className="absolute top-1 md:top-2 right-1 md:right-2 bg-gray-900 dark:bg-white dark:text-black text-white text-[8px] font-black rounded-full h-4 w-4 flex items-center justify-center">
                             {itemCount}
                         </span>
                     </button>
@@ -90,7 +95,7 @@ export function MinimalLuxeNavbar({ storeName, logo }: NavbarProps) {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="lg:hidden bg-white border-t border-gray-50 overflow-hidden"
+                        className="lg:hidden bg-white dark:bg-black border-t border-gray-50 dark:border-gray-800 overflow-hidden"
                     >
                         <div className="px-6 py-10 flex flex-col gap-8">
                             {[
@@ -108,7 +113,7 @@ export function MinimalLuxeNavbar({ storeName, logo }: NavbarProps) {
                                     <Link
                                         href={item.href}
                                         onClick={() => setIsMenuOpen(false)}
-                                        className="text-[12px] font-black uppercase tracking-[0.3em] text-gray-900"
+                                        className="text-[12px] font-black uppercase tracking-[0.3em] text-gray-900 dark:text-white"
                                     >
                                         {item.label}
                                     </Link>
@@ -126,21 +131,21 @@ function NavLink({ href, label, dropdown = false, active = false }: { href: stri
     return (
         <Link
             href={href}
-            className={`text-[11px] font-black uppercase tracking-[0.2em] flex items-center transition-all duration-300 relative group ${active ? 'text-gray-900' : 'text-gray-400 hover:text-gray-900'
+            className={`text-[11px] font-black uppercase tracking-[0.2em] flex items-center transition-all duration-300 relative group ${active ? 'text-gray-900 dark:text-white' : 'text-gray-400 hover:text-gray-900 dark:hover:text-white'
                 }`}
         >
             {label}
-            {dropdown && <ChevronDown className="ml-1 w-3 h-3 text-gray-300 group-hover:text-gray-900 transition-colors" />}
+            {dropdown && <ChevronDown className="ml-1 w-3 h-3 text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />}
 
             {/* Hover Unterline */}
-            <span className={`absolute -bottom-1 left-0 h-[2px] bg-gray-900 transition-all duration-300 ${active ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+            <span className={`absolute -bottom-1 left-0 h-[2px] bg-gray-900 dark:bg-white transition-all duration-300 ${active ? 'w-full' : 'w-0 group-hover:w-full'}`} />
         </Link>
     );
 }
 
 function IconButton({ icon, className = "" }: { icon: React.ReactNode; className?: string }) {
     return (
-        <button className={`p-2 text-gray-900 hover:text-primary transition-colors ${className}`}>
+        <button className={`p-2 text-gray-900 dark:text-white hover:text-primary transition-colors ${className}`}>
             {icon}
         </button>
     );

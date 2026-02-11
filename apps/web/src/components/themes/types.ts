@@ -26,6 +26,7 @@ export interface StoreData {
     officialEmail?: string | null;
     whatsappNumber?: string | null;
     useWhatsAppCheckout?: boolean;
+    paystackPublicKey?: string | null;
 }
 
 // Product data structure
@@ -61,6 +62,7 @@ export interface ProductGridProps {
     products: ProductData[];
     subdomain: string;
     storeId: string;
+    hideHeader?: boolean;
 }
 
 export interface ProductDetailProps {

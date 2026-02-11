@@ -28,10 +28,13 @@ export function ChicUrbanProductDetail({ product, store, subdomain }: ProductPag
             price: Number(product.price),
             image: product.image || undefined,
             storeId: store.id,
+            stock: product.stock || 0
         }, quantity);
         setAdded(true);
         setTimeout(() => setAdded(false), 2000);
     };
+
+    const isOutOfStock = (product.stock || 0) <= 0;
 
     return (
         <div className="bg-white min-h-screen pt-40 pb-24">
@@ -63,13 +66,18 @@ export function ChicUrbanProductDetail({ product, store, subdomain }: ProductPag
                                 <div className="bg-black text-white px-2 py-1">
                                     RES: 2400x2400px
                                 </div>
+                                {isOutOfStock && (
+                                    <div className="bg-red-600 text-white px-2 py-1 font-black">
+                                        STATUS: OUT_OF_STOCK
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         {/* Image Metadata Bar */}
                         <div className="mt-4 border-2 border-black p-3 bg-black text-[#CCFF00] font-mono text-[9px] uppercase flex justify-between tracking-widest">
                             <span>Image_ID: CHC_{product.id.substring(0, 12)}</span>
-                            <span>Status: Verified</span>
+                            <span>Stock_Count: {product.stock || 0}</span>
                         </div>
                     </div>
 
@@ -120,16 +128,17 @@ export function ChicUrbanProductDetail({ product, store, subdomain }: ProductPag
                                     <button
                                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
                                         className="px-6 py-4 hover:bg-black hover:text-[#CCFF00] transition-colors disabled:opacity-30"
-                                        disabled={quantity <= 1}
+                                        disabled={quantity <= 1 || isOutOfStock}
                                     >
                                         <ChevronLeft className="w-5 h-5" />
                                     </button>
                                     <span className="w-20 text-center font-black text-2xl italic tracking-tighter">
-                                        {quantity.toString().padStart(2, '0')}
+                                        {isOutOfStock ? "00" : quantity.toString().padStart(2, '0')}
                                     </span>
                                     <button
-                                        onClick={() => setQuantity(quantity + 1)}
-                                        className="px-6 py-4 hover:bg-black hover:text-[#CCFF00] transition-colors"
+                                        onClick={() => setQuantity(Math.min(product.stock || 1, quantity + 1))}
+                                        className="px-6 py-4 hover:bg-black hover:text-[#CCFF00] transition-colors disabled:opacity-30"
+                                        disabled={quantity >= (product.stock || 0) || isOutOfStock}
                                     >
                                         <ChevronRight className="w-5 h-5" />
                                     </button>
@@ -137,21 +146,26 @@ export function ChicUrbanProductDetail({ product, store, subdomain }: ProductPag
                                 <div className="flex-grow">
                                     <button
                                         onClick={handleAddToCart}
-                                        disabled={added}
+                                        disabled={added || isOutOfStock}
                                         className="w-full bg-black text-[#CCFF00] py-6 flex items-center justify-center gap-4 group relative overflow-hidden active:scale-95 transition-transform disabled:opacity-50"
                                     >
                                         <motion.div
                                             className="absolute inset-0 bg-white/10 -translate-x-full group-hover:translate-x-0 transition-transform duration-500"
                                         />
-                                        {added ? (
-                                            <ShieldCheck className="w-6 h-6 relative z-10" />
+                                        {isOutOfStock ? (
+                                            <span className="text-xl font-black uppercase italic tracking-tighter relative z-10 text-white/50">OUT_OF_STOCK</span>
+                                        ) : added ? (
+                                            <>
+                                                <ShieldCheck className="w-6 h-6 relative z-10" />
+                                                <span className="text-xl font-black uppercase italic tracking-tighter relative z-10">Item Deployed</span>
+                                            </>
                                         ) : (
-                                            <ShoppingBag className="w-6 h-6 relative z-10" />
+                                            <>
+                                                <ShoppingBag className="w-6 h-6 relative z-10" />
+                                                <span className="text-xl font-black uppercase italic tracking-tighter relative z-10">Deploy to Cart // Initiate Order</span>
+                                                <Zap className="w-5 h-5 text-[#CCFF00] fill-black relative z-10 animate-pulse" />
+                                            </>
                                         )}
-                                        <span className="text-xl font-black uppercase italic tracking-tighter relative z-10">
-                                            {added ? "Item Deployed" : "Deploy to Cart // Initiate Order"}
-                                        </span>
-                                        {!added && <Zap className="w-5 h-5 text-[#CCFF00] fill-black relative z-10 animate-pulse" />}
                                     </button>
                                 </div>
                             </div>

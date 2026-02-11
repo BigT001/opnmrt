@@ -7,30 +7,32 @@ import { formatPrice } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
-export function NeonStreamProductGrid({ products, storeId, subdomain }: ProductGridProps) {
+export function NeonStreamProductGrid({ products, storeId, subdomain, hideHeader }: ProductGridProps) {
     const { addItem } = useCartStore();
 
     return (
-        <section className="py-24 px-6 max-w-[1400px] mx-auto">
-            <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-6">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-[#00F5FF] rounded-full animate-ping" />
-                        <span className="text-[10px] font-black font-syne tracking-[0.4em] text-[#00F5FF] uppercase">Active_Inventory</span>
+        <section className={`px-6 max-w-[1400px] mx-auto ${hideHeader ? 'py-0' : 'py-24'}`}>
+            {!hideHeader && (
+                <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-6">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 bg-[#00F5FF] rounded-full animate-ping" />
+                            <span className="text-[10px] font-black font-syne tracking-[0.4em] text-[#00F5FF] uppercase">Active_Inventory</span>
+                        </div>
+                        <h2 className="text-4xl md:text-6xl font-black font-syne tracking-tighter uppercase italic text-white leading-none">
+                            CORE <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F5FF] to-[#BF00FF]">HARDWARE</span>
+                        </h2>
                     </div>
-                    <h2 className="text-4xl md:text-6xl font-black font-syne tracking-tighter uppercase italic text-white leading-none">
-                        CORE <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F5FF] to-[#BF00FF]">HARDWARE</span>
-                    </h2>
-                </div>
 
-                <div className="flex gap-4">
-                    {['ALL', 'PC', 'MOBILE', 'AUDIO'].map((tab) => (
-                        <button key={tab} className="px-6 py-2 border border-white/10 text-[10px] font-black font-syne tracking-widest text-gray-500 hover:text-white hover:border-[#00F5FF] transition-all">
-                            {tab}
-                        </button>
-                    ))}
+                    <div className="flex gap-4">
+                        {['ALL', 'PC', 'MOBILE', 'AUDIO'].map((tab) => (
+                            <button key={tab} className="px-6 py-2 border border-white/10 text-[10px] font-black font-syne tracking-widest text-gray-500 hover:text-white hover:border-[#00F5FF] transition-all">
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {products.map((product, idx) => (
@@ -101,6 +103,7 @@ export function NeonStreamProductGrid({ products, storeId, subdomain }: ProductG
                                             price: Number(product.price),
                                             image: product.image || undefined,
                                             storeId: storeId,
+                                            stock: product.stock || 0,
                                         })}
                                         className="w-10 h-10 bg-white/5 border border-white/10 hover:bg-[#00F5FF] hover:text-black rounded-xl flex items-center justify-center transition-all group/btn shadow-[0_0_15px_rgba(255,255,255,0.05)]"
                                     >

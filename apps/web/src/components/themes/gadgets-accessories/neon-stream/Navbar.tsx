@@ -1,16 +1,20 @@
 'use client';
 
 import { NavbarProps } from '../../types';
-import { ShoppingBag, Search, Menu, Zap } from 'lucide-react';
+import { ShoppingBag, Search, Menu, Zap, User } from 'lucide-react';
 import { useCartStore } from '@/store/useCartStore';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { useParams } from 'next/navigation';
+
 export function NeonStreamNavbar({ storeName, logo }: NavbarProps) {
     const { items, toggleCart } = useCartStore();
     const [mounted, setMounted] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const { subdomain } = useParams<{ subdomain: string }>();
 
     useEffect(() => {
         setMounted(true);
@@ -32,7 +36,7 @@ export function NeonStreamNavbar({ storeName, logo }: NavbarProps) {
         >
             <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
                 {/* Brand Selector */}
-                <Link href="/" className="group flex items-center gap-3">
+                <Link href={`/store/${subdomain}`} className="group flex items-center gap-3">
                     <div className="w-8 h-8 md:w-10 md:h-10 bg-[#00F5FF] flex items-center justify-center rounded-lg shadow-[0_0_20px_rgba(0,245,255,0.4)] group-hover:scale-110 transition-transform">
                         <Zap className="w-5 h-5 md:w-6 md:h-6 text-black fill-current" />
                     </div>
@@ -43,23 +47,31 @@ export function NeonStreamNavbar({ storeName, logo }: NavbarProps) {
 
                 {/* Nav Nodes */}
                 <nav className="hidden md:flex items-center gap-10">
-                    {['COLLECTIONS', 'HARDWARE', 'PERIPHERALS', 'LOGS'].map((link) => (
+                    {[
+                        { label: 'HOME', href: `/store/${subdomain}` },
+                        { label: 'SHOP', href: `/store/${subdomain}/shop` },
+                        { label: 'ABOUT', href: `/store/${subdomain}/about` }
+                    ].map((link) => (
                         <Link
-                            key={link}
-                            href="#"
+                            key={link.label}
+                            href={link.href}
                             className="text-[11px] font-black font-syne tracking-[0.2em] text-gray-400 hover:text-[#00F5FF] transition-all relative group"
                         >
-                            {link}
-                            <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[#00F5FF] group-hover:w-full transition-all duration-300 shadow-[0_0_8px_#00F5FF]" />
+                            {link.label}
+                            <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[#00F5FF] group-hover:w-full transition-all duration-300 shadow-[0_0_8px_#00F0FF]" />
                         </Link>
                     ))}
                 </nav>
 
                 {/* System Actions */}
                 <div className="flex items-center gap-2 md:gap-4">
+                    <ThemeToggle />
                     <button className="p-2 text-gray-400 hover:text-white transition-colors hidden sm:block">
                         <Search className="w-5 h-5" />
                     </button>
+                    <Link href={`/store/${subdomain}/customer/login`} className="p-2 text-gray-400 hover:text-white transition-colors hidden sm:block">
+                        <User className="w-5 h-5" />
+                    </Link>
                     <button
                         onClick={toggleCart}
                         className="relative group p-2 md:p-3 bg-white/5 border border-white/10 rounded-xl hover:border-[#00F5FF]/50 transition-all"
@@ -96,19 +108,24 @@ export function NeonStreamNavbar({ storeName, logo }: NavbarProps) {
                         exit={{ opacity: 0, scale: 0.95 }}
                         className="md:hidden absolute top-full left-0 right-0 mt-2 mx-6 p-8 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl flex flex-col gap-6"
                     >
-                        {['COLLECTIONS', 'HARDWARE', 'PERIPHERALS', 'LOGS'].map((link, i) => (
+                        {[
+                            { label: 'HOME', href: `/store/${subdomain}` },
+                            { label: 'SHOP', href: `/store/${subdomain}/shop` },
+                            { label: 'ABOUT', href: `/store/${subdomain}/about` },
+                            { label: 'LOGIN', href: `/store/${subdomain}/customer/login` }
+                        ].map((link, i) => (
                             <motion.div
-                                key={link}
+                                key={link.label}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.1 }}
                             >
                                 <Link
-                                    href="#"
+                                    href={link.href}
                                     onClick={() => setIsMenuOpen(false)}
                                     className="text-2xl font-black font-syne tracking-widest text-white/40 hover:text-[#00F5FF] transition-colors"
                                 >
-                                    {link}
+                                    {link.label}
                                 </Link>
                             </motion.div>
                         ))}

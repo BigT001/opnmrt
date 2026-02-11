@@ -8,13 +8,24 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { ThemeToggle } from '@/components/ThemeToggle';
+
 export function StarkEdgeNavbar({ storeName, logo }: NavbarProps) {
     const { items, toggleCart } = useCartStore();
     const [mounted, setMounted] = useState(false);
     const [scrolled, setScrolled] = useState(false);
-    const params = useParams<{ subdomain: string }>();
+    const { subdomain } = useParams<{ subdomain: string }>();
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     if (!mounted) return null;
 
@@ -23,11 +34,11 @@ export function StarkEdgeNavbar({ storeName, logo }: NavbarProps) {
     return (
         <nav
             className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 font-tactical ${scrolled || isMenuOpen
-                ? 'h-16 bg-[#080808]/90 backdrop-blur-xl border-b border-[#333]'
+                ? 'h-16 bg-[#080808]/90 dark:bg-black/95 backdrop-blur-xl border-b border-[#333]'
                 : 'h-24 bg-transparent border-b border-transparent'
                 }`}
         >
-            <div className="max-w-[1400px] mx-auto h-full px-6 md:px-10 flex items-center justify-between relative">
+            <div className="max-w-[1400px] mx-auto h-full px-6 md:px-10 flex items-center justify-between relative text-white">
 
                 {/* Left: Hardware Status & Mobile Toggle */}
                 <div className="flex items-center gap-4">
@@ -39,30 +50,31 @@ export function StarkEdgeNavbar({ storeName, logo }: NavbarProps) {
                     </button>
                     <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-[#1A1A1A] border border-[#333]">
                         <div className="w-1.5 h-1.5 rounded-full bg-[#00F0FF] animate-pulse shadow-[0_0_8px_#00F0FF]" />
-                        <span className="text-[10px] font-data text-white/40 uppercase tracking-tighter">Hardware: Secure</span>
+                        <span className="text-[10px] font-data text-white/40 uppercase tracking-tighter">System: Online</span>
                     </div>
-                    <button className="p-2 text-white/40 hover:text-[#00F0FF] transition-colors hidden md:block">
-                        <Search className="w-4 h-4" />
-                    </button>
                 </div>
 
                 {/* Center: Brand Architecture */}
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-12">
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-4 lg:gap-12">
                     <div className="hidden lg:flex items-center gap-8">
-                        {['Mobile', 'Wearables'].map((item) => (
-                            <Link
-                                key={item}
-                                href="#"
-                                className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/40 hover:text-white transition-all relative group"
-                            >
-                                <span className="relative z-10">{item}</span>
-                                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#00F0FF] transition-all duration-300 group-hover:w-full" />
-                            </Link>
-                        ))}
+                        <Link
+                            href={`/store/${subdomain}`}
+                            className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/40 hover:text-white transition-all relative group"
+                        >
+                            <span className="relative z-10">Home</span>
+                            <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#00F0FF] transition-all duration-300 group-hover:w-full" />
+                        </Link>
+                        <Link
+                            href={`/store/${subdomain}/shop`}
+                            className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/40 hover:text-white transition-all relative group"
+                        >
+                            <span className="relative z-10">Shop</span>
+                            <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#00F0FF] transition-all duration-300 group-hover:w-full" />
+                        </Link>
                     </div>
 
                     <Link
-                        href={`/store/${params.subdomain}`}
+                        href={`/store/${subdomain}`}
                         className="flex items-center gap-3 group px-4 md:px-6 py-2 border-x border-[#333]"
                     >
                         <Cpu className="w-5 h-5 text-[#00F0FF] group-hover:rotate-90 transition-transform duration-500" />
@@ -80,24 +92,26 @@ export function StarkEdgeNavbar({ storeName, logo }: NavbarProps) {
                     </Link>
 
                     <div className="hidden lg:flex items-center gap-8">
-                        {['Energy', 'Support'].map((item) => (
-                            <Link
-                                key={item}
-                                href="#"
-                                className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/40 hover:text-white transition-all relative group"
-                            >
-                                <span className="relative z-10">{item}</span>
-                                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#00F0FF] transition-all duration-300 group-hover:w-full" />
-                            </Link>
-                        ))}
+                        <Link
+                            href={`/store/${subdomain}/about`}
+                            className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/40 hover:text-white transition-all relative group"
+                        >
+                            <span className="relative z-10">About</span>
+                            <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#00F0FF] transition-all duration-300 group-hover:w-full" />
+                        </Link>
+                        <button className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/40 hover:text-white transition-all relative group">
+                            <Search className="w-4 h-4 inline-block mr-1" />
+                            <span className="relative z-10">Search</span>
+                        </button>
                     </div>
                 </div>
 
                 {/* Right: Asset Management */}
-                <div className="flex items-center gap-2 md:gap-6">
-                    <button className="p-2 text-white/40 hover:text-[#00F0FF] transition-colors hidden sm:block">
+                <div className="flex items-center gap-2 md:gap-4 lg:gap-6">
+                    <ThemeToggle />
+                    <Link href={`/store/${subdomain}/customer/login`} className="p-2 text-white/40 hover:text-[#00F0FF] transition-colors hidden sm:block">
                         <User className="w-4 h-4" />
-                    </button>
+                    </Link>
 
                     <button
                         onClick={toggleCart}
@@ -135,19 +149,24 @@ export function StarkEdgeNavbar({ storeName, logo }: NavbarProps) {
                         exit={{ opacity: 0, x: -100 }}
                         className="lg:hidden fixed inset-0 top-16 bg-[#080808] z-40 flex flex-col p-10 gap-8 border-t border-[#333]"
                     >
-                        {['Mobile', 'Wearables', 'Energy', 'Support'].map((item, i) => (
+                        {[
+                            { label: 'Home', href: `/store/${subdomain}` },
+                            { label: 'Shop', href: `/store/${subdomain}/shop` },
+                            { label: 'About', href: `/store/${subdomain}/about` },
+                            { label: 'Login', href: `/store/${subdomain}/customer/login` }
+                        ].map((item, i) => (
                             <motion.div
-                                key={item}
+                                key={item.label}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.1 }}
                             >
                                 <Link
-                                    href="#"
+                                    href={item.href}
                                     onClick={() => setIsMenuOpen(false)}
                                     className="text-4xl font-bold uppercase tracking-tighter text-white/40 hover:text-[#00F0FF] transition-all"
                                 >
-                                    {item}
+                                    {item.label}
                                 </Link>
                             </motion.div>
                         ))}

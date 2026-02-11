@@ -7,12 +7,12 @@ import { ShoppingBag, Eye, Heart } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
-export function VintageCharmProductGrid({ products, subdomain, storeId }: ProductGridProps) {
+export function VintageCharmProductGrid({ products, subdomain, storeId, hideHeader }: ProductGridProps) {
     const { addItem } = useCartStore();
 
     if (products.length === 0) {
         return (
-            <div className="max-w-[1800px] mx-auto px-10 py-32">
+            <div className={`max-w-[1800px] mx-auto px-10 ${hideHeader ? 'py-0' : 'py-32'}`}>
                 <div className="text-center py-20 border-[1px] border-[#1B3022]/10 vintage-border">
                     <p className="font-serif italic text-[#1B3022]/50">The archive is currently empty.</p>
                 </div>
@@ -21,16 +21,18 @@ export function VintageCharmProductGrid({ products, subdomain, storeId }: Produc
     }
 
     return (
-        <div className="bg-[#F9F4EE] py-32">
+        <div className={`bg-[#F9F4EE] ${hideHeader ? 'py-0' : 'py-32'}`}>
             <div className="max-w-[1800px] mx-auto px-10">
                 {/* Section Header */}
-                <div className="text-center mb-24 space-y-4">
-                    <span className="font-cursive text-3xl text-[#8B4513]">Hand-Picked</span>
-                    <h2 className="text-5xl md:text-6xl font-black text-[#1B3022] tracking-tighter uppercase italic">
-                        The Curated Archive
-                    </h2>
-                    <div className="w-24 h-[1px] bg-[#1B3022]/20 mx-auto mt-8" />
-                </div>
+                {!hideHeader && (
+                    <div className="text-center mb-24 space-y-4">
+                        <span className="font-cursive text-3xl text-[#8B4513]">Hand-Picked</span>
+                        <h2 className="text-5xl md:text-6xl font-black text-[#1B3022] tracking-tighter uppercase italic">
+                            The Curated Archive
+                        </h2>
+                        <div className="w-24 h-[1px] bg-[#1B3022]/20 mx-auto mt-8" />
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
                     {products.map((product, index) => (
@@ -94,6 +96,7 @@ export function VintageCharmProductGrid({ products, subdomain, storeId }: Produc
                                                 price: Number(product.price),
                                                 image: product.image || undefined,
                                                 storeId: storeId,
+                                                stock: product.stock || 0,
                                             })}
                                             className="w-full border border-[#1B3022] py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#1B3022] hover:bg-[#1B3022] hover:text-[#F9F4EE] transition-all flex items-center justify-center gap-3"
                                         >

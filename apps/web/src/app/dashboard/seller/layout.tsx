@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSocket } from '@/hooks/useSocket';
 
 export default function SellerLayout({
     children,
@@ -16,6 +17,41 @@ export default function SellerLayout({
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = React.useState(false);
     const { user, store, setUser, setStore, setLoading, isLoading } = useAuthStore();
+    const [unreadCount, setUnreadCount] = React.useState(0);
+    const socket = useSocket(user?.id);
+
+    useEffect(() => {
+        if (!user) return;
+        const fetchUnread = async () => {
+            try {
+                const res = await api.get('/chat/unread-count');
+                setUnreadCount(res.data.count);
+            } catch (err) {
+                console.error('Failed to fetch unread count:', err);
+            }
+        };
+        fetchUnread();
+    }, [user]);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleNewMessage = (message: any) => {
+            if (message.recipientId === user?.id && pathname !== '/dashboard/seller/messages') {
+                setUnreadCount(prev => prev + 1);
+            }
+        };
+
+        socket.on('newMessage', handleNewMessage);
+        return () => { socket.off('newMessage', handleNewMessage); };
+    }, [socket, user?.id, pathname]);
+
+    useEffect(() => {
+        // Reset count if on messages page
+        if (pathname === '/dashboard/seller/messages') {
+            setUnreadCount(0);
+        }
+    }, [pathname]);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -96,7 +132,14 @@ export default function SellerLayout({
                                     <SidebarLink href="/dashboard/seller/orders" icon="📦" label="Orders" active={pathname === '/dashboard/seller/orders'} isCollapsed={isCollapsed} />
                                     <SidebarLink href="/dashboard/seller/products" icon="🏷️" label="Products" active={pathname === '/dashboard/seller/products'} isCollapsed={isCollapsed} />
                                     <SidebarLink href="/dashboard/seller/inventory" icon="📦" label="Inventory" active={pathname === '/dashboard/seller/inventory'} isCollapsed={isCollapsed} />
-                                    <SidebarLink href="/dashboard/seller/messages" icon="💬" label="Messages" active={pathname === '/dashboard/seller/messages'} isCollapsed={isCollapsed} />
+                                    <SidebarLink
+                                        href="/dashboard/seller/messages"
+                                        icon="💬"
+                                        label="Messages"
+                                        active={pathname === '/dashboard/seller/messages'}
+                                        isCollapsed={isCollapsed}
+                                        badge={unreadCount > 0 ? unreadCount : undefined}
+                                    />
                                     <SidebarLink href="/dashboard/seller/customers" icon="👥" label="Customers" active={pathname === '/dashboard/seller/customers'} isCollapsed={isCollapsed} />
                                 </nav>
                             </div>
@@ -122,6 +165,7 @@ export default function SellerLayout({
                             <div>
                                 {!isCollapsed && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1">Help & Settings</p>}
                                 <nav className="space-y-0.5">
+                                    <SidebarLink href="/dashboard/seller/payments" icon="💰" label="Payments" active={pathname === '/dashboard/seller/payments'} isCollapsed={isCollapsed} />
                                     <SidebarLink href="/dashboard/seller/support" icon="🎧" label="Support" active={pathname === '/dashboard/seller/support'} isCollapsed={isCollapsed} />
                                     <SidebarLink href="/dashboard/seller/settings" icon="⚙️" label="Settings" active={pathname === '/dashboard/seller/settings'} isCollapsed={isCollapsed} />
                                 </nav>
@@ -228,18 +272,26 @@ export default function SellerLayout({
     );
 }
 
-function SidebarLink({ href, icon, label, active = false, isCollapsed = false }: { href: string; icon: string; label: string; active?: boolean; isCollapsed?: boolean }) {
+function SidebarLink({ href, icon, label, active = false, isCollapsed = false, badge }: { href: string; icon: string; label: string; active?: boolean; isCollapsed?: boolean; badge?: number }) {
     return (
         <Link
             href={href}
             title={isCollapsed ? label : undefined}
-            className={`flex items-center p-2 rounded-xl transition-all group ${isCollapsed ? 'justify-center' : 'space-x-3'} ${active
+            className={`flex items-center p-2 rounded-xl transition-all group relative ${isCollapsed ? 'justify-center' : 'space-x-3'} ${active
                 ? 'bg-slate-900 text-white shadow-lg'
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
         >
             <span className={`text-[1.1rem] shrink-0 ${active ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'}`}>{icon}</span>
-            {!isCollapsed && <span className="text-[12.5px] font-bold truncate">{label}</span>}
+            {!isCollapsed && <span className="text-[12.5px] font-bold truncate flex-1">{label}</span>}
+            {!isCollapsed && badge && (
+                <span className="bg-primary text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm animate-in zoom-in duration-300">
+                    {badge}
+                </span>
+            )}
+            {isCollapsed && badge && (
+                <div className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full ring-2 ring-white" />
+            )}
             {!isCollapsed && active && <div className="ml-auto w-1 h-3.5 bg-primary rounded-full shrink-0" />}
         </Link>
     );

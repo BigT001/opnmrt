@@ -24,6 +24,7 @@ export function StarkEdgeProductDetail({ product, store, subdomain }: ProductDet
             price: Number(product.price),
             image: product.image || undefined,
             storeId: store.id,
+            stock: product.stock || 0
         }, quantity);
 
         setAdded(true);
@@ -142,12 +143,12 @@ export function StarkEdgeProductDetail({ product, store, subdomain }: ProductDet
                                             <Minus className="w-6 h-6" />
                                         </button>
                                         <div className="flex-1 flex items-center justify-center font-data text-3xl font-bold text-white border-x border-[#333]">
-                                            {quantity < 10 ? `0${quantity}` : quantity}
+                                            {(product.stock || 0) <= 0 ? "00" : (quantity < 10 ? `0${quantity}` : quantity)}
                                         </div>
                                         <button
-                                            onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                                            onClick={() => setQuantity(Math.min(product.stock || 0, quantity + 1))}
                                             className="w-24 flex items-center justify-center text-white/30 hover:text-[#00F0FF] hover:bg-[#111] transition-all"
-                                            disabled={quantity >= product.stock}
+                                            disabled={quantity >= (product.stock || 0)}
                                         >
                                             <Plus className="w-6 h-6" />
                                         </button>

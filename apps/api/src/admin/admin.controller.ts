@@ -8,30 +8,30 @@ import { Roles } from '../common/decorators/roles.decorator';
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('ADMIN')
 export class AdminController {
-    constructor(private adminService: AdminService) { }
+  constructor(private adminService: AdminService) {}
 
-    @Get('stats')
-    async getStats() {
-        return this.adminService.getStats();
-    }
+  @Get('stats')
+  async getStats() {
+    return this.adminService.getStats();
+  }
 
-    @Get('sellers')
-    async getSellers() {
-        return this.adminService.getSellers();
-    }
+  @Get('sellers')
+  async getSellers() {
+    return this.adminService.getSellers();
+  }
 
-    @Get('sellers/:id')
-    async getSellerDetail(@Param('id') id: string) {
-        return this.adminService.getSellerDetail(id);
-    }
+  @Get('sellers/:id')
+  async getSellerDetail(@Param('id') id: string) {
+    return this.adminService.getSellerDetail(id);
+  }
 
-    @Get('buyers')
-    async getBuyers() {
-        return this.adminService.getBuyers();
-    }
+  @Get('buyers')
+  async getBuyers() {
+    return this.adminService.getBuyers();
+  }
 
-    @Get('orders')
-    async getOrders() {
-        return this.adminService.getOrders();
-    }
+  @Get('orders')
+  async getOrders() {
+    return this.adminService.getOrders();
+  }
 }

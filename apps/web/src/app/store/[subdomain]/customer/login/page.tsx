@@ -27,6 +27,7 @@ export default function CustomerAuthPage() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        phone: '',
         password: '',
     });
 
@@ -264,6 +265,24 @@ export default function CustomerAuthPage() {
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                             className="w-full h-16 pl-14 pr-8 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold text-slate-900 outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-300 placeholder:font-medium relative disabled:opacity-60"
                                             placeholder="name@example.com"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Phone Number</label>
+                                    <div className="relative group">
+                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-slate-900 transition-colors z-10">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                                        </div>
+                                        <input
+                                            type="tel"
+                                            required
+                                            disabled={otpSent}
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            className="w-full h-16 pl-14 pr-8 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold text-slate-900 outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-300 placeholder:font-medium relative disabled:opacity-60"
+                                            placeholder="+1 (555) 000-0000"
                                         />
                                     </div>
                                 </div>

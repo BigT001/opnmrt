@@ -23,6 +23,7 @@ model User {
   phone         String?   @unique
   password      String
   name          String?
+  image         String?
   role          UserRole  @default(BUYER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -35,6 +36,22 @@ model User {
   managedStore  Store?    @relation("StoreOwner")
   orders        Order[]
   messages      Message[]
+  passwordHistory PasswordHistory[]
+  
+  // Customer Profile Data
+  shippingAddress Json?   // { firstName, lastName, address, city, postalCode, country }
+  billingAddress  Json?   // Optional: different billing address
+  savedCards      Json?   // [{ brand: 'visa', last4: '4242', expMonth: 12, expYear: 2025 }] - Mock for now as we don't store real cards
+}
+
+model PasswordHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  password  String   // Hashed password
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Store {
@@ -64,6 +81,11 @@ model Store {
   officialEmail String?
   whatsappNumber String?
   useWhatsAppCheckout Boolean @default(false)
+  
+  // Payment Integration (Direct Paystack Account)
+  paystackPublicKey     String?
+  paystackSecretKey     String?
+  paystackWebhookSecret  String? // Optional: to verify specific account webhooks
   
   products      Product[]
   orders        Order[]

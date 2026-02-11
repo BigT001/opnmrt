@@ -115,7 +115,7 @@ export function PureBotanicalCartDrawer({ storeId }: CartDrawerProps) {
                                                 <div className="flex items-center justify-between mt-4">
                                                     <div className="flex items-center gap-1.5 p-1 bg-white rounded-full border border-[#7C9082]/20 shadow-sm h-10">
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 1, storeId)}
                                                             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F2EBE9] text-[#1C2B21]/40 hover:text-[#1C2B21] transition-all disabled:opacity-30"
                                                             disabled={item.quantity <= 1}
                                                         >
@@ -123,15 +123,16 @@ export function PureBotanicalCartDrawer({ storeId }: CartDrawerProps) {
                                                         </button>
                                                         <span className="font-sans font-black text-xs text-[#1C2B21] min-w-[28px] text-center">{item.quantity}</span>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F2EBE9] text-[#1C2B21]/40 hover:text-[#1C2B21] transition-all"
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1, storeId)}
+                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F2EBE9] text-[#1C2B21]/40 hover:text-[#1C2B21] transition-all disabled:opacity-30"
+                                                            disabled={item.quantity >= (item.stock ?? 9999)}
                                                         >
                                                             <Plus className="w-3.5 h-3.5" />
                                                         </button>
                                                     </div>
 
                                                     <button
-                                                        onClick={() => removeItem(item.id)}
+                                                        onClick={() => removeItem(item.id, storeId)}
                                                         className="p-3 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
                                                     >
                                                         <Trash2 className="w-4 h-4" />

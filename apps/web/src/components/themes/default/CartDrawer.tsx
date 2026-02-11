@@ -43,7 +43,7 @@ export function DefaultCartDrawer({ storeId }: { storeId?: string }) {
                                     <div className="flex-grow space-y-2">
                                         <div className="flex justify-between items-start">
                                             <h3 className="text-sm font-bold text-gray-900 leading-tight">{item.name}</h3>
-                                            <button onClick={() => removeItem(item.id)} className="text-gray-400 hover:text-red-500">
+                                            <button onClick={() => removeItem(item.id, storeId)} className="text-gray-400 hover:text-red-500">
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -51,7 +51,7 @@ export function DefaultCartDrawer({ storeId }: { storeId?: string }) {
                                         <div className="flex items-center justify-between pt-2">
                                             <div className="flex items-center gap-1 border border-gray-200 rounded-full p-1 bg-gray-50 h-8">
                                                 <button
-                                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                    onClick={() => updateQuantity(item.id, item.quantity - 1, storeId)}
                                                     className="w-6 h-6 flex items-center justify-center hover:bg-white rounded-full transition-all text-gray-400 hover:text-gray-900 shadow-sm disabled:opacity-30"
                                                     disabled={item.quantity <= 1}
                                                 >
@@ -59,8 +59,9 @@ export function DefaultCartDrawer({ storeId }: { storeId?: string }) {
                                                 </button>
                                                 <span className="text-xs font-black min-w-[24px] text-center text-gray-900">{item.quantity}</span>
                                                 <button
-                                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                    className="w-6 h-6 flex items-center justify-center hover:bg-white rounded-full transition-all text-gray-400 hover:text-gray-900 shadow-sm"
+                                                    onClick={() => updateQuantity(item.id, item.quantity + 1, storeId)}
+                                                    className="w-6 h-6 flex items-center justify-center hover:bg-white rounded-full transition-all text-gray-400 hover:text-gray-900 shadow-sm disabled:opacity-30"
+                                                    disabled={item.quantity >= (item.stock ?? 9999)}
                                                 >
                                                     <Plus className="w-3 h-3" />
                                                 </button>

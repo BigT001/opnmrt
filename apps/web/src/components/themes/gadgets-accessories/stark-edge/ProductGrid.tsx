@@ -7,7 +7,7 @@ import { Zap, Plus, ArrowUpRight } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
-export function StarkEdgeProductGrid({ products, subdomain, storeId }: ProductGridProps) {
+export function StarkEdgeProductGrid({ products, subdomain, storeId, hideHeader }: ProductGridProps) {
     const { addItem } = useCartStore();
 
     const handleAddToCart = (product: any) => {
@@ -17,6 +17,7 @@ export function StarkEdgeProductGrid({ products, subdomain, storeId }: ProductGr
             price: Number(product.price),
             image: product.image,
             storeId,
+            stock: product.stock || 0,
         }, 1);
     };
 
@@ -32,19 +33,21 @@ export function StarkEdgeProductGrid({ products, subdomain, storeId }: ProductGr
     }
 
     return (
-        <section className="max-w-[1400px] mx-auto px-10 py-32">
-            <header className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8 border-l-4 border-[#00F0FF] pl-10">
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-[#00F0FF]">
-                        <div className="w-2 h-2 bg-[#00F0FF] rounded-full animate-pulse" />
-                        <span className="font-data text-[10px] uppercase tracking-[0.4em] font-bold">Scanning Inventory</span>
+        <section className={`max-w-[1400px] mx-auto px-10 ${hideHeader ? 'py-0' : 'py-32'}`}>
+            {!hideHeader && (
+                <header className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8 border-l-4 border-[#00F0FF] pl-10">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-[#00F0FF]">
+                            <div className="w-2 h-2 bg-[#00F0FF] rounded-full animate-pulse" />
+                            <span className="font-data text-[10px] uppercase tracking-[0.4em] font-bold">Scanning Inventory</span>
+                        </div>
+                        <h2 className="text-6xl font-tactical font-black text-white uppercase tracking-tighter">Current Assets</h2>
                     </div>
-                    <h2 className="text-6xl font-tactical font-black text-white uppercase tracking-tighter">Current Assets</h2>
-                </div>
-                <div className="font-data text-[10px] text-white/40 uppercase tracking-widest bg-[#111] px-4 py-2 border border-[#333]">
-                    Location: Global_Edge_Node_01
-                </div>
-            </header>
+                    <div className="font-data text-[10px] text-white/40 uppercase tracking-widest bg-[#111] px-4 py-2 border border-[#333]">
+                        Location: Global_Edge_Node_01
+                    </div>
+                </header>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[#333] border border-[#333]">
                 {products.map((product, idx) => (

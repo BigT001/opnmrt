@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Plus, X, Upload, Loader2, Package } from 'lucide-react';
+import api from '@/lib/api';
 
 interface Product {
     id: string;
@@ -27,13 +28,10 @@ export default function ProductsPage() {
 
     // Fetch Products
     const fetchProducts = async () => {
-        if (!store?.subdomain) return;
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products?subdomain=${store.subdomain}`);
-            if (res.ok) {
-                const data = await res.json();
-                setProducts(data);
-            }
+            setLoading(true);
+            const res = await api.get('/products/seller');
+            setProducts(res.data);
         } catch (error) {
             console.error('Failed to fetch products', error);
         } finally {
@@ -42,10 +40,8 @@ export default function ProductsPage() {
     };
 
     useEffect(() => {
-        if (store) {
-            fetchProducts();
-        }
-    }, [store]);
+        fetchProducts();
+    }, []);
 
     return (
         <div className="space-y-8">

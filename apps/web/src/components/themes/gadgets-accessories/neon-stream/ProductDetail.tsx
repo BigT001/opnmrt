@@ -19,6 +19,7 @@ export function NeonStreamProductDetail({ product, store, subdomain }: ProductDe
             price: Number(product.price),
             image: product.image || undefined,
             storeId: store.id,
+            stock: product.stock || 0,
         }, quantity);
         setAdded(true);
         setTimeout(() => setAdded(false), 2000);
@@ -45,7 +46,7 @@ export function NeonStreamProductDetail({ product, store, subdomain }: ProductDe
                         {/* Live Proof Label */}
                         <div className="absolute top-8 left-8 flex items-center gap-3 px-4 py-2 bg-black/60 backdrop-blur-xl border border-white/10 rounded-full">
                             <span className="w-2 h-2 bg-[#00F5FF] rounded-full animate-ping" />
-                            <span className="text-[9px] font-black uppercase tracking-widest text-white italic">LIVE_STOCK // 14 UNITS LEFT</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-white italic">LIVE_STOCK // {product.stock || 0} UNITS LEFT</span>
                         </div>
                     </motion.div>
 
@@ -125,17 +126,27 @@ export function NeonStreamProductDetail({ product, store, subdomain }: ProductDe
                             <div className="flex items-center border border-white/10 bg-black/40 rounded-xl overflow-hidden h-12">
                                 <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-12 h-full hover:bg-white/5 transition-colors text-gray-400">-</button>
                                 <span className="px-6 text-xs font-black text-white border-x border-white/10 h-full flex items-center">{quantity}</span>
-                                <button onClick={() => setQuantity(quantity + 1)} className="w-12 h-full hover:bg-white/5 transition-colors text-gray-400">+</button>
+                                <button
+                                    onClick={() => setQuantity(Math.min(product.stock || 1, quantity + 1))}
+                                    className="w-12 h-full hover:bg-white/5 transition-colors text-gray-400"
+                                    disabled={quantity >= (product.stock || 0)}
+                                >
+                                    +
+                                </button>
                             </div>
                         </div>
 
                         <div className="flex gap-4 relative z-10">
                             <button
                                 onClick={handleAddToCart}
-                                disabled={added}
-                                className="flex-1 bg-[#00F5FF] text-black h-16 rounded-2xl font-black font-syne text-xs uppercase tracking-[0.4em] flex items-center justify-center gap-4 hover:shadow-[0_0_30px_rgba(0,245,255,0.4)] transition-all active:scale-95 group"
+                                disabled={added || (product.stock || 0) <= 0}
+                                className="flex-1 bg-[#00F5FF] text-black h-16 rounded-2xl font-black font-syne text-xs uppercase tracking-[0.4em] flex items-center justify-center gap-4 hover:shadow-[0_0_30px_rgba(0,245,255,0.4)] transition-all active:scale-95 group disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                             >
-                                {added ? (
+                                {product.stock <= 0 ? (
+                                    <>
+                                        OFFLINE_MANIFEST
+                                    </>
+                                ) : added ? (
                                     <>
                                         <Check className="w-5 h-5" />
                                         SYNCED_TO_STREAM
