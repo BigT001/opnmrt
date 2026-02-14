@@ -14,7 +14,7 @@ export function DefaultCartDrawer({ storeId }: { storeId?: string }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[200] overflow-hidden">
+        <div className="fixed inset-0 z-[2000] overflow-hidden">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={toggleCart} />
             <div className="absolute inset-y-0 right-0 max-w-full flex">
                 <div className="w-screen max-w-md bg-white shadow-xl flex flex-col">

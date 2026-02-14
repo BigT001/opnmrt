@@ -3,6 +3,7 @@
 import { NavbarProps } from '../../types';
 import { ShoppingBag, Menu, Search, User } from 'lucide-react';
 import { useCartStore } from '@/store/useCartStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,13 +13,21 @@ import { useParams } from 'next/navigation';
 
 export function VintageCharmNavbar({ storeName, logo }: NavbarProps) {
     const { items, toggleCart } = useCartStore();
+    const { user } = useAuthStore();
     const [mounted, setMounted] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
     const { subdomain } = useParams<{ subdomain: string }>();
 
     useEffect(() => {
         setMounted(true);
-        const handleScroll = () => setScrolled(window.scrollY > 20);
+        let lastScrollY = window.scrollY;
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            setScrolled(currentScrollY > 20);
+            setIsVisible(currentScrollY < lastScrollY || currentScrollY < 50);
+            lastScrollY = currentScrollY;
+        };
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
@@ -28,7 +37,7 @@ export function VintageCharmNavbar({ storeName, logo }: NavbarProps) {
     const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 transition-colors duration-300">
+        <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
             {/* Top Bar - Classic Announcement */}
             <div className="bg-[#1B3022] text-[#F9F4EE] py-2 px-6 flex justify-center items-center gap-4 text-[10px] tracking-[0.2em] font-medium uppercase border-b border-[#F9F4EE]/10">
                 <span>Complimentary Apothecary Shipping on Orders Over $150</span>
@@ -82,7 +91,10 @@ export function VintageCharmNavbar({ storeName, logo }: NavbarProps) {
                         <button className="hidden md:block text-[#1B3022] dark:text-[#F9F4EE] hover:text-[#8B4513] transition-colors">
                             <Search className="w-5 h-5" />
                         </button>
-                        <Link href={`/store/${subdomain}/customer/login`} className="hidden md:block text-[#1B3022] dark:text-[#F9F4EE] hover:text-[#8B4513] transition-colors">
+                        <Link
+                            href={user ? `/store/${subdomain}/customer/orders` : `/store/${subdomain}/customer/login`}
+                            className={`hidden md:block transition-colors ${user ? 'text-[#8B4513] dark:text-amber-200' : 'text-[#1B3022] dark:text-[#F9F4EE] hover:text-[#8B4513]'}`}
+                        >
                             <User className="w-5 h-5" />
                         </Link>
                         <button

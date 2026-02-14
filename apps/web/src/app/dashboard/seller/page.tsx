@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
@@ -78,9 +79,9 @@ export default function SellerDashboardPage() {
                             <span className="bg-white/10 backdrop-blur-md text-emerald-100 px-2 py-1 rounded-lg font-bold border border-white/10">{stats?.totalOrders || 0} Orders</span>
                             <span className="text-emerald-300 font-medium">Verified Growth</span>
                         </div>
-                        <button className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition-all shadow-lg shadow-orange-950/20 text-xs">
+                        <Link href="/dashboard/seller/analytics" className="bg-primary inline-block text-white px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition-all shadow-lg shadow-orange-950/20 text-xs">
                             View Detailed Report
-                        </button>
+                        </Link>
                     </div>
                     {/* Polished Illustration */}
                     <div className="absolute right-0 top-0 bottom-0 w-1/2 flex items-center justify-center pointer-events-none overflow-hidden">
@@ -98,13 +99,13 @@ export default function SellerDashboardPage() {
                 </div>
 
                 {/* Sales Funnel Section */}
-                <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
+                <div className="bg-white rounded-[2.5rem] p-6 lg:p-10 shadow-sm border border-slate-100">
                     <div className="flex justify-between items-center mb-10">
                         <h3 className="text-xl font-bold text-slate-900">Sales funnel</h3>
                         <button className="w-8 h-8 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 font-bold tracking-widest px-2">•••</button>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-6 mb-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                         <FunnelStat
                             label="All sessions"
                             value={funnel.sessions >= 1000 ? `${(funnel.sessions / 1000).toFixed(1)}K` : funnel.sessions.toString()}
@@ -141,42 +142,44 @@ export default function SellerDashboardPage() {
                 </div>
 
                 {/* Top Selling Products */}
-                <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
+                <div className="bg-white rounded-[2.5rem] p-6 lg:p-10 shadow-sm border border-slate-100 overflow-hidden">
                     <div className="flex justify-between items-center mb-10">
                         <h3 className="text-xl font-bold text-slate-900">Top selling products</h3>
                         <button className="w-8 h-8 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 font-bold tracking-widest px-2">•••</button>
                     </div>
 
-                    <table className="w-full">
-                        <thead>
-                            <tr className="text-left text-[10px] text-slate-400 uppercase tracking-widest">
-                                <th className="pb-6 font-bold">Products</th>
-                                <th className="pb-6 font-bold">Stocks</th>
-                                <th className="pb-6 font-bold">Price</th>
-                                <th className="pb-6 font-bold">Sales</th>
-                                <th className="pb-6 font-bold text-right">Earnings</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-sm font-bold text-slate-900">
-                            {stats?.topProducts && stats.topProducts.length > 0 ? (
-                                stats.topProducts.map((p) => (
-                                    <ProductRow
-                                        key={p.id}
-                                        name={p.name}
-                                        stocks={p.stocks.toLocaleString()}
-                                        price={formatPrice(p.price)}
-                                        sales={p.sales.toLocaleString()}
-                                        earnings={formatPrice(p.earnings)}
-                                        image={p.image}
-                                    />
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={5} className="py-10 text-center text-slate-400 italic">No products sold yet</td>
+                    <div className="overflow-x-auto no-scrollbar">
+                        <table className="w-full min-w-[600px]">
+                            <thead>
+                                <tr className="text-left text-[10px] text-slate-400 uppercase tracking-widest">
+                                    <th className="pb-6 font-bold">Products</th>
+                                    <th className="pb-6 font-bold">Stocks</th>
+                                    <th className="pb-6 font-bold">Price</th>
+                                    <th className="pb-6 font-bold">Sales</th>
+                                    <th className="pb-6 font-bold text-right">Earnings</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="text-sm font-bold text-slate-900">
+                                {stats?.topProducts && stats.topProducts.length > 0 ? (
+                                    stats.topProducts.map((p) => (
+                                        <ProductRow
+                                            key={p.id}
+                                            name={p.name}
+                                            stocks={p.stocks.toLocaleString()}
+                                            price={formatPrice(p.price)}
+                                            sales={p.sales.toLocaleString()}
+                                            earnings={formatPrice(p.earnings)}
+                                            image={p.image}
+                                        />
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={5} className="py-10 text-center text-slate-400 italic">No products sold yet</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -202,9 +205,9 @@ export default function SellerDashboardPage() {
                         <CategoryStat label="Electronics" value="24.53%" color="bg-emerald-500" />
                         <CategoryStat label="Food" value="16.47%" color="bg-amber-400" />
                     </div>
-                    <button className="w-full mt-8 py-4 border border-slate-100 rounded-2xl text-[10px] font-bold text-slate-600 uppercase tracking-widest hover:bg-slate-50 transition-all">
+                    <Link href="/dashboard/seller/analytics" className="w-full mt-8 py-4 border border-slate-100 rounded-2xl text-[10px] font-bold text-slate-600 uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center">
                         View details ↗
-                    </button>
+                    </Link>
                 </div>
 
                 {/* Next Upcoming Event */}

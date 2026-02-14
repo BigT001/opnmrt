@@ -173,25 +173,36 @@ export default function SellerMessagesPage() {
                                 <div
                                     key={chat.userId}
                                     onClick={() => setSelectedUserId(chat.userId)}
-                                    className={`p-4 rounded-2xl cursor-pointer transition-all relative ${selectedUserId === chat.userId ? 'bg-slate-900 text-white shadow-lg' : 'hover:bg-slate-50 text-slate-500'
+                                    className={`p-3 rounded-2xl cursor-pointer transition-all relative flex items-center gap-3 ${selectedUserId === chat.userId ? 'bg-slate-900 text-white shadow-lg' : 'hover:bg-slate-50 text-slate-500'
                                         }`}
                                 >
-                                    {chat.unreadCount > 0 && selectedUserId !== chat.userId && (
-                                        <div className="absolute top-4 right-4 h-5 px-1.5 min-w-[20px] bg-emerald-500 text-white text-[10px] font-black rounded-full flex items-center justify-center ring-4 ring-white shadow-lg animate-in zoom-in duration-300">
-                                            {chat.unreadCount}
+                                    {/* Avatar */}
+                                    <div className="relative shrink-0">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-black shadow-sm ${selectedUserId === chat.userId ? 'bg-white/20 text-white ring-1 ring-white/30' : 'bg-slate-100 text-slate-900 border border-slate-200'
+                                            }`}>
+                                            {chat.userName?.[0]?.toUpperCase() || 'U'}
                                         </div>
-                                    )}
-                                    <div className="flex justify-between items-start mb-1">
-                                        <span className={`text-xs font-black truncate max-w-[120px] ${selectedUserId === chat.userId ? 'text-white' : 'text-slate-900'}`}>
-                                            {chat.userName}
-                                        </span>
-                                        <span className="text-[9px] opacity-60 font-medium">
-                                            {new Date(chat.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
+                                        {/* Badge - Positioned Top Left as requested */}
+                                        {chat.unreadCount > 0 && selectedUserId !== chat.userId && (
+                                            <div className="absolute -top-1 -left-1 h-4 min-w-[16px] px-1 bg-emerald-500 text-white text-[9px] font-black rounded-full flex items-center justify-center ring-2 ring-white shadow-sm z-10 animate-in zoom-in duration-300">
+                                                {chat.unreadCount}
+                                            </div>
+                                        )}
                                     </div>
-                                    <p className={`text-[11px] line-clamp-1 italic ${chat.unreadCount > 0 ? 'font-black text-slate-900 opacity-90' : 'opacity-70'}`}>
-                                        {chat.lastMessage}
-                                    </p>
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-center mb-0.5">
+                                            <span className={`text-xs font-black truncate ${selectedUserId === chat.userId ? 'text-white' : 'text-slate-900'}`}>
+                                                {chat.userName}
+                                            </span>
+                                            <span className="text-[9px] opacity-60 font-medium whitespace-nowrap ml-2">
+                                                {new Date(chat.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        <p className={`text-[10px] line-clamp-1 italic ${chat.unreadCount > 0 ? 'font-bold text-slate-900' : 'opacity-70'}`}>
+                                            {chat.lastMessage}
+                                        </p>
+                                    </div>
                                 </div>
                             ))
                         )}

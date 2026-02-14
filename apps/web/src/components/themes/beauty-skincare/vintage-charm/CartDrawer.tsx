@@ -31,7 +31,7 @@ export function VintageCharmCartDrawer({ storeId }: CartDrawerProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={toggleCart}
-                        className="fixed inset-0 z-[60] bg-[#1B3022]/40 backdrop-blur-sm"
+                        className="fixed inset-0 z-[2000] bg-[#1B3022]/40 backdrop-blur-sm"
                     />
 
                     {/* Drawer */}
@@ -40,7 +40,7 @@ export function VintageCharmCartDrawer({ storeId }: CartDrawerProps) {
                         animate={{ x: 0, skewX: 0 }}
                         exit={{ x: '100%', skewX: 2 }}
                         transition={{ type: 'spring', damping: 30, stiffness: 200 }}
-                        className="fixed inset-y-0 right-0 z-[70] w-full max-w-lg bg-[#F9F4EE] shadow-[-20px_0_60px_rgba(27,48,34,0.15)] flex flex-col border-l border-[#1B3022]/10"
+                        className="fixed inset-y-0 right-0 z-[2001] w-full max-w-lg bg-[#F9F4EE] shadow-[-20px_0_60px_rgba(27,48,34,0.15)] flex flex-col border-l border-[#1B3022]/10"
                     >
                         {/* Header: Archival Manifest */}
                         <div className="p-10 border-b border-[#1B3022]/10 space-y-2 relative overflow-hidden">

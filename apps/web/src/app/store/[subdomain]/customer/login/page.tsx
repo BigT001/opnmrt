@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, User, ArrowRight, Loader2, ShoppingBag, CheckCircle, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2, ShoppingBag, CheckCircle, ShieldCheck, Store, Star, Box, Heart, Bell } from 'lucide-react';
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useCartStore } from '@/store/useCartStore';
 
 export default function CustomerAuthPage() {
     const { subdomain } = useParams<{ subdomain: string }>();
@@ -14,10 +15,15 @@ export default function CustomerAuthPage() {
     const searchParams = useSearchParams();
     const redirect = searchParams.get('redirect');
     const { setUser, setStore } = useAuthStore();
+    const { items: localItems, setItems } = useCartStore();
 
     const [isLogin, setIsLogin] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Store Info
+    const [storeName, setStoreName] = useState('');
+    const [storeLogo, setStoreLogo] = useState('');
 
     // Registration State
     const [otpSent, setOtpSent] = useState(false);
@@ -30,6 +36,17 @@ export default function CustomerAuthPage() {
         phone: '',
         password: '',
     });
+
+    useEffect(() => {
+        if (subdomain) {
+            api.get(`/stores/resolve?subdomain=${subdomain}`)
+                .then(res => {
+                    setStoreName(res.data.name || 'Store');
+                    setStoreLogo(res.data.logo || '');
+                })
+                .catch(() => setStoreName('Store'));
+        }
+    }, [subdomain]);
 
     const handleSendOtp = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -90,6 +107,12 @@ export default function CustomerAuthPage() {
                 setUser(response.data.user);
                 setStore(response.data.store);
 
+                // Sync Cart (Non-blocking or safer)
+                api.post('/users/cart/sync', { items: localItems })
+                    .then(cartRes => setItems(cartRes.data))
+                    .catch(e => console.error("Failed to sync cart:", e));
+
+
                 if (redirect === 'checkout') {
                     router.push(`/store/${subdomain}/checkout`);
                 } else {
@@ -103,7 +126,6 @@ export default function CustomerAuthPage() {
         }
     };
 
-    // Reset state when switching modes
     const toggleMode = () => {
         setIsLogin(!isLogin);
         setError(null);
@@ -113,308 +135,282 @@ export default function CustomerAuthPage() {
     };
 
     return (
-        <div className="flex flex-col items-center pt-10 pb-10 px-6 sm:px-10 relative overflow-x-hidden min-h-screen justify-center">
-            {/* Ambient Background */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-50/50 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-50/50 rounded-full blur-[120px]" />
-                <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-pink-50/30 rounded-full blur-[100px]" />
-            </div>
-
+        <div className="flex flex-col lg:flex-row min-h-[calc(100vh-80px)] lg:h-[85vh] bg-white overflow-hidden">
+            {/* Left Panel - Store Features */}
             <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="max-w-md w-full bg-white rounded-[3rem] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.04)] px-7 pt-8 pb-8 sm:px-10 sm:pt-10 sm:pb-10 border border-white relative z-20"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="hidden lg:flex lg:w-1/2 bg-[#0f172a] text-white p-12 flex-col justify-center relative overflow-hidden"
             >
-                {/* Redirect Notice */}
-                <AnimatePresence mode="wait">
-                    {redirect === 'checkout' && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
-                            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            className="bg-slate-900 rounded-[2rem] p-5 text-white relative overflow-hidden group shadow-2xl shadow-slate-900/20"
-                        >
-                            <div className="relative z-10">
-                                <motion.div
-                                    initial={{ x: -20, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    transition={{ delay: 0.2 }}
-                                    className="flex items-center gap-2 mb-2"
-                                >
-                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400/80">Secure Checkout</p>
-                                </motion.div>
-                                <h3 className="text-xl font-black leading-tight tracking-tight">One last step...</h3>
-                                <p className="text-xs font-medium text-slate-400 mt-2 leading-relaxed">
-                                    Please sign in to your secure customer account to complete your purchase and track delivery.
-                                </p>
-                            </div>
-                            <ShoppingBag className="absolute -right-6 -bottom-6 w-28 h-28 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-700 ease-out" />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {/* Background Decor */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
 
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-1">
-                        {isLogin ? 'Welcome Back' : (otpVerified ? 'Final Details' : 'Create Account')}
-                    </h1>
-                    <p className="text-slate-400 text-xs font-medium">
-                        {isLogin ? 'Please enter your details' : (otpVerified ? 'Set your password to finish' : 'Verify your email to continue')}
-                    </p>
+                <div className="relative z-10 max-w-lg mx-auto">
+                    {/* Brand */}
+                    <div className="mb-10">
+                        {storeLogo ? (
+                            <img src={storeLogo} alt={storeName} className="h-12 w-auto object-contain mb-6" />
+                        ) : (
+                            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/10 mb-6 text-white">
+                                <Store className="w-6 h-6" />
+                            </div>
+                        )}
+                        <h1 className="text-4xl font-bold tracking-tight mb-4">
+                            Welcome to {storeName || 'Our Store'}
+                        </h1>
+                        <p className="text-slate-400 text-lg leading-relaxed">
+                            Sign in to access your orders, wishlist, and exclusive member-only offers.
+                        </p>
+                    </div>
+
+                    {/* Feature Grid */}
+                    <div className="grid gap-6">
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0">
+                                <Box className="w-5 h-5 text-blue-400" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-white mb-1">Track Orders</h3>
+                                <p className="text-sm text-slate-400">Real-time updates on your deliveries</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center shrink-0">
+                                <Star className="w-5 h-5 text-purple-400" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-white mb-1">Exclusive Access</h3>
+                                <p className="text-sm text-slate-400">Early access to new drops and sales</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
+                                <Bell className="w-5 h-5 text-emerald-400" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-white mb-1">Instant Notifications</h3>
+                                <p className="text-sm text-slate-400">Get notified about restocks and offers</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* Right Panel - Auth Form */}
+            <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 relative">
+                {/* Mobile Heading */}
+                <div className="lg:hidden text-center mb-6">
+                    <h2 className="text-2xl font-bold text-slate-900">{storeName || 'Store'}</h2>
+                    <p className="text-sm text-slate-500">Welcome Back</p>
                 </div>
 
-                {error && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 p-4 bg-rose-50 border border-rose-100 text-rose-600 text-xs font-bold rounded-2xl text-center"
-                    >
-                        {error}
-                    </motion.div>
-                )}
-
-                {/* LOGIN FORM */}
-                {isLogin ? (
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Email Address</label>
-                            <div className="relative group">
-                                <div className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-slate-900 transition-colors z-10">
-                                    <Mail strokeWidth={2.5} />
+                <div className="w-full max-w-sm">
+                    {/* Redirect Notice */}
+                    <AnimatePresence mode="wait">
+                        {redirect === 'checkout' && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                                animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
+                                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                                className="bg-blue-50/50 rounded-2xl p-4 text-blue-900 border border-blue-100 mb-6 flex items-start gap-3"
+                            >
+                                <ShoppingBag className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                                <div>
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-1">Checkout Pending</h3>
+                                    <p className="text-sm text-blue-800/80">Sign in to complete your purchase.</p>
                                 </div>
-                                <input
-                                    type="email"
-                                    required
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="w-full h-16 pl-14 pr-8 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold text-slate-900 outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-300 placeholder:font-medium relative"
-                                    placeholder="name@example.com"
-                                />
-                            </div>
-                        </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                        <div className="space-y-2">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Secure Password</label>
-                            <div className="relative group">
-                                <div className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-slate-900 transition-colors z-10">
-                                    <Lock strokeWidth={2.5} />
-                                </div>
-                                <input
-                                    type="password"
-                                    required
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="w-full h-16 pl-14 pr-8 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold text-slate-900 outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-300 placeholder:font-medium relative"
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                        </div>
+                    <div className="text-center mb-6 hidden lg:block">
+                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                            {isLogin ? 'Sign In' : (otpVerified ? 'Final Step' : 'Create Account')}
+                        </h2>
+                        <p className="text-slate-500 text-sm mt-1">
+                            {isLogin ? 'Enter your details to continue' : 'Join us for a better experience'}
+                        </p>
+                    </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full h-16 bg-slate-900 text-white rounded-[1.5rem] text-sm font-black uppercase tracking-[0.2em] hover:bg-black transition-all flex items-center justify-center gap-3 group disabled:opacity-50 mt-4 relative overflow-hidden shadow-xl shadow-slate-900/10"
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-medium rounded-xl text-center"
                         >
-                            {loading ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : (
-                                <>
-                                    <span>Sign In</span>
-                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
-                                </>
-                            )}
-                        </button>
-                    </form>
-                ) : (
-                    /* REGISTRATION FLOW */
-                    <div className="space-y-4">
-                        {!otpVerified ? (
-                            /* STEP 1: Email & OTP */
-                            <form onSubmit={!otpSent ? handleSendOtp : (e) => { e.preventDefault(); handleVerifyOtp(); }} className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Full Name</label>
-                                    <div className="relative group">
-                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-slate-900 transition-colors z-10">
-                                            <User strokeWidth={2.5} />
-                                        </div>
-                                        <input
-                                            type="text"
-                                            required
-                                            disabled={otpSent}
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            className="w-full h-16 pl-14 pr-8 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold text-slate-900 outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-300 placeholder:font-medium relative disabled:opacity-60"
-                                            placeholder="John Doe"
-                                        />
-                                    </div>
-                                </div>
+                            {error}
+                        </motion.div>
+                    )}
 
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Email Address</label>
-                                    <div className="relative group">
-                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-slate-900 transition-colors z-10">
-                                            <Mail strokeWidth={2.5} />
-                                        </div>
-                                        <input
-                                            type="email"
-                                            required
-                                            disabled={otpSent}
-                                            value={formData.email}
-                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className="w-full h-16 pl-14 pr-8 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold text-slate-900 outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-300 placeholder:font-medium relative disabled:opacity-60"
-                                            placeholder="name@example.com"
-                                        />
-                                    </div>
+                    {isLogin ? (
+                        <form onSubmit={handleSubmit} className="space-y-3">
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-slate-500 ml-1">Email</label>
+                                <div className="relative">
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input
+                                        type="email"
+                                        required
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        className="w-full h-12 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-slate-900 focus:ring-0 transition-all placeholder:text-slate-400"
+                                        placeholder="name@example.com"
+                                    />
                                 </div>
+                            </div>
 
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Phone Number</label>
-                                    <div className="relative group">
-                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-slate-900 transition-colors z-10">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-                                        </div>
-                                        <input
-                                            type="tel"
-                                            required
-                                            disabled={otpSent}
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                            className="w-full h-16 pl-14 pr-8 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold text-slate-900 outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-300 placeholder:font-medium relative disabled:opacity-60"
-                                            placeholder="+1 (555) 000-0000"
-                                        />
-                                    </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-slate-500 ml-1">Password</label>
+                                <div className="relative">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input
+                                        type="password"
+                                        required
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        className="w-full h-12 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-slate-900 focus:ring-0 transition-all placeholder:text-slate-400"
+                                        placeholder="••••••••"
+                                    />
                                 </div>
+                            </div>
 
-                                {otpSent && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        className="space-y-2"
-                                    >
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Verification Code</label>
-                                        <div className="relative group">
-                                            <div className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-slate-900 transition-colors z-10">
-                                                <ShieldCheck strokeWidth={2.5} />
-                                            </div>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full h-12 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center gap-2 mt-2"
+                            >
+                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sign In'}
+                            </button>
+                        </form>
+                    ) : (
+                        <div className="space-y-4">
+                            {!otpVerified ? (
+                                <form onSubmit={!otpSent ? handleSendOtp : (e) => { e.preventDefault(); handleVerifyOtp(); }} className="space-y-3">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-500 ml-1">Full Name</label>
+                                        <div className="relative">
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                             <input
                                                 type="text"
                                                 required
-                                                maxLength={6}
-                                                value={otp}
-                                                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                                                className="w-full h-16 pl-14 pr-8 bg-white border-2 border-slate-900/10 rounded-[1.5rem] text-lg font-black text-slate-900 outline-none focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all placeholder:text-slate-300 tracking-widest relative"
-                                                placeholder="000000"
+                                                disabled={otpSent}
+                                                value={formData.name}
+                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                className="w-full h-12 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-slate-900 focus:ring-0 transition-all placeholder:text-slate-400 disabled:opacity-50"
+                                                placeholder="John Doe"
                                             />
                                         </div>
-                                        <div className="text-center">
-                                            <button
-                                                type="button"
-                                                onClick={() => setOtpSent(false)}
-                                                className="text-[10px] font-bold text-slate-400 hover:text-slate-600 underline"
-                                            >
-                                                Wrong email?
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-500 ml-1">Email</label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="email"
+                                                required
+                                                disabled={otpSent}
+                                                value={formData.email}
+                                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                className="w-full h-12 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-slate-900 focus:ring-0 transition-all placeholder:text-slate-400 disabled:opacity-50"
+                                                placeholder="name@example.com"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {otpSent && (
+                                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-1">
+                                            <label className="text-xs font-bold text-slate-500 ml-1">Code</label>
+                                            <div className="relative">
+                                                <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    maxLength={6}
+                                                    value={otp}
+                                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                                                    className="w-full h-12 pl-10 pr-4 bg-white border-2 border-slate-900 rounded-xl text-sm font-bold text-slate-900 focus:ring-0 transition-all tracking-widest"
+                                                    placeholder="000000"
+                                                />
+                                            </div>
+                                            <button type="button" onClick={() => setOtpSent(false)} className="text-xs text-slate-400 hover:text-slate-600 underline ml-1">
+                                                Change Email
                                             </button>
-                                        </div>
-                                    </motion.div>
-                                )}
-
-                                <button
-                                    type="submit"
-                                    disabled={loading || (otpSent && otp.length !== 6)}
-                                    className="w-full h-16 bg-slate-900 text-white rounded-[1.5rem] text-sm font-black uppercase tracking-[0.2em] hover:bg-black transition-all flex items-center justify-center gap-3 group disabled:opacity-50 mt-4 relative overflow-hidden shadow-xl shadow-slate-900/10"
-                                >
-                                    {loading ? (
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                    ) : (
-                                        <>
-                                            <span>{otpSent ? 'Verify Code' : 'Send Code'}</span>
-                                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
-                                        </>
+                                        </motion.div>
                                     )}
-                                </button>
-                            </form>
-                        ) : (
-                            /* STEP 2: Password & Finish */
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] ml-4 flex items-center gap-2">
-                                        <CheckCircle className="w-3 h-3" /> Email Verified
-                                    </label>
-                                    <div className="p-4 bg-emerald-50/50 rounded-[1.5rem] border border-emerald-100 flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
-                                            <Mail strokeWidth={2.5} className="w-5 h-5" />
+
+                                    {!otpSent && (
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-slate-500 ml-1">Phone</label>
+                                            <div className="relative">
+                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400">#</div>
+                                                <input
+                                                    type="tel"
+                                                    required
+                                                    value={formData.phone}
+                                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                    className="w-full h-12 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-slate-900 focus:ring-0 transition-all placeholder:text-slate-400"
+                                                    placeholder="+1234567890"
+                                                />
+                                            </div>
                                         </div>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={loading || (otpSent && otp.length !== 6)}
+                                        className="w-full h-12 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center gap-2 mt-2"
+                                    >
+                                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (otpSent ? 'Verify' : 'Continue')}
+                                    </button>
+                                </form>
+                            ) : (
+                                <form onSubmit={handleSubmit} className="space-y-3">
+                                    <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-3">
+                                        <CheckCircle className="w-5 h-5 text-emerald-500" />
                                         <div>
-                                            <p className="text-xs font-bold text-slate-900">{formData.name}</p>
-                                            <p className="text-[10px] font-medium text-slate-500">{formData.email}</p>
+                                            <p className="text-xs font-bold text-emerald-700">Email Verified</p>
+                                            <p className="text-[10px] text-emerald-600">{formData.email}</p>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Set Password</label>
-                                    <div className="relative group">
-                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-slate-900 transition-colors z-10">
-                                            <Lock strokeWidth={2.5} />
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-500 ml-1">Set Password</label>
+                                        <div className="relative">
+                                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="password"
+                                                required
+                                                value={formData.password}
+                                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                                className="w-full h-12 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-slate-900 focus:ring-0 transition-all placeholder:text-slate-400"
+                                                placeholder="••••••••"
+                                                minLength={8}
+                                            />
                                         </div>
-                                        <input
-                                            type="password"
-                                            required
-                                            value={formData.password}
-                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                            className="w-full h-16 pl-14 pr-8 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold text-slate-900 outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-300 placeholder:font-medium relative"
-                                            placeholder="••••••••"
-                                            minLength={8}
-                                        />
                                     </div>
-                                </div>
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full h-12 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center gap-2 mt-2"
+                                    >
+                                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Account'}
+                                    </button>
+                                </form>
+                            )}
+                        </div>
+                    )}
 
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full h-16 bg-slate-900 text-white rounded-[1.5rem] text-sm font-black uppercase tracking-[0.2em] hover:bg-black transition-all flex items-center justify-center gap-3 group disabled:opacity-50 mt-4 relative overflow-hidden shadow-xl shadow-slate-900/10"
-                                >
-                                    {loading ? (
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                    ) : (
-                                        <>
-                                            <span>Create Account</span>
-                                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
-                                        </>
-                                    )}
-                                </button>
-                            </form>
-                        )}
+                    <div className="mt-6 text-center">
+                        <button
+                            onClick={toggleMode}
+                            className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-wider"
+                        >
+                            {isLogin ? "Create an account" : "Sign in instead"}
+                        </button>
                     </div>
-                )}
-
-                <div className="mt-8 text-center">
-                    <button
-                        onClick={toggleMode}
-                        className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-900 transition-colors"
-                    >
-                        {isLogin ? "New here? Create an account" : "Already have an account? Sign in"}
-                    </button>
                 </div>
-            </motion.div>
-
-            {/* Footer escape link */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="relative z-10 mt-8"
-            >
-                <Link
-                    href={`/store/${subdomain}`}
-                    className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-900 transition-colors"
-                >
-                    <ArrowRight className="w-4 h-4 rotate-180" />
-                    Back to Store
-                </Link>
-            </motion.div>
+            </div>
         </div>
     );
 }

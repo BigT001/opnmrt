@@ -13,8 +13,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OPNMRT | The Multi-Tenant AI Commerce Engine",
+  title: {
+    template: '%s | OPNMRT',
+    default: 'OPNMRT | The Multi-Tenant AI Commerce Engine',
+  },
   description: "Independent storefronts, global scale. Deploy sovereign commerce with AI-powered intelligence.",
+  keywords: ['OPNMART', 'OPNMRT', 'OPEN MART', 'OpenMart', 'Ecommerce Platform', 'Start your store', 'Sell online', 'Multi-tenant Ecommerce'],
+  openGraph: {
+    type: 'website',
+    siteName: 'OPNMRT',
+    title: 'OPNMRT | The Multi-Tenant AI Commerce Engine',
+    description: 'Independent storefronts, global scale. Deploy sovereign commerce with AI-powered intelligence.',
+  },
 };
 
 import { ThemeProvider } from "@/components/ThemeProvider";

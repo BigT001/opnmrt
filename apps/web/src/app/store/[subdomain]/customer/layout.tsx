@@ -8,6 +8,9 @@ import api from '@/lib/api';
 import { useSocket } from '@/hooks/useSocket';
 import { AnimatePresence, motion } from 'framer-motion';
 
+import { useAuthStore } from '@/store/useAuthStore';
+import { useCartStore } from '@/store/useCartStore';
+
 export default function CustomerDashboardLayout({
     children,
 }: {
@@ -21,6 +24,8 @@ export default function CustomerDashboardLayout({
     const [unreadCount, setUnreadCount] = useState(0);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const socket = useSocket(user?.id);
+    const { logout } = useAuthStore();
+    const { clearCart } = useCartStore();
 
     React.useEffect(() => {
         const token = localStorage.getItem('token');
@@ -42,7 +47,8 @@ export default function CustomerDashboardLayout({
             } catch (error: any) {
                 console.error("Failed to fetch user:", error);
                 if (error.response?.status === 401 && !isAuthPage) {
-                    localStorage.removeItem('token');
+                    logout(); // Use store logout
+                    clearCart();
                     router.push(`/store/${subdomain}/customer/login?redirect=${encodeURIComponent(pathname)}`);
                 }
             } finally {
@@ -55,7 +61,7 @@ export default function CustomerDashboardLayout({
         } else {
             setLoading(false);
         }
-    }, [pathname, subdomain, router]);
+    }, [pathname, subdomain, router, logout]);
 
     useEffect(() => {
         if (!socket) return;
@@ -85,7 +91,8 @@ export default function CustomerDashboardLayout({
     ];
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
+        logout(); // Syncs state immediately
+        clearCart();
         router.push(`/store/${subdomain}`);
     };
 
@@ -110,22 +117,22 @@ export default function CustomerDashboardLayout({
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col pt-16 lg:pt-20">
+        <div className="min-h-screen bg-slate-50 dark:bg-black/95 flex flex-col pt-16 lg:pt-20 transition-colors duration-300">
             {/* Mobile Header */}
-            <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-100 z-50 flex items-center justify-between px-6">
+            <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-black border-b border-slate-100 dark:border-slate-800 z-50 flex items-center justify-between px-6 transition-colors duration-300">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold text-xs uppercase overflow-hidden">
+                    <div className="w-8 h-8 bg-slate-900 dark:bg-white rounded-lg flex items-center justify-center text-white dark:text-black font-bold text-xs uppercase overflow-hidden">
                         {user?.image ? (
                             <img src={user.image} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
                             user?.name?.[0] || 'U'
                         )}
                     </div>
-                    <span className="font-black text-slate-900 text-sm uppercase tracking-tight">Dashboard</span>
+                    <span className="font-black text-slate-900 dark:text-white text-sm uppercase tracking-tight">Dashboard</span>
                 </div>
                 <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="w-10 h-10 flex items-center justify-center text-slate-900 bg-slate-50 rounded-xl"
+                    className="w-10 h-10 flex items-center justify-center text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 rounded-xl"
                 >
                     {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
@@ -134,9 +141,9 @@ export default function CustomerDashboardLayout({
             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-10 py-6 lg:py-10 flex-grow relative">
                 {/* Sidebar - Desktop */}
                 <aside className="hidden lg:block lg:col-span-1 space-y-6 xl:pl-8">
-                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm sticky top-28">
+                    <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm sticky top-28 transition-colors duration-300">
                         <div className="flex items-center gap-4 mb-8">
-                            <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+                            <div className="w-12 h-12 bg-slate-900 dark:bg-white rounded-2xl flex items-center justify-center text-white dark:text-black font-bold text-lg overflow-hidden">
                                 {user?.image ? (
                                     <img src={user.image} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
@@ -144,8 +151,8 @@ export default function CustomerDashboardLayout({
                                 )}
                             </div>
                             <div>
-                                <h2 className="font-black text-slate-900 leading-tight">{user?.name || 'Customer'}</h2>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
+                                <h2 className="font-black text-slate-900 dark:text-white leading-tight">{user?.name || 'Customer'}</h2>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
                                     ID: {user?.id ? `CUST-${user.id.slice(-6).toUpperCase()}` : `${subdomain.toUpperCase()}-USR`}
                                 </p>
                             </div>
@@ -159,8 +166,8 @@ export default function CustomerDashboardLayout({
                                         key={item.href}
                                         href={item.href}
                                         className={`flex items-center justify-between p-4 rounded-2xl transition-all group ${isActive
-                                            ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
-                                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                            ? 'bg-slate-900 dark:bg-white text-white dark:text-black shadow-lg shadow-slate-200 dark:shadow-none'
+                                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3 relative">
@@ -178,10 +185,10 @@ export default function CustomerDashboardLayout({
                             })}
                         </nav>
 
-                        <div className="mt-8 pt-8 border-t border-slate-50">
+                        <div className="mt-8 pt-8 border-t border-slate-50 dark:border-slate-800">
                             <button
                                 onClick={handleLogout}
-                                className="flex items-center gap-3 p-4 w-full text-rose-500 hover:bg-rose-50 rounded-2xl transition-all text-left"
+                                className="flex items-center gap-3 p-4 w-full text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-2xl transition-all text-left"
                             >
                                 <LogOut className="w-5 h-5" />
                                 <span className="text-[11px] font-black uppercase tracking-widest">Logout</span>
@@ -206,12 +213,12 @@ export default function CustomerDashboardLayout({
                                 animate={{ x: 0 }}
                                 exit={{ x: '100%' }}
                                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                                className="lg:hidden fixed top-0 right-0 bottom-0 w-80 bg-white z-[70] shadow-2xl flex flex-col p-8"
+                                className="lg:hidden fixed top-0 right-0 bottom-0 w-80 bg-white dark:bg-slate-950 z-[70] shadow-2xl flex flex-col p-8"
                             >
                                 <div className="flex justify-between items-center mb-10">
-                                    <h2 className="text-xl font-black text-slate-900 uppercase">Account</h2>
-                                    <button onClick={() => setIsMenuOpen(false)} className="w-10 h-10 flex items-center justify-center bg-slate-50 rounded-xl">
-                                        <X className="w-5 h-5 text-slate-900" />
+                                    <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase">Account</h2>
+                                    <button onClick={() => setIsMenuOpen(false)} className="w-10 h-10 flex items-center justify-center bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                        <X className="w-5 h-5 text-slate-900 dark:text-white" />
                                     </button>
                                 </div>
 
@@ -224,8 +231,8 @@ export default function CustomerDashboardLayout({
                                                 href={item.href}
                                                 onClick={() => setIsMenuOpen(false)}
                                                 className={`flex items-center justify-between p-5 rounded-3xl transition-all ${isActive
-                                                    ? 'bg-slate-900 text-white shadow-xl'
-                                                    : 'text-slate-500 bg-slate-50'
+                                                    ? 'bg-slate-900 dark:bg-white text-white dark:text-black shadow-xl'
+                                                    : 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900'
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-4 relative">
@@ -245,7 +252,7 @@ export default function CustomerDashboardLayout({
                                 <div className="mt-auto">
                                     <button
                                         onClick={handleLogout}
-                                        className="flex items-center gap-4 p-6 w-full text-rose-500 bg-rose-50 rounded-3xl font-black uppercase tracking-widest text-sm"
+                                        className="flex items-center gap-4 p-6 w-full text-rose-500 bg-rose-50 dark:bg-rose-950/20 rounded-3xl font-black uppercase tracking-widest text-sm"
                                     >
                                         <LogOut className="w-6 h-6" />
                                         Logout

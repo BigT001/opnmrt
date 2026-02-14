@@ -13,7 +13,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 @Controller('stores')
 export class StoresController {
-  constructor(private storesService: StoresService) {}
+  constructor(private storesService: StoresService) { }
 
   @Get('resolve')
   async resolveStore(
@@ -53,7 +53,12 @@ export class StoresController {
 
   @Get(':id/stats')
   async getStats(@Param('id') id: string) {
-    return this.storesService.getStoreStats(id);
+    try {
+      return await this.storesService.getStoreStats(id);
+    } catch (error) {
+      console.error('[GET_STATS_ERROR]', error);
+      throw error;
+    }
   }
 
   @Get(':id/customers')
@@ -64,5 +69,13 @@ export class StoresController {
   @Get(':id/customer-stats')
   async getCustomerStats(@Param('id') id: string) {
     return this.storesService.getCustomerStats(id);
+  }
+
+  @Get(':id/customers/:customerId')
+  async getCustomerDetails(
+    @Param('id') storeId: string,
+    @Param('customerId') customerId: string,
+  ) {
+    return this.storesService.getCustomerDetails(storeId, customerId);
   }
 }

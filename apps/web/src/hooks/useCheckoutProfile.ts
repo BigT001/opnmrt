@@ -52,26 +52,22 @@ export const useCheckoutProfile = (initialData: CheckoutFormData) => {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         if (!token) return;
 
-        try {
-            const name = formData.fullName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim();
-            const splitName = name.split(' ');
+        const name = formData.fullName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim();
+        const splitName = name.split(' ');
 
-            await api.patch('/users/profile', {
-                shippingAddress: {
-                    firstName: formData.firstName || splitName[0] || '',
-                    lastName: formData.lastName || splitName.slice(1).join(' ') || '',
-                    address: formData.address,
-                    city: formData.city,
-                    postalCode: formData.postalCode || formData.postalKey || '',
-                    country: 'Nigeria'
-                },
-                email: formData.email,
-                phone: formData.phone,
-                name: name
-            });
-        } catch (e) {
-            console.error("Failed to sync profile during checkout-process:", e);
-        }
+        await api.patch('/users/profile-json', {
+            shippingAddress: {
+                firstName: formData.firstName || splitName[0] || '',
+                lastName: formData.lastName || splitName.slice(1).join(' ') || '',
+                address: formData.address,
+                city: formData.city,
+                postalCode: formData.postalCode || formData.postalKey || '',
+                country: 'Nigeria'
+            },
+            email: formData.email,
+            phone: formData.phone,
+            name: name
+        });
     };
 
     return { formData, setFormData, syncProfile, isLoaded };

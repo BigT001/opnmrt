@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from '../common/decorators/get-user.decorator';
@@ -28,6 +28,14 @@ export class OrdersController {
       items: { productId: string; quantity: number; price: number }[];
     },
   ) {
-    return this.ordersService.createOrder(userId, data);
+    return this.ordersService.create(userId, data);
+  }
+
+  @Patch(':orderId/abandon')
+  async trackAbandonment(
+    @Param('orderId') orderId: string,
+    @Body() data: { reason?: string },
+  ) {
+    return this.ordersService.trackAbandonment(orderId, data.reason);
   }
 }

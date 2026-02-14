@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,231 +8,193 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum UserRole {
-  ADMIN
-  SELLER
-  BUYER
-}
-
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  phone         String?   @unique
-  password      String
-  name          String?
-  image         String?
-  role          UserRole  @default(BUYER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // A buyer is associated with a specific store (tenant-scoped accounts)
-  // A seller owns a store
-  tenantId      String?   // Only for BUYERs, null for ADMIN/SELLER (SELLER has store)
-  storeId       String?   // Only for BUYERs
-
-  managedStore  Store?    @relation("StoreOwner")
-  orders        Order[]
-  messages      Message[]
+  id              String            @id @default(cuid())
+  email           String            @unique
+  password        String
+  name            String?
+  role            UserRole          @default(BUYER)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  tenantId        String?
+  storeId         String?
+  phone           String?           @unique
+  image           String?
+  billingAddress  Json?
+  savedCards      Json?
+  shippingAddress Json?
+  cart            Json?
+  messages        Message[]
+  orders          Order[]
+  reviews         Review[]
   passwordHistory PasswordHistory[]
-  
-  // Customer Profile Data
-  shippingAddress Json?   // { firstName, lastName, address, city, postalCode, country }
-  billingAddress  Json?   // Optional: different billing address
-  savedCards      Json?   // [{ brand: 'visa', last4: '4242', expMonth: 12, expYear: 2025 }] - Mock for now as we don't store real cards
+  managedStore    Store?            @relation("StoreOwner")
 }
 
 model PasswordHistory {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  password  String   // Hashed password
+  password  String
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
 model Store {
-  id            String    @id @default(cuid())
-  tenantId      String    @unique // Logical tenant ID
-  name          String
-  subdomain     String    @unique
-  customDomain  String?   @unique
-  ownerId       String    @unique
-  owner         User      @relation("StoreOwner", fields: [ownerId], references: [id])
-  
-  plan          String    @default("FREE") // FREE, PAID
-  
-  // Customization
-  logo          String?
-  heroImage     String?
-  heroTitle     String?
-  heroSubtitle  String?
-  primaryColor  String?   @default("#10b981") // emerald-500
-  accentColor   String?
-  
-  // Theme System
-  theme         String    @default("DEFAULT") // DEFAULT, MINIMAL_LUXE, etc.
-  themeConfig   Json?     // Stores overrides like { colors: {...}, fonts: {...} }
-  
-  biography     String?   @db.Text
-  officialEmail String?
-  whatsappNumber String?
-  useWhatsAppCheckout Boolean @default(false)
-  
-  // Payment Integration (Direct Paystack Account)
+  id                    String      @id @default(cuid())
+  tenantId              String      @unique
+  name                  String
+  subdomain             String      @unique
+  customDomain          String?     @unique
+  ownerId               String      @unique
+  plan                  String      @default("FREE")
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  accentColor           String?
+  biography             String?
+  heroImage             String?
+  heroSubtitle          String?
+  heroTitle             String?
+  logo                  String?
+  officialEmail         String?
+  primaryColor          String?     @default("#10b981")
+  theme                 String      @default("DEFAULT")
+  themeConfig           Json?
+  useWhatsAppCheckout   Boolean     @default(false)
+  whatsappNumber        String?
   paystackPublicKey     String?
   paystackSecretKey     String?
-  paystackWebhookSecret  String? // Optional: to verify specific account webhooks
-  
-  products      Product[]
-  orders        Order[]
-  inventory     Inventory[]
-  payments      Payment[]
-  analytics     Analytics[]
-  messages      Message[]
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  paystackWebhookSecret String?
+  analytics             Analytics[]
+  inventory             Inventory[]
+  messages              Message[]
+  orders                Order[]
+  payments              Payment[]
+  products              Product[]
+  owner                 User        @relation("StoreOwner", fields: [ownerId], references: [id])
 }
 
 model Product {
-  id            String    @id @default(cuid())
+  id            String      @id @default(cuid())
   tenantId      String
   storeId       String
-  store         Store     @relation(fields: [storeId], references: [id])
-  
   name          String
-  description   String?   @db.Text
-  price         Decimal   @db.Decimal(10, 2)
-  discountPrice Decimal?  @db.Decimal(10, 2)
-  stock         Int       @default(0)
-  images        String[]  // Cloudinary URLs
-  category      String?
+  description   String?
+  price         Decimal     @db.Decimal(10, 2)
+  stock         Int         @default(0)
+  images        String[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   colors        String[]
   sizes         String[]
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
+  discountPrice Decimal?    @db.Decimal(10, 2)
+  category      String?
   inventory     Inventory?
   orderItems    OrderItem[]
+  reviews       Review[]
+  store         Store       @relation(fields: [storeId], references: [id])
 
   @@index([tenantId])
   @@index([storeId])
 }
 
 model Inventory {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   tenantId      String
   storeId       String
-  store         Store     @relation(fields: [storeId], references: [id])
-  
-  productId     String    @unique
-  product       Product   @relation(fields: [productId], references: [id])
-  
-  quantity      Int       @default(0)
-  lowStockAlert Int       @default(5)
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  productId     String   @unique
+  quantity      Int      @default(0)
+  lowStockAlert Int      @default(5)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  product       Product  @relation(fields: [productId], references: [id])
+  store         Store    @relation(fields: [storeId], references: [id])
 
   @@index([tenantId])
   @@index([storeId])
 }
 
 model Order {
-  id            String    @id @default(cuid())
-  tenantId      String
-  storeId       String
-  store         Store     @relation(fields: [storeId], references: [id])
-  
-  buyerId       String
-  buyer         User      @relation(fields: [buyerId], references: [id])
-  
-  totalAmount   Decimal   @db.Decimal(10, 2)
-  status        String    @default("PENDING") // PENDING, PAID, COMPLETED, CANCELLED
-  
-  paymentRef    String?   // Paystack reference
-  
-  items         OrderItem[]
-  payment       Payment?
-  messages      Message[]
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String      @id @default(cuid())
+  tenantId       String
+  storeId        String
+  buyerId        String
+  totalAmount    Decimal     @db.Decimal(10, 2)
+  status         String      @default("PENDING")
+  paymentRef     String?
+  retryCount     Int         @default(0)        // Track payment retry attempts
+  lastAttemptAt  DateTime    @default(now()) @updatedAt  // Last payment attempt
+  abandonReason  String?     // Why payment wasn't completed
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  messages       Message[]
+  buyer          User        @relation(fields: [buyerId], references: [id])
+  store          Store       @relation(fields: [storeId], references: [id])
+  items          OrderItem[]
+  payment        Payment?
 
   @@index([tenantId])
   @@index([storeId])
   @@index([buyerId])
+  @@index([status])  // Add index for faster status queries
 }
 
 model OrderItem {
-  id            String    @id @default(cuid())
-  orderId       String
-  order         Order     @relation(fields: [orderId], references: [id])
-  
-  productId     String
-  product       Product   @relation(fields: [productId], references: [id])
-  
-  quantity      Int
-  price         Decimal   @db.Decimal(10, 2)
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2)
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
 }
 
 model Payment {
-  id            String    @id @default(cuid())
-  tenantId      String
-  storeId       String
-  store         Store     @relation(fields: [storeId], references: [id])
-  
-  orderId       String    @unique
-  order         Order     @relation(fields: [orderId], references: [id])
-  
-  reference     String    @unique
-  amount        Decimal   @db.Decimal(10, 2)
-  status        String
-  metadata      Json?
-  
-  createdAt     DateTime  @default(now())
+  id        String   @id @default(cuid())
+  tenantId  String
+  storeId   String
+  orderId   String   @unique
+  reference String   @unique
+  amount    Decimal  @db.Decimal(10, 2)
+  status    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id])
+  store     Store    @relation(fields: [storeId], references: [id])
 
   @@index([tenantId])
   @@index([storeId])
 }
 
 model Analytics {
-  id            String    @id @default(cuid())
-  tenantId      String
-  storeId       String
-  store         Store     @relation(fields: [storeId], references: [id])
-  
-  date          DateTime
-  metricName    String
-  metricValue   Float
-  
-  createdAt     DateTime  @default(now())
+  id          String   @id @default(cuid())
+  tenantId    String
+  storeId     String
+  date        DateTime
+  metricName  String
+  metricValue Float
+  createdAt   DateTime @default(now())
+  store       Store    @relation(fields: [storeId], references: [id])
 
   @@index([tenantId, date])
   @@index([storeId, date])
 }
 
 model Message {
-  id            String    @id @default(cuid())
-  tenantId      String
-  storeId       String
-  store         Store     @relation(fields: [storeId], references: [id])
-  
-  orderId       String?
-  order         Order?    @relation(fields: [orderId], references: [id])
-  
-  senderId      String
-  sender        User      @relation(fields: [senderId], references: [id])
-  senderRole    UserRole
-  
-  content       String    @db.Text
-  
-  recipientId   String?   // For direct messages (e.g., SELLER to specific BUYER)
-  isRead        Boolean   @default(false)
-  
-  createdAt     DateTime  @default(now())
+  id          String   @id @default(cuid())
+  tenantId    String
+  storeId     String
+  orderId     String?
+  senderId    String
+  senderRole  UserRole
+  content     String
+  createdAt   DateTime @default(now())
+  recipientId String?
+  isRead      Boolean  @default(false)
+  order       Order?   @relation(fields: [orderId], references: [id])
+  sender      User     @relation(fields: [senderId], references: [id])
+  store       Store    @relation(fields: [storeId], references: [id])
 
   @@index([tenantId])
   @@index([storeId])
@@ -246,14 +205,35 @@ model Message {
 }
 
 model EventLog {
-  id            String    @id @default(cuid())
-  tenantId      String
-  storeId       String
-  eventType     String    // ORDER_CREATED, STOCK_UPDATED, etc.
-  payload       Json
-  createdAt     DateTime  @default(now())
+  id        String   @id @default(cuid())
+  tenantId  String
+  storeId   String
+  eventType String
+  payload   Json
+  createdAt DateTime @default(now())
 
   @@index([tenantId])
   @@index([storeId])
   @@index([createdAt])
+}
+
+enum UserRole {
+  ADMIN
+  SELLER
+  BUYER
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  productId String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([productId])
+  @@index([userId])
 }

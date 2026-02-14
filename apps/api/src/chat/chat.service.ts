@@ -7,7 +7,7 @@ export class ChatService {
   constructor(
     private prisma: PrismaService,
     private chatGateway: ChatGateway,
-  ) {}
+  ) { }
 
   async sendMessage(
     userId: string,
@@ -70,6 +70,7 @@ export class ChatService {
   }
 
   async getStoreConversations(storeId: string, userId: string) {
+    // 1. Get existing message history
     const messages = await this.prisma.message.findMany({
       where: { storeId },
       orderBy: { createdAt: 'desc' },
@@ -116,7 +117,51 @@ export class ChatService {
       }
     });
 
-    return Array.from(conversationsMap.values());
+    // 2. Fetch distinct buyers who have placed orders
+    const orderBuyers = await this.prisma.order.findMany({
+      where: { storeId },
+      distinct: ['buyerId'],
+      select: {
+        buyer: {
+          select: { id: true, name: true, createdAt: true },
+        },
+      },
+    });
+
+    // 3. Fetch users explicitly linked to this store (e.g. signed up on store domain)
+    const storeUsers = await this.prisma.user.findMany({
+      where: { storeId, role: 'BUYER' },
+      select: { id: true, name: true, createdAt: true },
+    });
+
+    // 4. Merge all potential contacts
+    const allPotentialContacts = new Map<string, { id: string; name: string | null; createdAt: Date }>();
+
+    orderBuyers.forEach((order) => {
+      if (order.buyer) allPotentialContacts.set(order.buyer.id, order.buyer);
+    });
+
+    storeUsers.forEach((user) => {
+      allPotentialContacts.set(user.id, user);
+    });
+
+    // 5. Add any missing contacts to conversations map
+    for (const contact of allPotentialContacts.values()) {
+      if (contact.id !== userId && !conversationsMap.has(contact.id)) {
+        conversationsMap.set(contact.id, {
+          userId: contact.id,
+          userName: contact.name || 'Customer',
+          lastMessage: 'Start a conversation',
+          time: contact.createdAt,
+          unreadCount: 0,
+        });
+      }
+    }
+
+    // Sort by most recent activity (message time or signup time)
+    return Array.from(conversationsMap.values()).sort(
+      (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
+    );
   }
 
   async getUserMessagesForStore(

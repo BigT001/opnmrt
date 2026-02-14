@@ -30,7 +30,7 @@ export function NeonStreamCartDrawer({ storeId }: CartDrawerProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={toggleCart}
-                        className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md"
+                        className="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-md"
                     />
 
                     {/* Drawer */}
@@ -39,7 +39,7 @@ export function NeonStreamCartDrawer({ storeId }: CartDrawerProps) {
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                        className="fixed inset-y-0 right-0 z-[101] w-full max-w-md bg-[#0a0a0a] border-l border-white/5 shadow-2xl flex flex-col font-inter"
+                        className="fixed inset-y-0 right-0 z-[2001] w-full max-w-md bg-[#0a0a0a] border-l border-white/5 shadow-2xl flex flex-col font-inter"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between p-8 border-b border-white/5 bg-white/[0.02]">

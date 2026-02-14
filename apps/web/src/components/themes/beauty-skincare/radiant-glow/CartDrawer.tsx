@@ -30,7 +30,7 @@ export function RadiantGlowCartDrawer({ storeId }: CartDrawerProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={toggleCart}
-                        className="fixed inset-0 z-[60] bg-[#2D1E1E]/20 backdrop-blur-md"
+                        className="fixed inset-0 z-[2000] bg-[#2D1E1E]/20 backdrop-blur-md"
                     />
 
                     {/* Drawer */}
@@ -44,7 +44,7 @@ export function RadiantGlowCartDrawer({ storeId }: CartDrawerProps) {
                             stiffness: 200,
                             mass: 0.8
                         }}
-                        className="fixed inset-y-0 right-0 z-[70] w-full max-w-lg bg-[#FFF9F0]/90 backdrop-blur-2xl shadow-[-20px_0_80px_rgba(45,30,30,0.1)] flex flex-col border-l border-white/40"
+                        className="fixed inset-y-0 right-0 z-[2001] w-full max-w-lg bg-[#FFF9F0]/90 backdrop-blur-2xl shadow-[-20px_0_80px_rgba(45,30,30,0.1)] flex flex-col border-l border-white/40"
                     >
                         {/* Shimmer Overlay */}
                         <div className="absolute inset-0 pointer-events-none opacity-20 bg-gradient-to-tr from-[#E2AFA2] via-transparent to-transparent" />

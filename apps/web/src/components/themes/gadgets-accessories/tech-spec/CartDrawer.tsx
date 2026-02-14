@@ -30,7 +30,7 @@ export function TechSpecCartDrawer({ storeId }: CartDrawerProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={toggleCart}
-                        className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md"
+                        className="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-md"
                     />
 
                     {/* Drawer */}
@@ -39,7 +39,7 @@ export function TechSpecCartDrawer({ storeId }: CartDrawerProps) {
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                        className="fixed inset-y-0 right-0 z-[101] w-full max-w-md bg-white shadow-2xl flex flex-col font-data"
+                        className="fixed inset-y-0 right-0 z-[2001] w-full max-w-md bg-white shadow-2xl flex flex-col font-data"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between p-8 border-b border-gray-100 bg-gray-50">

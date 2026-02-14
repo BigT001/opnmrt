@@ -1,4 +1,13 @@
-import 'dotenv/config';
+import 'dotenv/config'; // RESTART_V4: 2026-02-14 11:42
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+import * as dns from 'dns';
+
+// Force use of Google DNS to bypass local DNS resolution issues
+// dns.setServers(['8.8.8.8', '8.8.4.4']);
+
+dotenv.config({ path: path.join(__dirname, '../.env') });
+
 import { NestFactory } from '@nestjs/core';
 import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';

@@ -130,10 +130,10 @@ export default function ProductsPage() {
                                         </td>
                                         <td className="py-5">
                                             <div className="flex flex-col">
-                                                <span className="text-slate-900 font-mono">${Number(product.price).toFixed(2)}</span>
+                                                <span className="text-slate-900 font-mono">₦{Number(product.price).toFixed(2)}</span>
                                                 {product.discountPrice && product.discountPrice > 0 && (
                                                     <span className="text-[9px] text-primary font-black line-through opacity-50">
-                                                        ${Number(product.discountPrice).toFixed(2)}
+                                                        ₦{Number(product.discountPrice).toFixed(2)}
                                                     </span>
                                                 )}
                                             </div>
@@ -330,7 +330,7 @@ function ProductDetailView({ product, onClose, onUpdate }: { product: Product; o
                             </div>
                         </div>
                         <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Base Price ($)</label>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Base Price (₦)</label>
                             <input
                                 type="number"
                                 value={price}
@@ -339,7 +339,7 @@ function ProductDetailView({ product, onClose, onUpdate }: { product: Product; o
                             />
                         </div>
                         <div>
-                            <label className="block text-[10px] font-bold text-primary uppercase tracking-wider mb-2">Sale Price ($)</label>
+                            <label className="block text-[10px] font-bold text-primary uppercase tracking-wider mb-2">Sale Price (₦)</label>
                             <input
                                 type="number"
                                 value={discountPrice}
@@ -487,12 +487,12 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: bool
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-white rounded-[2.5rem] w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] border border-slate-200">
                 <div className="px-10 py-8 flex justify-between items-center bg-white shrink-0">
                     <div>
                         <h2 className="text-2xl font-black text-slate-900 tracking-tight">Add New Product</h2>
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Populate your store with high quality products</p>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Provide specific details to help your products appear in Google Search results</p>
                     </div>
                     <button onClick={onClose} className="p-3 hover:bg-slate-100 rounded-2xl transition-all group">
                         <X className="w-6 h-6 text-slate-400 group-hover:text-primary transition-colors" />
@@ -557,17 +557,17 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: bool
                                     </div>
 
                                     <div>
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Category</label>
-                                        <select
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                                            Category <span className="text-emerald-500 ml-1 px-1.5 py-0.5 bg-emerald-50 rounded text-[8px]">SEO CRUCIAL</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            required
                                             value={formData.category}
                                             onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all appearance-none cursor-pointer"
-                                        >
-                                            <option value="">Select Category</option>
-                                            <option value="Fashion, Clothing & Accessories">Fashion</option>
-                                            <option value="Beauty, Skincare & Cosmetics">Beauty</option>
-                                            <option value="Gadgets & Accessories">Gadgets</option>
-                                        </select>
+                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all placeholder:text-slate-300"
+                                            placeholder="e.g. Summer Vintage Shirts"
+                                        />
                                     </div>
 
                                     <div>
@@ -601,7 +601,7 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: bool
                                     <div>
                                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Base Price</label>
                                         <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
                                             <input
                                                 type="number"
                                                 step="0.01"
@@ -616,7 +616,7 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: bool
                                     <div>
                                         <label className="block text-[10px] font-black text-primary uppercase tracking-widest mb-2">Offer Price</label>
                                         <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-bold">$</span>
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-bold">₦</span>
                                             <input
                                                 type="number"
                                                 step="0.01"

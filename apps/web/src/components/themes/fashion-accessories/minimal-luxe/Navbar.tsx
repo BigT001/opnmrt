@@ -7,19 +7,28 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuthStore } from '@/store/useAuthStore';
 
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function MinimalLuxeNavbar({ storeName, logo }: NavbarProps) {
     const { items, toggleCart } = useCartStore();
+    const { user } = useAuthStore();
     const [mounted, setMounted] = useState(false);
     const { subdomain } = useParams<{ subdomain: string }>();
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     useEffect(() => {
         setMounted(true);
-        const handleScroll = () => setIsScrolled(window.scrollY > 20);
+        let lastScrollY = window.scrollY;
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            setIsScrolled(currentScrollY > 20);
+            setIsVisible(currentScrollY < lastScrollY || currentScrollY < 50);
+            lastScrollY = currentScrollY;
+        };
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
@@ -30,10 +39,10 @@ export function MinimalLuxeNavbar({ storeName, logo }: NavbarProps) {
 
     return (
         <nav
-            className={`sticky top-0 left-0 right-0 z-[100] transition-all duration-500 ${isScrolled || isMenuOpen
+            className={`fixed top-0 left-0 right-0 z-[1000] transition-all duration-500 ${isScrolled || isMenuOpen
                 ? 'bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 h-20 shadow-sm'
                 : 'bg-white dark:bg-black h-24 md:h-28'
-                }`}
+                } ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}
         >
             <div className="max-w-7xl mx-auto px-6 lg:px-12 h-full flex items-center justify-between">
                 {/* Mobile: Hamburger (Left) */}
@@ -70,7 +79,11 @@ export function MinimalLuxeNavbar({ storeName, logo }: NavbarProps) {
                 {/* Icons (Right) - Simplified and refined */}
                 <div className="flex items-center space-x-1 md:space-x-2">
                     <IconButton icon={<Search className="w-5 h-5 stroke-[1.5]" />} className="hidden sm:flex" />
-                    <Link href={`/store/${subdomain}/customer/login`} className="hidden sm:flex p-2 text-gray-900 dark:text-white hover:text-primary transition-colors">
+                    <Link
+                        href={user ? `/store/${subdomain}/customer/orders` : `/store/${subdomain}/customer/login`}
+                        className={`hidden sm:flex p-2 transition-colors ${user ? 'text-primary' : 'text-gray-900 dark:text-white hover:text-primary'}`}
+                        title={user ? 'Account' : 'Login'}
+                    >
                         <User className="w-5 h-5 stroke-[1.5]" />
                     </Link>
                     <ThemeToggle />

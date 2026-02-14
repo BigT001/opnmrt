@@ -3,12 +3,12 @@ import { getThemeLayout } from '@/components/themes/registry';
 
 async function getStore(subdomain: string) {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/stores/resolve?subdomain=${subdomain}`;
-    console.log(`Resolving store at: ${url}`);
     try {
         const res = await fetch(
             url,
-            { cache: 'no-store' } // Disable cache for debugging
+            { next: { revalidate: 3600 } } // Cache for 1 hour
         );
+
         console.log(`Store resolve status: ${res.status}`);
         if (!res.ok) {
             console.error(`Store resolve failed: ${await res.text()}`);
@@ -22,6 +22,7 @@ async function getStore(subdomain: string) {
 }
 
 import { TrackSession } from '@/components/analytics/TrackSession';
+import { CartSync } from '@/components/storefront/CartSync';
 
 export default async function StoreLayout({
     children,
@@ -41,6 +42,7 @@ export default async function StoreLayout({
 
     return (
         <ThemeLayout store={store}>
+            <CartSync />
             <TrackSession storeId={store.id} />
             {children}
         </ThemeLayout>

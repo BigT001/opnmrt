@@ -30,7 +30,7 @@ export function GlamourEveCartDrawer({ storeId }: CartDrawerProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={toggleCart}
-                        className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-md"
+                        className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-md"
                     />
 
                     {/* Drawer */}
@@ -39,7 +39,7 @@ export function GlamourEveCartDrawer({ storeId }: CartDrawerProps) {
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                        className="fixed inset-y-0 right-0 z-[70] w-full max-w-lg bg-white shadow-[-20px_0_60px_rgba(0,0,0,0.1)] flex flex-col"
+                        className="fixed inset-y-0 right-0 z-[2001] w-full max-w-lg bg-white shadow-[-20px_0_60px_rgba(0,0,0,0.1)] flex flex-col"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between p-10 border-b border-black/5">

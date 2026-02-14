@@ -16,6 +16,9 @@ import { AdminModule } from './admin/admin.module';
 import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 
+import { SearchModule } from './search/search.module';
+import { ReviewsModule } from './reviews/reviews.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -31,8 +34,10 @@ import { PrismaModule } from './prisma/prisma.module';
     ChatModule,
     AdminModule,
     PrismaModule,
+    SearchModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
+  providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

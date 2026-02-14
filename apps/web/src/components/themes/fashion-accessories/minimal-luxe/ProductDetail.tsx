@@ -7,6 +7,8 @@ import { Minus, Plus, ShoppingBag, Check, ShieldCheck, Truck, RotateCcw } from '
 import { formatPrice } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
+import { ReviewSystem } from '@/components/store/ReviewSystem';
+
 export function MinimalLuxeProductDetail({ product, store, subdomain }: ProductDetailProps) {
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(product.image || '');
@@ -183,8 +185,13 @@ export function MinimalLuxeProductDetail({ product, store, subdomain }: ProductD
                         </motion.div>
                     </div>
                 </div>
+
+                <div className="mt-32 pt-16 border-t border-gray-100">
+                    <ReviewSystem productId={product.id} productName={product.name} />
+                </div>
             </div>
         </div>
     );
 }
+
 

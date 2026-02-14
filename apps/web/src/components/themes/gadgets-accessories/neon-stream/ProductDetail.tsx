@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Zap, Star, Shield, Truck, Heart, Activity, Cpu, Battery, Globe, Check } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { ReviewSystem } from '@/components/store/ReviewSystem';
 
 export function NeonStreamProductDetail({ product, store, subdomain }: ProductDetailProps) {
     const { addItem } = useCartStore();
@@ -28,7 +29,6 @@ export function NeonStreamProductDetail({ product, store, subdomain }: ProductDe
     return (
         <div className="min-h-screen pt-32 pb-24 px-6 max-w-[1400px] mx-auto font-inter">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
-
                 {/* Visual Unit */}
                 <div className="space-y-6">
                     <motion.div
@@ -82,17 +82,16 @@ export function NeonStreamProductDetail({ product, store, subdomain }: ProductDe
                                         <Star key={i} className="w-4 h-4 fill-[#00F5FF] text-[#00F5FF]" />
                                     ))}
                                 </div>
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none mt-1">128 LOGS</span>
+                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none mt-1">Verified Experience</span>
                             </div>
                             <div className="h-4 w-[1px] bg-white/10" />
                             <span className="text-2xl font-black font-syne italic text-[#00F5FF] tracking-tighter">{formatPrice(product.price)}</span>
                         </div>
 
                         <p className="text-gray-400 text-sm leading-relaxed max-w-lg">
-                            {product.description || "Unleash extreme processing efficiency with our flagship hardware unit. Engineered for ultra-low latency streams and high-fidelity output. The ultimate upgrade for any advanced ecosystem."}
+                            {product.description || "Unleash extreme processing efficiency with our flagship hardware unit. Engineered for ultra-low latency streams and high-fidelity output."}
                         </p>
 
-                        {/* Hardware Matrix */}
                         <div className="grid grid-cols-2 gap-6 pt-8 pb-12">
                             {[
                                 { icon: Cpu, label: "CORE", val: "SYNAPSE_X" },
@@ -120,7 +119,7 @@ export function NeonStreamProductDetail({ product, store, subdomain }: ProductDe
                         <div className="flex items-center justify-between relative z-10">
                             <div className="space-y-1">
                                 <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Aggregate_Price</p>
-                                <p className="text-4xl font-black font-syne italic text-white tracking-tighter">{formatPrice(product.price * quantity)}</p>
+                                <p className="text-4xl font-black font-syne italic text-white tracking-tighter">{formatPrice(Number(product.price) * quantity)}</p>
                             </div>
 
                             <div className="flex items-center border border-white/10 bg-black/40 rounded-xl overflow-hidden h-12">
@@ -143,9 +142,7 @@ export function NeonStreamProductDetail({ product, store, subdomain }: ProductDe
                                 className="flex-1 bg-[#00F5FF] text-black h-16 rounded-2xl font-black font-syne text-xs uppercase tracking-[0.4em] flex items-center justify-center gap-4 hover:shadow-[0_0_30px_rgba(0,245,255,0.4)] transition-all active:scale-95 group disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                             >
                                 {product.stock <= 0 ? (
-                                    <>
-                                        OFFLINE_MANIFEST
-                                    </>
+                                    <>OFFLINE_MANIFEST</>
                                 ) : added ? (
                                     <>
                                         <Check className="w-5 h-5" />
@@ -158,23 +155,13 @@ export function NeonStreamProductDetail({ product, store, subdomain }: ProductDe
                                     </>
                                 )}
                             </button>
-                            <button className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center hover:border-[#BF00FF]/50 hover:text-[#BF00FF] transition-all">
-                                <Heart className="w-6 h-6" />
-                            </button>
-                        </div>
-
-                        <div className="flex items-center justify-between text-[10px] font-black text-gray-500 uppercase tracking-widest pt-4 relative z-10">
-                            <div className="flex items-center gap-2">
-                                <Shield className="w-4 h-4 text-[#00F5FF]" />
-                                2YR_SYSTEM_WARRANTY
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Truck className="w-4 h-4 text-[#BF00FF]" />
-                                GLOBAL_DEPLOYMENT
-                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div className="mt-24 border-t border-white/5 pt-12">
+                <ReviewSystem productId={product.id} productName={product.name} />
             </div>
         </div>
     );

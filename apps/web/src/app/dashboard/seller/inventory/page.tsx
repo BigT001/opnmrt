@@ -5,11 +5,12 @@ import api from '@/lib/api';
 import {
     Loader2, Package, AlertTriangle, CheckCircle2, Search,
     History, TrendingUp, Plus, Minus, ArrowRight, Settings2,
-    Calendar, ChevronDown, ChevronUp, DollarSign
+    Calendar, ChevronDown, ChevronUp, DollarSign, BrainCircuit, Sparkles, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface Product {
     id: string;
@@ -21,6 +22,7 @@ interface Product {
 }
 
 export default function InventoryPage() {
+    const { store } = useAuthStore();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -29,21 +31,38 @@ export default function InventoryPage() {
     const [isUpdating, setIsUpdating] = useState(false);
     const [history, setHistory] = useState<any[]>([]);
     const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+    const [aiInsights, setAiInsights] = useState<any[]>([]);
+    const [isAiLoading, setIsAiLoading] = useState(false);
+
+    const fetchInventory = async () => {
+        try {
+            setLoading(true);
+            const res = await api.get('/products/seller');
+            setProducts(res.data);
+        } catch (err) {
+            console.error('Failed to fetch inventory:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchAiInsights = async () => {
+        if (!store?.id) return;
+        try {
+            setIsAiLoading(true);
+            const res = await api.get(`/analytics/ai-insights/${store.id}`);
+            setAiInsights(res.data);
+        } catch (err) {
+            console.error('Failed to fetch AI insights:', err);
+        } finally {
+            setIsAiLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchInventory = async () => {
-            try {
-                setLoading(true);
-                const res = await api.get('/products/seller');
-                setProducts(res.data);
-            } catch (err) {
-                console.error('Failed to fetch inventory:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchInventory();
-    }, []);
+        fetchAiInsights();
+    }, [store?.id]);
 
     const fetchHistory = async (productId: string) => {
         try {
@@ -65,7 +84,7 @@ export default function InventoryPage() {
         } else {
             setExpandedId(product.id);
             setLocalStock(product.stock);
-            setHistory([]); // Clear previous
+            setHistory([]);
             fetchHistory(product.id);
         }
     };
@@ -77,7 +96,6 @@ export default function InventoryPage() {
             const res = await api.patch(`/products/${productId}`, { stock: localStock });
             const updatedProduct = res.data;
 
-            // Update local state with the actual backend response
             setProducts(prev => prev.map(p =>
                 p.id === productId ? updatedProduct : p
             ));
@@ -94,9 +112,9 @@ export default function InventoryPage() {
 
     const getStockColor = (stock: number) => {
         if (stock === 0) return 'text-rose-600 bg-rose-50';
-        if (stock < 5) return 'text-rose-500 bg-rose-50'; // Red for < 5
-        if (stock < 10) return 'text-amber-500 bg-amber-50'; // Orange for 5-9
-        return 'text-emerald-600 bg-emerald-50'; // Green for 10+
+        if (stock < 5) return 'text-rose-500 bg-rose-50';
+        if (stock < 10) return 'text-amber-500 bg-amber-50';
+        return 'text-emerald-600 bg-emerald-50';
     };
 
     const getStockStatus = (stock: number) => {
@@ -120,6 +138,13 @@ export default function InventoryPage() {
         const critical = products.filter(p => p.stock > 0 && p.stock < 5).length;
         return { totalValue, lowStock, outOfStock, totalSKUs: products.length, critical };
     }, [products]);
+
+    // Match AI insights to products
+    const getProductInsight = (productName: string) => {
+        return aiInsights.find(insight =>
+            insight.description.toLowerCase().includes(productName.toLowerCase())
+        );
+    };
 
     if (loading) {
         return (
@@ -147,26 +172,63 @@ export default function InventoryPage() {
                             className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         />
                     </div>
-                    <button className="px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold hover:brightness-110 transition-all shadow-lg shadow-emerald-900/10 shrink-0">
-                        Update Stock
-                    </button>
                 </div>
             </div>
 
-            {/* Expert Stats Bar */}
-            <div className="bg-[#1A4331] rounded-[2.5rem] p-8 text-white flex flex-col md:flex-row items-center justify-between gap-8 border border-white/10 shadow-2xl">
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-emerald-400">
-                        <TrendingUp className="w-4 h-4" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Storefront Liquidity</span>
+            {/* AI Expert Stats Bar */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-[#1A4331] rounded-[2.5rem] p-8 text-white flex flex-col md:flex-row items-center justify-between gap-8 border border-white/10 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="space-y-2 relative z-10">
+                        <div className="flex items-center gap-2 text-emerald-400">
+                            <TrendingUp className="w-4 h-4" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Storefront Liquidity</span>
+                        </div>
+                        <h2 className="text-4xl font-black">{formatPrice(stats.totalValue)}</h2>
+                        <p className="opacity-60 text-xs font-bold">Total asset value currently on shelves</p>
                     </div>
-                    <h2 className="text-4xl font-black">{formatPrice(stats.totalValue)}</h2>
-                    <p className="opacity-60 text-xs font-bold">Total asset value currently on shelves</p>
+                    <div className="grid grid-cols-3 gap-8 border-l border-white/10 pl-8 relative z-10">
+                        <InvStat label="Total SKU" value={stats.totalSKUs.toString()} color="text-white" />
+                        <InvStat label="Critical" value={stats.critical.toString()} color="text-rose-400" />
+                        <InvStat label="Low Stock" value={stats.lowStock.toString()} color="text-amber-400" />
+                    </div>
                 </div>
-                <div className="grid grid-cols-3 gap-8 border-l border-white/10 pl-8">
-                    <InvStat label="Total SKU" value={stats.totalSKUs.toString()} color="text-white" />
-                    <InvStat label="Critical" value={stats.critical.toString()} color="text-rose-400" />
-                    <InvStat label="Low Stock" value={stats.lowStock.toString()} color="text-amber-400" />
+
+                <div className="bg-slate-950 rounded-[2.5rem] p-8 text-white relative overflow-hidden border border-white/5 shadow-2xl group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/30 transition-all"></div>
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md">
+                                <BrainCircuit className="w-4 h-4 text-primary" />
+                            </div>
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-white/70">AI Inventory Analyst</h4>
+                        </div>
+
+                        <div className="space-y-3">
+                            {isAiLoading ? (
+                                <div className="flex items-center gap-2 py-4">
+                                    <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Running Diagnostics...</span>
+                                </div>
+                            ) : aiInsights.length > 0 ? (
+                                <div className="space-y-3">
+                                    <div className="flex gap-3">
+                                        <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                                        <p className="text-[11px] font-medium leading-relaxed text-slate-300">
+                                            {aiInsights.find(i => i.type === 'INVENTORY')?.description || "Your inventory is optimized for the current sales trend."}
+                                        </p>
+                                    </div>
+                                    <button onClick={fetchAiInsights} className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline flex items-center gap-1">
+                                        Refresh AI Audit <Zap className="w-2 h-2" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="py-4">
+                                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest italic">Waiting for enough data points...</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -177,166 +239,196 @@ export default function InventoryPage() {
                         <tr className="text-left text-[10px] text-slate-400 uppercase tracking-widest px-4">
                             <th className="pb-4 pl-6 font-black">Item Details</th>
                             <th className="pb-4 font-black">Category</th>
-                            <th className="pb-4 font-black">Unit Price</th>
                             <th className="pb-4 font-black">Holdings</th>
                             <th className="pb-4 font-black">Asset Value</th>
-                            <th className="pb-4 pr-6 text-right font-black">Status</th>
+                            <th className="pb-4 pr-6 text-right font-black">AI Advisor Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredProducts.map((item) => (
-                            <React.Fragment key={item.id}>
-                                <tr
-                                    onClick={() => handleExpand(item)}
-                                    className={`group cursor-pointer transition-all duration-200 ${expandedId === item.id ? 'bg-slate-50 ring-1 ring-slate-200 shadow-inner rounded-2xl' : 'bg-white hover:bg-slate-50/80'}`}
-                                >
-                                    <td className="py-4 pl-6 rounded-l-2xl">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden border border-slate-100 shrink-0">
-                                                {item.images?.[0] ? (
-                                                    <img src={item.images[0]} alt="" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center"><Package className="w-5 h-5 text-slate-300" /></div>
-                                                )}
+                        {filteredProducts.map((item) => {
+                            const productInsight = getProductInsight(item.name);
+                            return (
+                                <React.Fragment key={item.id}>
+                                    <tr
+                                        onClick={() => handleExpand(item)}
+                                        className={`group cursor-pointer transition-all duration-200 ${expandedId === item.id ? 'bg-slate-50 ring-1 ring-slate-200 shadow-inner rounded-2xl' : 'bg-white hover:bg-slate-50/80'}`}
+                                    >
+                                        <td className="py-4 pl-6 rounded-l-2xl">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden border border-slate-100 shrink-0">
+                                                    {item.images?.[0] ? (
+                                                        <img src={item.images[0]} alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center"><Package className="w-5 h-5 text-slate-300" /></div>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="font-black text-slate-900">{item.name}</p>
+                                                    <p className="text-[10px] font-mono text-slate-400 uppercase">#{item.id.slice(-8)}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="font-black text-slate-900">{item.name}</p>
-                                                <p className="text-[10px] font-mono text-slate-400 uppercase">#{item.id.slice(-8)}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-4">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter bg-slate-50 px-2 py-1 rounded-lg">
-                                            {item.category}
-                                        </span>
-                                    </td>
-                                    <td className="py-4 text-xs font-bold text-slate-600">{formatPrice(item.price)}</td>
-                                    <td className="py-4 text-sm font-black">
-                                        <span className={item.stock < 5 ? 'text-rose-500' : item.stock < 10 ? 'text-amber-500' : 'text-slate-900'}>
-                                            {item.stock}
-                                        </span>
-                                        <span className="text-[10px] text-slate-400 ml-1 font-bold">units</span>
-                                    </td>
-                                    <td className="py-4 text-xs font-black text-primary">
-                                        {formatPrice(Number(item.price) * item.stock)}
-                                    </td>
-                                    <td className="py-4 pr-6 text-right rounded-r-2xl">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <span className={`px-2.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest ${getStockColor(item.stock)}`}>
-                                                {getStockStatus(item.stock)}
+                                        </td>
+                                        <td className="py-4">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter bg-slate-50 px-2 py-1 rounded-lg">
+                                                {item.category}
                                             </span>
-                                            {expandedId === item.id ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                {/* Professional Expansion Area */}
-                                <AnimatePresence mode="wait">
-                                    {expandedId === item.id && (
-                                        <tr>
-                                            <td colSpan={6} className="p-0">
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    exit={{ height: 0, opacity: 0 }}
-                                                    className="overflow-hidden mb-4"
-                                                >
-                                                    <div className="mx-6 p-8 bg-slate-50/50 rounded-3xl border border-slate-100 flex flex-col md:flex-row gap-8">
-                                                        {/* Activity History (Expert Mock) */}
-                                                        <div className="flex-1 space-y-4">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <History className="w-4 h-4 text-slate-400" />
-                                                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Stock Movement (7d)</h4>
-                                                            </div>
-                                                            <div className="space-y-3">
-                                                                {isHistoryLoading ? (
-                                                                    <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-dashed border-slate-200">
-                                                                        <Loader2 className="w-4 h-4 text-slate-300 animate-spin" />
-                                                                        <span className="text-[11px] font-bold text-slate-400">Loading audit trail...</span>
-                                                                    </div>
-                                                                ) : history.length === 0 ? (
-                                                                    <div className="text-[11px] font-bold text-slate-400 p-4 border border-dashed border-slate-200 rounded-xl text-center">
-                                                                        No recent movements recorded
-                                                                    </div>
-                                                                ) : (
-                                                                    history.map((log, i) => {
-                                                                        const isOrder = log.type === 'STOCK_REDUCED_BY_ORDER';
-                                                                        const adjustment = isOrder ? `-${log.payload.quantityReduced}` : (log.payload.adjustment > 0 ? `+${log.payload.adjustment}` : log.payload.adjustment);
-                                                                        const actionName = isOrder ? `Order Fulfilled #${log.payload.orderId.slice(-4)}` : 'Manual Adjustment';
-
-                                                                        return (
-                                                                            <div key={log.id} className="flex items-center justify-between text-[11px] font-bold p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
-                                                                                <div className="flex items-center gap-3">
-                                                                                    <div className={`w-1.5 h-1.5 rounded-full ${isOrder ? 'bg-rose-400' : 'bg-emerald-400'}`} />
-                                                                                    <span className="text-slate-900">{actionName}</span>
-                                                                                </div>
-                                                                                <div className="flex items-center gap-4">
-                                                                                    <span className={adjustment.toString().startsWith('+') ? 'text-emerald-500' : 'text-rose-500'}>{adjustment}</span>
-                                                                                    <span className="text-slate-400 font-medium">{format(new Date(log.date), 'MMM d, h:mm a')}</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        );
-                                                                    })
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Quick Control Center */}
-                                                        <div className="w-full md:w-72 space-y-6">
-                                                            <div className="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-4">
-                                                                <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                                                                    <Settings2 className="w-3.5 h-3.5" /> Rapid Adjust
-                                                                </h4>
-                                                                <div className="flex items-center justify-between">
-                                                                    <button
-                                                                        onClick={(e) => { e.stopPropagation(); setLocalStock(prev => Math.max(0, (prev || 0) - 1)); }}
-                                                                        className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all"
-                                                                    >
-                                                                        <Minus className="w-4 h-4 text-slate-600" />
-                                                                    </button>
-                                                                    <div className="text-center">
-                                                                        <p className="text-2xl font-black text-slate-900">{localStock ?? item.stock}</p>
-                                                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Adjust</p>
-                                                                    </div>
-                                                                    <button
-                                                                        onClick={(e) => { e.stopPropagation(); setLocalStock(prev => (prev || 0) + 1); }}
-                                                                        className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all"
-                                                                    >
-                                                                        <Plus className="w-4 h-4 text-slate-600" />
-                                                                    </button>
-                                                                </div>
-                                                                <button
-                                                                    disabled={isUpdating || localStock === item.stock}
-                                                                    onClick={(e) => { e.stopPropagation(); handleConfirmCount(item.id); }}
-                                                                    className="w-full h-12 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md hover:brightness-110 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                                                >
-                                                                    {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Count'}
-                                                                </button>
-                                                            </div>
-
-                                                            <div className="flex items-center justify-between px-2">
-                                                                <div className="flex items-center gap-2">
-                                                                    <Calendar className="w-4 h-4 text-slate-400" />
-                                                                    <span className="text-[10px] font-bold text-slate-400">Restock Alert: <span className="text-slate-900">10 units</span></span>
-                                                                </div>
-                                                                <button className="text-[10px] font-black text-primary uppercase hover:underline">Edit Hub</button>
-                                                            </div>
-                                                        </div>
+                                        </td>
+                                        <td className="py-4 text-sm font-black">
+                                            <span className={item.stock < 5 ? 'text-rose-500' : item.stock < 10 ? 'text-amber-500' : 'text-slate-900'}>
+                                                {item.stock}
+                                            </span>
+                                            <span className="text-[10px] text-slate-400 ml-1 font-bold">units</span>
+                                        </td>
+                                        <td className="py-4 text-xs font-black text-primary">
+                                            {formatPrice(Number(item.price) * item.stock)}
+                                        </td>
+                                        <td className="py-4 pr-6 text-right rounded-r-2xl">
+                                            <div className="flex items-center justify-end gap-3">
+                                                {productInsight && (
+                                                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center animate-pulse">
+                                                        <Sparkles className="w-3 h-3 text-primary" />
                                                     </div>
-                                                </motion.div>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </AnimatePresence>
-                            </React.Fragment>
-                        ))}
+                                                )}
+                                                <span className={`px-2.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest ${getStockColor(item.stock)}`}>
+                                                    {getStockStatus(item.stock)}
+                                                </span>
+                                                {expandedId === item.id ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <AnimatePresence mode="wait">
+                                        {expandedId === item.id && (
+                                            <tr>
+                                                <td colSpan={6} className="p-0">
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                        exit={{ height: 0, opacity: 0 }}
+                                                        className="overflow-hidden mb-4"
+                                                    >
+                                                        <div className="mx-6 p-8 bg-slate-50/50 rounded-3xl border border-slate-100 flex flex-col md:flex-row gap-8">
+                                                            <div className="flex-1 space-y-6">
+                                                                {/* AI Proactive Suggestion */}
+                                                                {productInsight && (
+                                                                    <div className="p-5 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <BrainCircuit className="w-4 h-4 text-primary" />
+                                                                            <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">Gemini 1.5 Growth Suggestion</h4>
+                                                                        </div>
+                                                                        <p className="text-[13px] font-bold text-slate-700 leading-relaxed">
+                                                                            {productInsight.description}
+                                                                        </p>
+                                                                        <div className="flex items-center gap-2 pt-1">
+                                                                            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md uppercase">
+                                                                                Impact: {productInsight.impact}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                <div className="space-y-4">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <History className="w-4 h-4 text-slate-400" />
+                                                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Inventory Audit Log</h4>
+                                                                    </div>
+                                                                    <div className="space-y-3 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+                                                                        {isHistoryLoading ? (
+                                                                            <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-dashed border-slate-200">
+                                                                                <Loader2 className="w-4 h-4 text-slate-300 animate-spin" />
+                                                                                <span className="text-[11px] font-bold text-slate-400">Tracking movements...</span>
+                                                                            </div>
+                                                                        ) : history.length === 0 ? (
+                                                                            <div className="text-[11px] font-bold text-slate-400 p-4 border border-dashed border-slate-200 rounded-xl text-center">
+                                                                                No movement recorded in this cycle
+                                                                            </div>
+                                                                        ) : (
+                                                                            history.map((log, i) => {
+                                                                                const isOrder = log.type === 'STOCK_REDUCED_BY_ORDER';
+                                                                                const adjustment = isOrder ? `-${log.payload.quantityReduced}` : (log.payload.adjustment > 0 ? `+${log.payload.adjustment}` : log.payload.adjustment);
+                                                                                const actionName = isOrder ? `Sale #${log.payload.orderId.slice(-4)}` : 'Manual Adjust';
+
+                                                                                return (
+                                                                                    <div key={log.id} className="flex items-center justify-between text-[11px] font-bold p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                                                                                        <div className="flex items-center gap-3">
+                                                                                            <div className={`w-1.5 h-1.5 rounded-full ${isOrder ? 'bg-rose-400' : 'bg-emerald-400'}`} />
+                                                                                            <span className="text-slate-900">{actionName}</span>
+                                                                                        </div>
+                                                                                        <div className="flex items-center gap-4">
+                                                                                            <span className={adjustment.toString().startsWith('+') ? 'text-emerald-500' : 'text-rose-500'}>{adjustment}</span>
+                                                                                            <span className="text-slate-400 font-medium">{format(new Date(log.date), 'MMM d, p')}</span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="w-full md:w-80 space-y-6">
+                                                                <div className="p-6 bg-white rounded-[2rem] border border-slate-100 shadow-xl space-y-6">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-900 border-b-2 border-primary pb-1">Stock Control</h4>
+                                                                        <Settings2 className="w-4 h-4 text-slate-400" />
+                                                                    </div>
+
+                                                                    <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl">
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); setLocalStock(prev => Math.max(0, (prev || 0) - 1)); }}
+                                                                            className="w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all"
+                                                                        >
+                                                                            <Minus className="w-5 h-5 text-slate-600" />
+                                                                        </button>
+                                                                        <div className="text-center">
+                                                                            <motion.p key={localStock} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-3xl font-black text-slate-900">
+                                                                                {localStock ?? item.stock}
+                                                                            </motion.p>
+                                                                            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">In Stock</p>
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); setLocalStock(prev => (prev || 0) + 1); }}
+                                                                            className="w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all"
+                                                                        >
+                                                                            <Plus className="w-5 h-5 text-slate-600" />
+                                                                        </button>
+                                                                    </div>
+
+                                                                    <button
+                                                                        disabled={isUpdating || localStock === item.stock}
+                                                                        onClick={(e) => { e.stopPropagation(); handleConfirmCount(item.id); }}
+                                                                        className="w-full h-14 bg-slate-950 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:brightness-110 active:scale-98 transition-all disabled:opacity-30 disabled:grayscale flex items-center justify-center gap-2"
+                                                                    >
+                                                                        {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Apply Adjustment'}
+                                                                    </button>
+                                                                </div>
+
+                                                                <div className="bg-amber-50 rounded-2xl p-5 border border-amber-100/50 flex items-start gap-4">
+                                                                    <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+                                                                    <div>
+                                                                        <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-1">Stock Notice</p>
+                                                                        <p className="text-[11px] font-medium text-amber-700 leading-normal">
+                                                                            Stock updates are live immediately. This will affect your visibility on the storefront.
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </motion.div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </AnimatePresence>
+                                </React.Fragment>
+                            );
+                        })}
                     </tbody>
                 </table>
 
                 {filteredProducts.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center py-20 text-slate-400">
                         <Package className="w-12 h-12 mb-4 opacity-20" />
-                        <p className="font-bold">No results found for "{searchTerm}"</p>
+                        <p className="font-bold uppercase tracking-widest text-[10px]">Zero matches found in terminal</p>
                     </div>
                 )}
             </div>

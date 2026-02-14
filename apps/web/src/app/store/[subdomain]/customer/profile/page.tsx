@@ -38,6 +38,7 @@ export default function CustomerProfilePage() {
                 const res = await api.get('/users/profile');
                 setProfile({
                     ...res.data,
+                    phone: res.data.phone || '', // Ensure phone is never null
                     // Ensure nested objects exist to avoid undefined errors
                     shippingAddress: res.data.shippingAddress || {
                         firstName: '',
@@ -143,8 +144,8 @@ export default function CustomerProfilePage() {
     return (
         <div className="max-w-7xl mx-auto pb-20 px-4 sm:px-6 lg:px-8">
             <div className="mb-10">
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight">Profile Settings</h1>
-                <p className="text-slate-500 mt-1">Manage your account information and preferences</p>
+                <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Profile Settings</h1>
+                <p className="text-slate-500 dark:text-slate-400 mt-1">Manage your account information and preferences</p>
             </div>
 
             <div className="space-y-8">
@@ -160,9 +161,9 @@ export default function CustomerProfilePage() {
                 )}
 
                 {/* Avatar & ID Section */}
-                <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm flex items-center gap-8">
+                <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-8 transition-colors duration-300">
                     <div className="relative group shrink-0">
-                        <div className="w-24 h-24 bg-slate-900 rounded-[2rem] flex items-center justify-center text-white font-black text-3xl shadow-xl shadow-slate-200 overflow-hidden relative">
+                        <div className="w-24 h-24 bg-slate-900 dark:bg-white rounded-[2rem] flex items-center justify-center text-white dark:text-black font-black text-3xl shadow-xl shadow-slate-200 dark:shadow-none overflow-hidden relative">
                             {previewUrl || profile.image ? (
                                 <img src={previewUrl || profile.image} alt="Profile" className="w-full h-full object-cover" />
                             ) : (
@@ -187,12 +188,12 @@ export default function CustomerProfilePage() {
                         />
                     </div>
                     <div>
-                        <h3 className="text-2xl font-black text-slate-900">{profile.name || 'Set your name'}</h3>
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white">{profile.name || 'Set your name'}</h3>
                         <div className="flex items-center gap-2 mt-2">
-                            <div className="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            <div className="px-3 py-1 bg-slate-100 dark:bg-slate-900 rounded-lg text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                                 ID:
                             </div>
-                            <p className="text-xs font-bold text-slate-900 tracking-widest uppercase">
+                            <p className="text-xs font-bold text-slate-900 dark:text-white tracking-widest uppercase">
                                 {profile.id ? `CUST-${profile.id.slice(-6)}` : 'UNKNOWN'}
                             </p>
                         </div>
@@ -203,10 +204,10 @@ export default function CustomerProfilePage() {
                 {/* Main Profile Form (Personal + Shipping) */}
                 <form id="profile-form" onSubmit={handleSubmit} className="space-y-8">
                     {/* Personal Information */}
-                    <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm space-y-8">
+                    <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-10 border border-slate-100 dark:border-slate-800 shadow-sm space-y-8 transition-colors duration-300">
                         <div className="flex items-center gap-3 mb-2">
-                            <User className="w-5 h-5 text-slate-900" />
-                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Personal Information</h3>
+                            <User className="w-5 h-5 text-slate-900 dark:text-white" />
+                            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Personal Information</h3>
                         </div>
 
                         <div className="grid gap-6">
@@ -220,7 +221,7 @@ export default function CustomerProfilePage() {
                                         type="text"
                                         value={profile.name}
                                         onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                                        className={`w-full h-16 pl-14 pr-8 bg-slate-50 border border-slate-50 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100/50 transition-all text-slate-900 ${initialName ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                        className={`w-full h-16 pl-14 pr-8 bg-slate-50 dark:bg-slate-900 border border-slate-50 dark:border-slate-800 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-slate-200 dark:focus:border-slate-700 focus:ring-4 focus:ring-slate-100/50 dark:focus:ring-slate-800/50 transition-all text-slate-900 dark:text-white ${initialName ? 'opacity-60 cursor-not-allowed' : ''}`}
                                         placeholder="Enter your name"
                                         disabled={!!initialName}
                                         title={initialName ? "Name cannot be changed once set" : ""}
@@ -239,7 +240,7 @@ export default function CustomerProfilePage() {
                                         type="email"
                                         value={profile.email}
                                         onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                                        className="w-full h-16 pl-14 pr-8 bg-slate-50 border border-slate-50 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100/50 transition-all text-slate-900"
+                                        className="w-full h-16 pl-14 pr-8 bg-slate-50 dark:bg-slate-900 border border-slate-50 dark:border-slate-800 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-slate-200 dark:focus:border-slate-700 focus:ring-4 focus:ring-slate-100/50 dark:focus:ring-slate-800/50 transition-all text-slate-900 dark:text-white"
                                         placeholder="Enter your email"
                                     />
                                 </div>
@@ -255,7 +256,7 @@ export default function CustomerProfilePage() {
                                         type="tel"
                                         value={profile.phone}
                                         onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                                        className="w-full h-16 pl-14 pr-8 bg-slate-50 border border-slate-50 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100/50 transition-all text-slate-900"
+                                        className="w-full h-16 pl-14 pr-8 bg-slate-50 dark:bg-slate-900 border border-slate-50 dark:border-slate-800 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-slate-200 dark:focus:border-slate-700 focus:ring-4 focus:ring-slate-100/50 dark:focus:ring-slate-800/50 transition-all text-slate-900 dark:text-white"
                                         placeholder="+1 (555) 000-0000"
                                     />
                                 </div>
@@ -264,10 +265,10 @@ export default function CustomerProfilePage() {
                     </div>
 
                     {/* Shipping Address Section */}
-                    <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm space-y-8">
+                    <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-10 border border-slate-100 dark:border-slate-800 shadow-sm space-y-8 transition-colors duration-300">
                         <div className="flex items-center gap-3 mb-2">
-                            <MapPin className="w-5 h-5 text-slate-900" />
-                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Shipping Details</h3>
+                            <MapPin className="w-5 h-5 text-slate-900 dark:text-white" />
+                            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Shipping Details</h3>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -277,7 +278,7 @@ export default function CustomerProfilePage() {
                                     type="text"
                                     value={profile.shippingAddress.address}
                                     onChange={(e) => setProfile({ ...profile, shippingAddress: { ...profile.shippingAddress, address: e.target.value } })}
-                                    className="w-full h-16 px-8 bg-slate-50 border border-slate-50 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100/50 transition-all text-slate-900"
+                                    className="w-full h-16 px-8 bg-slate-50 dark:bg-slate-900 border border-slate-50 dark:border-slate-800 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-slate-200 dark:focus:border-slate-700 focus:ring-4 focus:ring-slate-100/50 dark:focus:ring-slate-800/50 transition-all text-slate-900 dark:text-white"
                                     placeholder="123 Aba Road"
                                 />
                             </div>
@@ -287,7 +288,7 @@ export default function CustomerProfilePage() {
                                     type="text"
                                     value={profile.shippingAddress.city}
                                     onChange={(e) => setProfile({ ...profile, shippingAddress: { ...profile.shippingAddress, city: e.target.value } })}
-                                    className="w-full h-16 px-8 bg-slate-50 border border-slate-50 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100/50 transition-all text-slate-900"
+                                    className="w-full h-16 px-8 bg-slate-50 dark:bg-slate-900 border border-slate-50 dark:border-slate-800 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-slate-200 dark:focus:border-slate-700 focus:ring-4 focus:ring-slate-100/50 dark:focus:ring-slate-800/50 transition-all text-slate-900 dark:text-white"
                                     placeholder="Port Harcourt"
                                 />
                             </div>
@@ -297,7 +298,7 @@ export default function CustomerProfilePage() {
                                     type="text"
                                     value={profile.shippingAddress.postalCode}
                                     onChange={(e) => setProfile({ ...profile, shippingAddress: { ...profile.shippingAddress, postalCode: e.target.value } })}
-                                    className="w-full h-16 px-8 bg-slate-50 border border-slate-50 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100/50 transition-all text-slate-900"
+                                    className="w-full h-16 px-8 bg-slate-50 dark:bg-slate-900 border border-slate-50 dark:border-slate-800 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-slate-200 dark:focus:border-slate-700 focus:ring-4 focus:ring-slate-100/50 dark:focus:ring-slate-800/50 transition-all text-slate-900 dark:text-white"
                                     placeholder="500272"
                                 />
                             </div>
@@ -307,7 +308,7 @@ export default function CustomerProfilePage() {
                                     type="text"
                                     value={profile.shippingAddress.country}
                                     onChange={(e) => setProfile({ ...profile, shippingAddress: { ...profile.shippingAddress, country: e.target.value } })}
-                                    className="w-full h-16 px-8 bg-slate-50 border border-slate-50 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-100/50 transition-all text-slate-900"
+                                    className="w-full h-16 px-8 bg-slate-50 dark:bg-slate-900 border border-slate-50 dark:border-slate-800 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-slate-200 dark:focus:border-slate-700 focus:ring-4 focus:ring-100/50 dark:focus:ring-slate-800/50 transition-all text-slate-900 dark:text-white"
                                     placeholder="Rivers State, Nigeria"
                                 />
                             </div>
@@ -315,12 +316,12 @@ export default function CustomerProfilePage() {
                     </div>
                 </form>
 
-                {/* Saved Cards Section (Visual Only for now) */}
-                <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm space-y-8">
+                {/* Saved Cards Section */}
+                <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-10 border border-slate-100 dark:border-slate-800 shadow-sm space-y-8 transition-colors duration-300">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
-                            <CreditCard className="w-5 h-5 text-slate-900" />
-                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Saved Cards</h3>
+                            <CreditCard className="w-5 h-5 text-slate-900 dark:text-white" />
+                            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Saved Cards</h3>
                         </div>
                     </div>
 
@@ -361,19 +362,19 @@ export default function CustomerProfilePage() {
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-slate-50 rounded-[1.5rem] p-8 text-center border border-dashed border-slate-200">
-                            <CreditCard className="w-10 h-10 text-slate-300 mx-auto mb-4" />
-                            <p className="text-sm font-black text-slate-900">No saved cards</p>
+                        <div className="bg-slate-50 dark:bg-slate-900 rounded-[1.5rem] p-8 text-center border border-dashed border-slate-200 dark:border-slate-800">
+                            <CreditCard className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+                            <p className="text-sm font-black text-slate-900 dark:text-white">No saved cards</p>
                             <p className="text-xs text-slate-400 mt-1">Cards used at checkout will appear here.</p>
                         </div>
                     )}
                 </div>
 
                 {/* Password Section */}
-                <form onSubmit={handlePasswordSubmit} className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm space-y-8 flex flex-col">
+                <form onSubmit={handlePasswordSubmit} className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-10 border border-slate-100 dark:border-slate-800 shadow-sm space-y-8 flex flex-col transition-colors duration-300">
                     <div className="flex items-center gap-3 mb-2">
-                        <ShieldCheck className="w-5 h-5 text-slate-900" />
-                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Security & Password</h3>
+                        <ShieldCheck className="w-5 h-5 text-slate-900 dark:text-white" />
+                        <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Security & Password</h3>
                     </div>
 
                     <div className="grid gap-6 flex-grow">
@@ -383,7 +384,7 @@ export default function CustomerProfilePage() {
                                 type="password"
                                 value={passwordData.currentPassword}
                                 onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                                className="w-full h-16 px-8 bg-slate-50 border border-slate-50 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100/50 transition-all text-slate-900"
+                                className="w-full h-16 px-8 bg-slate-50 dark:bg-slate-900 border border-slate-50 dark:border-slate-800 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-slate-200 dark:focus:border-slate-700 focus:ring-4 focus:ring-slate-100/50 dark:focus:ring-slate-800/50 transition-all text-slate-900 dark:text-white"
                                 placeholder="••••••••"
                                 required
                             />
@@ -395,7 +396,7 @@ export default function CustomerProfilePage() {
                                 type="password"
                                 value={passwordData.newPassword}
                                 onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                                className="w-full h-16 px-8 bg-slate-50 border border-slate-50 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100/50 transition-all text-slate-900"
+                                className="w-full h-16 px-8 bg-slate-50 dark:bg-slate-900 border border-slate-50 dark:border-slate-800 rounded-[1.5rem] text-sm font-bold outline-none focus:bg-white dark:focus:bg-slate-950 focus:border-slate-200 dark:focus:border-slate-700 focus:ring-4 focus:ring-slate-100/50 dark:focus:ring-slate-800/50 transition-all text-slate-900 dark:text-white"
                                 placeholder="••••••••"
                                 required
                             />
@@ -405,7 +406,7 @@ export default function CustomerProfilePage() {
                     <button
                         type="submit"
                         disabled={changingPassword}
-                        className="w-full h-14 bg-white border-2 border-slate-900 text-slate-900 rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-slate-50 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-auto"
+                        className="w-full h-14 bg-white dark:bg-slate-950 border-2 border-slate-900 dark:border-white text-slate-900 dark:text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-slate-50 dark:hover:bg-slate-900 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-auto"
                     >
                         {changingPassword ? <Loader2 className="w-5 h-5 animate-spin" /> : <><ShieldCheck className="w-5 h-5" /> Change Password</>}
                     </button>
@@ -420,7 +421,7 @@ export default function CustomerProfilePage() {
                         type="submit"
                         form="profile-form"
                         disabled={saving}
-                        className="w-full md:w-auto md:min-w-[200px] h-14 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center justify-center gap-3 disabled:opacity-50 px-8"
+                        className="w-full md:w-auto md:min-w-[200px] h-14 bg-slate-900 dark:bg-white text-white dark:text-black rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center justify-center gap-3 disabled:opacity-50 px-8"
                     >
                         {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /> Save Profile Info</>}
                     </button>

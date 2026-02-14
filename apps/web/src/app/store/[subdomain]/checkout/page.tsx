@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getThemeComponents } from '@/components/themes/registry';
 import { Loader2 } from 'lucide-react';
@@ -13,6 +13,8 @@ export default function CheckoutPage() {
     const [isRedirecting, setIsRedirecting] = useState(false);
     const router = useRouter();
 
+    const trackedCheckoutRef = useRef(false);
+
     useEffect(() => {
         async function fetchStore() {
             try {
@@ -23,9 +25,10 @@ export default function CheckoutPage() {
                     setStore(data);
 
                     // Track Checkout Start
-                    if (data?.id) {
+                    if (data?.id && !trackedCheckoutRef.current) {
                         import('@/lib/analytics').then(({ trackEvent, ANALYTICS_EVENTS }) => {
                             trackEvent(data.id, ANALYTICS_EVENTS.CHECKOUT_START);
+                            trackedCheckoutRef.current = true;
                         });
                     }
                 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ShoppingBag, Search, User, Menu } from 'lucide-react';
 import { useStoreCart } from '@/store/useStoreCart';
+import { useAuthStore } from '@/store/useAuthStore';
 import { NavbarProps } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,11 +13,24 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function DefaultNavbar({ storeName, logo, storeId }: NavbarProps) {
     const { toggleCart, totalCount: itemCount } = useStoreCart(storeId);
+    const { user } = useAuthStore();
     const { subdomain } = useParams<{ subdomain: string }>();
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+    const [isVisible, setIsVisible] = React.useState(true);
+
+    React.useEffect(() => {
+        let lastScrollY = window.scrollY;
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            setIsVisible(currentScrollY < lastScrollY || currentScrollY < 50);
+            lastScrollY = currentScrollY;
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     return (
-        <nav className="bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 shadow-sm sticky top-0 z-50 transition-colors duration-300">
+        <nav className={`bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 shadow-sm sticky top-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
             {/* Indisputable Visual Marker: High-Contrast Top Bar */}
             <div className="bg-indigo-600 py-1.5 sm:py-2.5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-[9px] sm:text-[11px] font-black text-white uppercase tracking-[0.2em]">
@@ -66,7 +80,11 @@ export function DefaultNavbar({ storeName, logo, storeId }: NavbarProps) {
 
                     <div className="flex items-center gap-1 sm:gap-2 border-l border-gray-100 dark:border-gray-800 ml-2 sm:ml-4 pl-2 sm:pl-4">
                         <ThemeToggle />
-                        <Link href={`/store/${subdomain}/customer/login`} className="p-2 sm:p-2.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-all">
+                        <Link
+                            href={user ? `/store/${subdomain}/customer/orders` : `/store/${subdomain}/customer/login`}
+                            className={`p-2 sm:p-2.5 rounded-xl transition-all ${user ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'}`}
+                            title={user ? 'Account' : 'Login'}
+                        >
                             <User className="w-5 h-5" />
                         </Link>
                         <button

@@ -7,6 +7,9 @@ import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocket } from '@/hooks/useSocket';
+import { SearchModal } from '@/components/dashboard/SearchModal';
+import { NotificationDropdown } from '@/components/dashboard/NotificationDropdown';
+import { UserMenu } from '@/components/dashboard/UserMenu';
 
 export default function SellerLayout({
     children,
@@ -16,9 +19,46 @@ export default function SellerLayout({
     const router = useRouter();
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = React.useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
     const { user, store, setUser, setStore, setLoading, isLoading } = useAuthStore();
     const [unreadCount, setUnreadCount] = React.useState(0);
     const socket = useSocket(user?.id);
+
+    // Header States
+    const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+    const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
+    const [notifications, setNotifications] = React.useState<any[]>([]);
+
+    useEffect(() => {
+        const down = (e: KeyboardEvent) => {
+            if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                setIsSearchOpen((open) => !open);
+            }
+        }
+        document.addEventListener('keydown', down);
+        return () => document.removeEventListener('keydown', down);
+    }, []);
+
+    const fetchNotifications = async () => {
+        if (!store?.id) return;
+        try {
+            const res = await api.get(`/analytics/notifications/${store.id}`);
+            setNotifications(res.data);
+        } catch (err) {
+            console.error('Failed to fetch notifications:', err);
+        }
+    };
+
+    useEffect(() => {
+        fetchNotifications();
+        // Refresh every minute
+        const interval = setInterval(fetchNotifications, 60000);
+        return () => clearInterval(interval);
+    }, [store?.id]);
+
+    const notificationsCount = notifications.length;
 
     useEffect(() => {
         if (!user) return;
@@ -108,10 +148,50 @@ export default function SellerLayout({
     if (!user) return null;
 
     return (
-        <div className="h-screen bg-slate-50 flex overflow-hidden font-sans">
-            {/* Sidebar */}
+        <div className="h-screen bg-slate-50 flex overflow-hidden font-sans relative">
+            {/* Mobile Menu Overlay */}
+            <AnimatePresence>
+                {isMobileMenuOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] lg:hidden"
+                        />
+                        <motion.aside
+                            initial={{ x: '-100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '-100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="fixed inset-y-0 left-0 w-72 bg-white z-[110] lg:hidden shadow-2xl flex flex-col"
+                        >
+                            <div className="p-6 border-b border-slate-50 flex items-center justify-between">
+                                <div className="flex items-center space-x-3 text-slate-900">
+                                    <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-emerald-200 shrink-0">
+                                        <span className="text-white text-md font-bold font-mono">O</span>
+                                    </div>
+                                    <span className="text-md font-bold tracking-tight">OPNMRT</span>
+                                </div>
+                                <button
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="p-2 hover:bg-slate-50 rounded-lg transition-colors"
+                                >
+                                    <span className="text-xl">✕</span>
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar">
+                                <SidebarNav pathname={pathname} unreadCount={unreadCount} setIsMobileMenuOpen={setIsMobileMenuOpen} />
+                            </div>
+                        </motion.aside>
+                    </>
+                )}
+            </AnimatePresence>
+
+            {/* Sidebar (Desktop) */}
             <aside
-                className={`bg-white border-r border-slate-100 flex flex-col shrink-0 transition-all duration-300 ease-in-out relative group/sidebar ${isCollapsed ? 'w-24' : 'w-72'}`}
+                className={`bg-white border-r border-slate-100 hidden lg:flex flex-col shrink-0 transition-all duration-300 ease-in-out relative group/sidebar ${isCollapsed ? 'w-24' : 'w-72'}`}
             >
                 {/* Independent Scroll for Sidebar */}
                 <div className="flex-1 flex flex-col overflow-y-auto no-scrollbar">
@@ -123,54 +203,7 @@ export default function SellerLayout({
                             {!isCollapsed && <span className="text-lg font-bold tracking-tight whitespace-nowrap">OPNMRT</span>}
                         </div>
 
-                        {/* Navigation Wrapper */}
-                        <div className="space-y-3">
-                            <div>
-                                {!isCollapsed && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1">General</p>}
-                                <nav className="space-y-0.5">
-                                    <SidebarLink href="/dashboard/seller" icon="📊" label="Dashboard" active={pathname === '/dashboard/seller'} isCollapsed={isCollapsed} />
-                                    <SidebarLink href="/dashboard/seller/orders" icon="📦" label="Orders" active={pathname === '/dashboard/seller/orders'} isCollapsed={isCollapsed} />
-                                    <SidebarLink href="/dashboard/seller/products" icon="🏷️" label="Products" active={pathname === '/dashboard/seller/products'} isCollapsed={isCollapsed} />
-                                    <SidebarLink href="/dashboard/seller/inventory" icon="📦" label="Inventory" active={pathname === '/dashboard/seller/inventory'} isCollapsed={isCollapsed} />
-                                    <SidebarLink
-                                        href="/dashboard/seller/messages"
-                                        icon="💬"
-                                        label="Messages"
-                                        active={pathname === '/dashboard/seller/messages'}
-                                        isCollapsed={isCollapsed}
-                                        badge={unreadCount > 0 ? unreadCount : undefined}
-                                    />
-                                    <SidebarLink href="/dashboard/seller/customers" icon="👥" label="Customers" active={pathname === '/dashboard/seller/customers'} isCollapsed={isCollapsed} />
-                                </nav>
-                            </div>
-
-                            {/* AI Section (Infused) */}
-                            <div>
-                                {!isCollapsed && <p className="text-[9px] font-bold text-primary/80 uppercase tracking-widest px-2 mb-1 flex items-center">
-                                    AI Engine <span className="ml-2 px-1 bg-primary/10 text-primary rounded-[4px] text-[7px]">ACTIVE</span>
-                                </p>}
-                                <nav className="space-y-0.5">
-                                    <SidebarLink href="/dashboard/seller/analytics" icon="✨" label="AI Insights" active={pathname === '/dashboard/seller/analytics'} isCollapsed={isCollapsed} />
-                                </nav>
-                            </div>
-
-                            {/* Customization Section */}
-                            <div>
-                                {!isCollapsed && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1">Customization</p>}
-                                <nav className="space-y-0.5">
-                                    <SidebarLink href="/dashboard/seller/themes" icon="🎨" label="Themes" active={pathname.startsWith('/dashboard/seller/themes')} isCollapsed={isCollapsed} />
-                                </nav>
-                            </div>
-
-                            <div>
-                                {!isCollapsed && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1">Help & Settings</p>}
-                                <nav className="space-y-0.5">
-                                    <SidebarLink href="/dashboard/seller/payments" icon="💰" label="Payments" active={pathname === '/dashboard/seller/payments'} isCollapsed={isCollapsed} />
-                                    <SidebarLink href="/dashboard/seller/support" icon="🎧" label="Support" active={pathname === '/dashboard/seller/support'} isCollapsed={isCollapsed} />
-                                    <SidebarLink href="/dashboard/seller/settings" icon="⚙️" label="Settings" active={pathname === '/dashboard/seller/settings'} isCollapsed={isCollapsed} />
-                                </nav>
-                            </div>
-                        </div>
+                        <SidebarNav pathname={pathname} unreadCount={unreadCount} isCollapsed={isCollapsed} />
                     </div>
 
                     {/* Upgrade Card / AI Assistant Card */}
@@ -223,10 +256,15 @@ export default function SellerLayout({
 
             {/* Main Content Area - Independent Scroll */}
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                <header className="h-20 bg-white/50 backdrop-blur-md flex items-center justify-between px-10 shrink-0 border-b border-slate-100/50">
-                    <div className="flex items-center space-x-4 w-1/4">
-                        <Link href="/" className="lg:hidden text-2xl font-bold text-primary mr-4">O</Link>
-                        <div className="flex flex-col">
+                <header className="h-20 bg-white/50 backdrop-blur-md flex items-center justify-between px-6 lg:px-10 shrink-0 border-b border-slate-100/50 relative z-[500]">
+                    <div className="flex items-center space-x-4 lg:w-1/4">
+                        <button
+                            onClick={() => setIsMobileMenuOpen(true)}
+                            className="lg:hidden w-10 h-10 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-slate-600"
+                        >
+                            <span className="text-xl">☰</span>
+                        </button>
+                        <div className="hidden lg:flex flex-col">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Good Morning,</span>
                             <span className="text-sm font-bold text-slate-900 mt-1">{user?.name?.split(' ')[0] || 'User'}</span>
                         </div>
@@ -248,21 +286,58 @@ export default function SellerLayout({
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-end space-x-4 w-1/4">
-                        <div className="flex space-x-2">
-                            <HeaderButton icon="🔍" />
-                            <HeaderButton icon="🔔" badge />
-                        </div>
-                        <div className="h-8 w-px bg-slate-200 mx-2" />
-                        <div className="flex items-center space-x-3 pl-2 group cursor-pointer">
-                            <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-slate-200 to-slate-100 flex items-center justify-center text-slate-600 font-bold overflow-hidden shadow-inner">
-                                {user.name.charAt(0).toUpperCase()}
+                    <div className="flex items-center justify-end space-x-4 lg:w-1/4">
+                        <div className="flex space-x-2 relative">
+                            <HeaderButton icon="🔍" onClick={() => setIsSearchOpen(true)} />
+                            <div className="relative">
+                                <HeaderButton
+                                    icon="🔔"
+                                    badge={notificationsCount > 0}
+                                    onClick={() => {
+                                        setIsNotificationsOpen(!isNotificationsOpen);
+                                        setIsUserMenuOpen(false);
+                                    }}
+                                />
+                                <NotificationDropdown
+                                    storeId={store?.id || ''}
+                                    isOpen={isNotificationsOpen}
+                                    onClose={() => setIsNotificationsOpen(false)}
+                                />
                             </div>
                         </div>
+                        <div className="h-8 w-px bg-slate-200 mx-2" />
+                        <div className="relative">
+                            <div
+                                onClick={() => {
+                                    setIsUserMenuOpen(!isUserMenuOpen);
+                                    setIsNotificationsOpen(false);
+                                }}
+                                className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-slate-200 to-slate-100 flex items-center justify-center text-slate-600 font-bold overflow-hidden shadow-inner cursor-pointer hover:ring-2 ring-primary/20 transition-all"
+                            >
+                                {store?.logo ? (
+                                    <img src={store.logo} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                    user.name.charAt(0).toUpperCase()
+                                )}
+                            </div>
+                            <UserMenu
+                                user={user}
+                                store={store}
+                                isOpen={isUserMenuOpen}
+                                onClose={() => setIsUserMenuOpen(false)}
+                                onLogout={handleLogout}
+                            />
+                        </div>
                     </div>
+
+                    <SearchModal
+                        isOpen={isSearchOpen}
+                        onClose={() => setIsSearchOpen(false)}
+                        storeId={store?.id || ''}
+                    />
                 </header>
 
-                <main className="flex-1 overflow-y-auto bg-slate-50/30 p-10 pt-6 no-scrollbar">
+                <main className="flex-1 overflow-y-auto bg-slate-50/30 p-4 lg:p-10 pt-6 no-scrollbar">
                     <div className="max-w-[1600px] mx-auto">
                         {children}
                     </div>
@@ -272,11 +347,69 @@ export default function SellerLayout({
     );
 }
 
-function SidebarLink({ href, icon, label, active = false, isCollapsed = false, badge }: { href: string; icon: string; label: string; active?: boolean; isCollapsed?: boolean; badge?: number }) {
+function SidebarNav({ pathname, unreadCount, isCollapsed = false, setIsMobileMenuOpen }: { pathname: string; unreadCount: number; isCollapsed?: boolean; setIsMobileMenuOpen?: (open: boolean) => void }) {
+    const handleLinkClick = () => {
+        if (setIsMobileMenuOpen) setIsMobileMenuOpen(false);
+    };
+
+    return (
+        <div className="space-y-3">
+            <div>
+                {!isCollapsed && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1">General</p>}
+                <nav className="space-y-0.5">
+                    <SidebarLink href="/dashboard/seller" icon="📊" label="Dashboard" active={pathname === '/dashboard/seller'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
+                    <SidebarLink href="/dashboard/seller/orders" icon="📦" label="Orders" active={pathname === '/dashboard/seller/orders'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
+                    <SidebarLink href="/dashboard/seller/products" icon="🏷️" label="Products" active={pathname === '/dashboard/seller/products'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
+                    <SidebarLink href="/dashboard/seller/inventory" icon="📦" label="Inventory" active={pathname === '/dashboard/seller/inventory'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
+                    <SidebarLink
+                        href="/dashboard/seller/messages"
+                        icon="💬"
+                        label="Messages"
+                        active={pathname === '/dashboard/seller/messages'}
+                        isCollapsed={isCollapsed}
+                        badge={unreadCount > 0 ? unreadCount : undefined}
+                        onClick={handleLinkClick}
+                    />
+                    <SidebarLink href="/dashboard/seller/customers" icon="👥" label="Customers" active={pathname === '/dashboard/seller/customers'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
+                </nav>
+            </div>
+
+            {/* AI Section (Infused) */}
+            <div>
+                {!isCollapsed && <p className="text-[9px] font-bold text-primary/80 uppercase tracking-widest px-2 mb-1 flex items-center">
+                    AI Engine <span className="ml-2 px-1 bg-primary/10 text-primary rounded-[4px] text-[7px]">ACTIVE</span>
+                </p>}
+                <nav className="space-y-0.5">
+                    <SidebarLink href="/dashboard/seller/analytics" icon="📈" label="Store Analytics" active={pathname === '/dashboard/seller/analytics'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
+                </nav>
+            </div>
+
+            {/* Customization Section */}
+            <div>
+                {!isCollapsed && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1">Customization</p>}
+                <nav className="space-y-0.5">
+                    <SidebarLink href="/dashboard/seller/themes" icon="🎨" label="Themes" active={pathname.startsWith('/dashboard/seller/themes')} isCollapsed={isCollapsed} onClick={handleLinkClick} />
+                </nav>
+            </div>
+
+            <div>
+                {!isCollapsed && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1">Help & Settings</p>}
+                <nav className="space-y-0.5">
+                    <SidebarLink href="/dashboard/seller/payments" icon="💰" label="Payments" active={pathname === '/dashboard/seller/payments'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
+                    <SidebarLink href="/dashboard/seller/support" icon="🎧" label="Support" active={pathname === '/dashboard/seller/support'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
+                    <SidebarLink href="/dashboard/seller/settings" icon="⚙️" label="Settings" active={pathname === '/dashboard/seller/settings'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
+                </nav>
+            </div>
+        </div>
+    );
+}
+
+function SidebarLink({ href, icon, label, active = false, isCollapsed = false, badge, onClick }: { href: string; icon: string; label: string; active?: boolean; isCollapsed?: boolean; badge?: number; onClick?: () => void }) {
     return (
         <Link
             href={href}
             title={isCollapsed ? label : undefined}
+            onClick={onClick}
             className={`flex items-center p-2 rounded-xl transition-all group relative ${isCollapsed ? 'justify-center' : 'space-x-3'} ${active
                 ? 'bg-slate-900 text-white shadow-lg'
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
@@ -297,10 +430,13 @@ function SidebarLink({ href, icon, label, active = false, isCollapsed = false, b
     );
 }
 
-function HeaderButton({ icon, badge = false }: { icon: string; badge?: boolean }) {
+function HeaderButton({ icon, badge = false, onClick }: { icon: string; badge?: boolean; onClick?: () => void }) {
     return (
-        <button className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center relative shadow-sm border border-slate-100 hover:bg-slate-50 transition-all">
-            <span className="text-lg">{icon}</span>
+        <button
+            onClick={onClick}
+            className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center relative shadow-sm border border-slate-100 hover:bg-slate-50 transition-all group"
+        >
+            <span className="text-lg group-hover:scale-110 transition-transform">{icon}</span>
             {badge && (
                 <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full ring-2 ring-white" />
             )}

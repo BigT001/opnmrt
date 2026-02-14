@@ -1,6 +1,21 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
+// Helper for backend sync
+const syncToBackend = async (items: any[]) => {
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+        // Dynamic import to avoid cycles or unnecessary loads
+        const api = (await import('@/lib/api')).default;
+        await api.post('/users/cart/sync', { items, merge: false });
+    } catch (e) {
+        console.error("Cart auto-sync failed:", e);
+    }
+};
+
 export interface CartItem {
     id: string;
     name: string;
@@ -26,6 +41,7 @@ interface CartState {
     totalItems: (storeId?: string) => number;
     totalPrice: (storeId?: string) => number;
     clearNotification: () => void;
+    setItems: (items: CartItem[]) => void;
 }
 
 export const useCartStore = create<CartState>()(
@@ -67,6 +83,7 @@ export const useCartStore = create<CartState>()(
                         notification: 'Successfully added to cart',
                         error: null
                     });
+                    syncToBackend(get().items);
                 } else {
                     const availableStock = item.stock ?? 9999;
                     if (quantity > availableStock) {
@@ -82,6 +99,7 @@ export const useCartStore = create<CartState>()(
                         notification: 'Successfully added to cart',
                         error: null
                     });
+                    syncToBackend(get().items);
                 }
 
                 setTimeout(() => set({ notification: null }), 3000);
@@ -96,6 +114,7 @@ export const useCartStore = create<CartState>()(
                         return i.id !== id;
                     })
                 });
+                syncToBackend(get().items);
             },
 
             updateQuantity: (id, quantity, storeId) => {
@@ -124,9 +143,13 @@ export const useCartStore = create<CartState>()(
                     }),
                     error: null
                 });
+                syncToBackend(get().items);
             },
 
-            clearCart: () => set({ items: [] }),
+            clearCart: () => {
+                set({ items: [] });
+                syncToBackend([]);
+            },
 
             clearStoreCart: (storeId: string) => {
                 set({ items: get().items.filter((i) => i.storeId !== storeId) });
@@ -147,6 +170,8 @@ export const useCartStore = create<CartState>()(
                 const items = storeId ? get().items.filter(i => i.storeId === storeId) : get().items;
                 return items.reduce((acc, item) => acc + (Number(item.price) || 0) * (Number(item.quantity) || 0), 0);
             },
+
+            setItems: (items) => set({ items }),
         }),
         {
             name: 'opnmart-cart-v3', // Bumped version to ensure fresh start with stock fixes

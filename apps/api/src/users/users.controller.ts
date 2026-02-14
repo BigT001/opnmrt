@@ -1,18 +1,19 @@
 import {
   Controller,
   Get,
+  Post,
   Patch,
   Body,
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from '../common/decorators/get-user.decorator';
-// import { Express } from 'express'; // Usually global, but let's see if needed
 
 @Controller('users')
 @UseGuards(AuthGuard('jwt'))
@@ -21,6 +22,16 @@ export class UsersController {
     private usersService: UsersService,
     private cloudinaryService: CloudinaryService,
   ) { }
+
+  @Post('cart/sync')
+  async syncCart(
+    @GetUser('userId') userId: string,
+    @Body('items') items: any[],
+    @Body('merge') merge?: boolean,
+  ) {
+    if (!userId) throw new UnauthorizedException();
+    return this.usersService.syncCart(userId, items || [], merge ?? true);
+  }
 
   @Get('profile')
   async getProfile(@GetUser('userId') userId: string) {
@@ -32,13 +43,7 @@ export class UsersController {
   async updateProfile(
     @GetUser('userId') userId: string,
     @Body()
-    data: {
-      name?: string;
-      email?: string;
-      phone?: string;
-      shippingAddress?: any;
-      savedCards?: any;
-    },
+    data: any,
     @UploadedFile() file?: Express.Multer.File,
   ) {
     let imageUrl: string | undefined;
@@ -69,10 +74,34 @@ export class UsersController {
       } catch (e) { }
     }
 
-    return this.usersService.update(userId, {
-      ...data,
-      ...(imageUrl && { image: imageUrl }),
-    });
+    try {
+      console.log('UPDATING PROFILE (MULTIPART) FOR:', userId);
+
+      const result = await this.usersService.update(userId, {
+        ...data,
+        ...(imageUrl && { image: imageUrl }),
+      });
+      console.log('PROFILE UPDATED SUCCESSFULLY');
+      return result;
+    } catch (error: any) {
+      console.error('CONTROLLER PROFILE UPDATE ERROR:', error);
+      throw error;
+    }
+  }
+
+  @Patch('profile-json')
+  async updateProfileJson(
+    @GetUser('userId') userId: string,
+    @Body() data: any,
+  ) {
+    try {
+      console.log('UPDATING PROFILE (JSON) FOR:', userId);
+      console.log('BODY:', JSON.stringify(data));
+      return await this.usersService.update(userId, data);
+    } catch (error: any) {
+      console.error('CONTROLLER PROFILE JSON ERROR:', error);
+      throw error;
+    }
   }
 
   @Patch('change-password')

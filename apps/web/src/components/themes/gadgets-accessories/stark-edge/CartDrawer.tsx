@@ -30,7 +30,7 @@ export function StarkEdgeCartDrawer({ storeId }: CartDrawerProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={toggleCart}
-                        className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md"
+                        className="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-md"
                     />
 
                     {/* Drawer */}
@@ -39,7 +39,7 @@ export function StarkEdgeCartDrawer({ storeId }: CartDrawerProps) {
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                        className="fixed inset-y-0 right-0 z-[70] w-full max-w-xl bg-[#080808] border-l border-[#333] flex flex-col font-tactical"
+                        className="fixed inset-y-0 right-0 z-[2001] w-full max-w-xl bg-[#080808] border-l border-[#333] flex flex-col font-tactical"
                     >
                         {/* Header: Hardware Status */}
                         <div className="flex items-center justify-between p-10 border-b border-[#333]">

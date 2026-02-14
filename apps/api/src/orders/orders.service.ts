@@ -54,7 +54,7 @@ export class OrdersService {
     return this.findByStoreId(store.id);
   }
 
-  async createOrder(
+  async create(
     userId: string,
     data: {
       storeId: string;
@@ -65,8 +65,79 @@ export class OrdersService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new Error('User not found');
 
+    // SMART UPDATE: Find the SINGLE most recent active pending order
+    const existingPendingOrder = await this.prisma.order.findFirst({
+      where: {
+        buyerId: userId,
+        storeId: data.storeId,
+        status: 'PENDING',
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    if (existingPendingOrder) {
+      console.log(`♻️ Updating existing pending order with current cart: ${existingPendingOrder.id}`);
+
+      return this.prisma.$transaction(async (tx) => {
+        // 1. CLEANUP: Cancel any OTHER pending orders for this store/user to ensure single active order
+        await tx.order.updateMany({
+          where: {
+            buyerId: userId,
+            storeId: data.storeId,
+            status: 'PENDING',
+            id: { not: existingPendingOrder.id } // Don't cancel the one we're updating
+          },
+          data: { status: 'CANCELLED' }
+        });
+
+        // 2. Clear items from the active pending order
+        await tx.orderItem.deleteMany({
+          where: { orderId: existingPendingOrder.id },
+        });
+
+        // 2. Update order with new items and total
+        const updatedOrder = await tx.order.update({
+          where: { id: existingPendingOrder.id },
+          data: {
+            totalAmount: data.totalAmount,
+            lastAttemptAt: new Date(),
+            retryCount: { increment: 1 },
+            items: {
+              create: data.items.map((item) => ({
+                productId: item.productId,
+                quantity: item.quantity,
+                price: item.price,
+              })),
+            },
+          },
+          include: {
+            items: {
+              include: { product: true },
+            },
+          },
+        });
+
+        return updatedOrder;
+      });
+    }
+
+    // No existing pending order - create new one
+    console.log('✨ Creating new pending order (first attempt)');
+
     return this.prisma.$transaction(async (tx) => {
-      // Create the order
+      // 1. Cancel any stale pending orders (just in case they exist)
+      await tx.order.updateMany({
+        where: {
+          buyerId: userId,
+          storeId: data.storeId,
+          status: 'PENDING',
+        },
+        data: { status: 'CANCELLED' }
+      });
+
+      // 2. Create the new active order
       const order = await tx.order.create({
         data: {
           tenantId: user.tenantId || 'system',
@@ -74,6 +145,7 @@ export class OrdersService {
           buyerId: userId,
           totalAmount: data.totalAmount,
           status: 'PENDING',
+          retryCount: 0,
           items: {
             create: data.items.map((item) => ({
               productId: item.productId,
@@ -82,11 +154,17 @@ export class OrdersService {
             })),
           },
         },
+        include: {
+          items: {
+            include: { product: true },
+          },
+        },
       });
 
       return order;
     });
   }
+
 
   async updateOrderStatus(
     orderId: string,
@@ -243,5 +321,17 @@ export class OrdersService {
     }
 
     return updatedOrder;
+  }
+
+  async trackAbandonment(orderId: string, reason?: string) {
+    console.log(`📊 Tracking abandonment for order ${orderId}: ${reason || 'unknown'}`);
+
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        abandonReason: reason || 'payment_modal_closed',
+        lastAttemptAt: new Date(),
+      },
+    });
   }
 }
