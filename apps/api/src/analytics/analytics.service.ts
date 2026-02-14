@@ -51,33 +51,41 @@ export class AnalyticsService {
 
                     switch (event.eventType) {
                         case 'ORDER_CREATED':
-                            title = 'New Order';
-                            const orderIdTail = event.id.slice(-6).toUpperCase();
-                            message = `Order #${orderIdTail} received.`;
-                            icon = '📦';
+                        case 'ORDER_PLACED':
+                            const p = event.payload as any;
+                            title = 'New Order 💰';
+                            message = `${p?.customerName || 'A customer'} just spent ${p?.amount ? '₦' + p.amount : 'some money'}.`;
+                            icon = '🛍️';
                             link = '/dashboard/seller/orders';
                             break;
-                        case 'ADD_TO_CART':
-                            title = 'Cart Activity';
-                            message = 'A customer added an item to their cart.';
-                            icon = '🛒';
+                        case 'CUSTOMER_ACCOUNT_CREATED':
+                        case 'NEW_CUSTOMER':
+                            title = 'New Member ✨';
+                            message = `${(event.payload as any)?.customerName || 'A new visitor'} just joined the store!`;
+                            icon = '👤';
                             break;
                         case 'PRODUCT_VIEW':
-                            title = 'Product Viewed';
-                            message = 'A customer is looking at your products.';
+                        case 'PRODUCT_VIEWED':
+                            title = 'Browsing Activity';
+                            message = `Someone is viewing "${(event.payload as any)?.productName || 'a product'}" right now.`;
                             icon = '👀';
                             break;
                         case 'STOCK_REDUCED_BY_ORDER':
-                            title = 'Inventory Update';
-                            const payload = event.payload as any;
-                            message = `${payload?.productName || 'A product'} stock reduced by ${payload?.quantityReduced || 1}.`;
+                        case 'STOCK_LOW':
+                            const sp = event.payload as any;
+                            title = 'Inventory Alert';
+                            message = `${sp?.productName || 'A product'} is running low (${sp?.newStock || 0} left).`;
                             icon = '📉';
-                            link = '/dashboard/seller/products';
+                            link = '/dashboard/seller/inventory';
                             break;
-                        case 'SESSION_START':
-                            title = 'New Visitor';
-                            message = 'A new shopper has started browsing.';
-                            icon = '👋';
+                        case 'USER_LOGIN':
+                            title = 'Security Alert';
+                            message = `${(event.payload as any)?.userName || 'A user'} logged in to the dashboard.`;
+                            icon = '🔑';
+                            break;
+                        default:
+                            title = event.eventType.replace(/_/g, ' ');
+                            message = 'A new activity was recorded in your store.';
                             break;
                     }
 
@@ -136,5 +144,76 @@ export class AnalyticsService {
         });
 
         return Object.values(dailyData);
+    }
+
+    async getInventorySnapshot(storeId: string) {
+        try {
+            // Get all products with their inventory records
+            const products = await this.prisma.product.findMany({
+                where: { storeId },
+                select: {
+                    id: true,
+                    name: true,
+                    stock: true,
+                    updatedAt: true,
+                    inventory: {
+                        select: {
+                            quantity: true,
+                            lowStockAlert: true,
+                            lastRestockedAt: true,
+                            restockHistory: true,
+                        }
+                    }
+                },
+                orderBy: { stock: 'asc' }, // Low stock first
+            });
+
+            // Get recent PRODUCT_RESTOCKED events
+            const recentRestockEvents = await this.prisma.eventLog.findMany({
+                where: {
+                    storeId,
+                    eventType: { in: ['PRODUCT_RESTOCKED', 'STOCK_ADJUSTED_MANUALLY'] },
+                },
+                orderBy: { createdAt: 'desc' },
+                take: 10,
+            });
+
+            const lowStockProducts = products.filter(p => p.stock <= (p.inventory?.lowStockAlert || 5));
+            const outOfStockProducts = products.filter(p => p.stock === 0);
+
+            return {
+                totalProducts: products.length,
+                outOfStockCount: outOfStockProducts.length,
+                lowStockCount: lowStockProducts.length,
+                outOfStockProducts: outOfStockProducts.map(p => ({ name: p.name, id: p.id })),
+                lowStockProducts: lowStockProducts.map(p => ({
+                    name: p.name,
+                    currentStock: p.stock,
+                    lastRestockedAt: p.inventory?.lastRestockedAt || null,
+                })),
+                products: products.map(p => ({
+                    name: p.name,
+                    currentStock: p.stock,
+                    lastRestockedAt: p.inventory?.lastRestockedAt || null,
+                    restockHistory: p.inventory?.restockHistory || [],
+                })),
+                recentStockEvents: recentRestockEvents.map(e => ({
+                    type: e.eventType,
+                    date: e.createdAt,
+                    details: e.payload,
+                })),
+            };
+        } catch (error) {
+            console.error('[INVENTORY_SNAPSHOT_ERROR]', error);
+            return {
+                totalProducts: 0,
+                outOfStockCount: 0,
+                lowStockCount: 0,
+                outOfStockProducts: [],
+                lowStockProducts: [],
+                products: [],
+                recentStockEvents: [],
+            };
+        }
     }
 }

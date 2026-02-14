@@ -24,6 +24,15 @@ export default function SellerLayout({
     const [unreadCount, setUnreadCount] = React.useState(0);
     const socket = useSocket(user?.id);
 
+    // Auto-collapse sidebar on analytics page
+    useEffect(() => {
+        if (pathname === '/dashboard/seller/analytics') {
+            setIsCollapsed(true);
+        } else {
+            setIsCollapsed(false);
+        }
+    }, [pathname]);
+
     // Header States
     const [isSearchOpen, setIsSearchOpen] = React.useState(false);
     const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);

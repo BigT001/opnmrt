@@ -70,6 +70,8 @@ export class StoresService {
 
   async getStoreStats(storeId: string) {
     try {
+      console.log('[GET_STATS] Starting for storeId:', storeId);
+
       const [totalOrders, totalRevenue, totalProducts, topProducts, funnelData] =
         await Promise.all([
           this.prisma.order.count({ where: { storeId } }),
@@ -105,6 +107,9 @@ export class StoresService {
           }),
         ]);
 
+      console.log('[GET_STATS] Basic queries completed');
+      console.log('[GET_STATS] Top products count:', topProducts.length);
+
       // Fetch product details for top products with safety
       const topProductsWithDetails = await Promise.all(
         topProducts.map(async (item) => {
@@ -127,6 +132,8 @@ export class StoresService {
           }
         }),
       );
+
+      console.log('[GET_STATS] Product details fetched');
 
       const funnel: any = {
         sessions: 0,
@@ -152,6 +159,8 @@ export class StoresService {
         funnel.checkout = totalOrders;
       }
 
+      console.log('[GET_STATS] Success');
+
       return {
         totalOrders,
         totalRevenue: Number(totalRevenue._sum.totalAmount || 0),
@@ -160,7 +169,12 @@ export class StoresService {
         funnel,
       };
     } catch (error) {
-      console.error('[GET_STORE_STATS_SERVICE_ERROR]', error);
+      console.error('[GET_STORE_STATS_SERVICE_ERROR]', {
+        storeId,
+        error: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       throw error;
     }
   }

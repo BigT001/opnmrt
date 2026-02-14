@@ -1,449 +1,377 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-    TrendingUp,
-    Users,
-    ShoppingBag,
-    DollarSign,
-    ArrowUpRight,
-    ArrowDownRight,
-    Download,
-    BrainCircuit,
-    Zap,
-    Target,
+    Send,
+    Bot,
+    User as UserIcon,
     Loader2,
+    TrendingUp,
     Sparkles,
-    AlertCircle,
-    BarChart3,
-    Calendar,
-    MousePointer2,
-    CheckCircle2
+    Plus,
+    MessageSquare,
+    Search,
+    Clock,
+    Zap,
+    ChevronRight,
+    LayoutDashboard,
+    ShoppingBag,
+    Users,
+    Package,
+    ArrowRight,
+    Lightbulb,
+    History,
+    MoreHorizontal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
-import { FloatingAiAdvisor } from '@/components/dashboard/FloatingAiAdvisor';
+
+// --- Components ---
+
+const SidebarItem = ({ active, title, onClick, icon: Icon = MessageSquare, date }: any) => (
+    <button
+        onClick={onClick}
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${active
+                ? 'bg-slate-900 text-white shadow-lg'
+                : 'text-slate-500 hover:bg-slate-100'
+            }`}
+    >
+        <Icon size={14} className={active ? 'text-indigo-400' : 'text-slate-400'} />
+        <div className="flex-1 text-left truncate">
+            <p className={`text-[11px] font-bold ${active ? 'text-white' : 'text-slate-700'}`}>{title}</p>
+            {date && <p className="text-[8px] font-black uppercase tracking-widest mt-0.5 opacity-50">{date}</p>}
+        </div>
+        <MoreHorizontal size={14} className="opacity-0 group-hover:opacity-50 transition-opacity" />
+    </button>
+);
+
+const AdviceCard = ({ content }: { content: string }) => (
+    <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 group hover:border-indigo-300 transition-all cursor-default"
+    >
+        <div className="flex gap-3">
+            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0 shadow-sm text-indigo-600">
+                <Lightbulb size={14} />
+            </div>
+            <p className="text-[11px] font-bold text-slate-800 leading-relaxed">
+                {content}
+            </p>
+        </div>
+    </motion.div>
+);
+
+const IntelligenceStream = ({ advices, notifications }: any) => (
+    <div className="flex flex-col h-full space-y-8 overflow-y-auto no-scrollbar pt-2">
+        <div>
+            <div className="flex items-center justify-between mb-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                    <Zap size={12} className="text-amber-500" /> Live Advice Engine
+                </h4>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
+            <div className="space-y-3">
+                {advices.length > 0 ? (
+                    advices.map((a: string, i: number) => <AdviceCard key={i} content={a} />)
+                ) : (
+                    <p className="text-[10px] text-slate-400 italic font-medium px-2">Gathering fresh store insights...</p>
+                )}
+            </div>
+        </div>
+
+        <div>
+            <div className="flex items-center justify-between mb-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                    <History size={12} /> Pulse Feed
+                </h4>
+            </div>
+            <div className="space-y-5 px-1">
+                {notifications.slice(0, 8).map((n: any) => (
+                    <div key={n.id} className="flex gap-3">
+                        <div className="w-1 h-1 rounded-full bg-slate-300 mt-1.5 shrink-0" />
+                        <div>
+                            <p className="text-[10px] text-slate-700 font-bold leading-snug">{n.message}</p>
+                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 mt-1 block">
+                                {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </div>
+);
+
+// --- Main Page ---
 
 export default function AnalyticsPage() {
     const { store } = useAuthStore();
-    const [timeRange, setTimeRange] = useState('7D');
-    const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState<any>(null);
-    const [timeline, setTimeline] = useState<any[]>([]);
-    const [aiInsights, setAiInsights] = useState<any[]>([]);
-    const [predictions, setPredictions] = useState<any>(null);
-    const [isGenerating, setIsGenerating] = useState(false);
+    const [conversations, setConversations] = useState<any[]>([]);
+    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+    const [messages, setMessages] = useState<any[]>([]);
+    const [input, setInput] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [advices, setAdvices] = useState<string[]>([]);
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const fetchData = async () => {
+    // Initial Load
+    useEffect(() => {
         if (!store?.id) return;
+        fetchConversations();
+        fetchNotifications();
+        fetchLiveAdvice();
+    }, [store?.id]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const fetchConversations = async () => {
         try {
-            setLoading(true);
+            const res = await api.get(`/analytics/ai-chat/conversations/${store?.id}`);
+            const convs = res.data || [];
+            setConversations(convs);
+            if (convs.length > 0 && !currentSessionId) {
+                switchSession(convs[0].id);
+            }
+        } catch (err) { console.error('History failed', err); }
+    };
 
-            // Stats and Timeline are critical
-            const [statsRes, timelineRes] = await Promise.all([
-                api.get(`/stores/${store.id}/stats`).catch(err => ({ data: null })),
-                api.get(`/analytics/timeline/${store.id}?days=${timeRange === '7D' ? 7 : 30}`).catch(err => ({ data: [] }))
-            ]);
+    const fetchNotifications = async () => {
+        try {
+            const res = await api.get(`/analytics/notifications/${store?.id}`);
+            setNotifications(res.data || []);
+        } catch (err) { console.warn('Pulse failed', err); }
+    };
 
-            if (statsRes.data) setStats(statsRes.data);
-            if (timelineRes.data) setTimeline(timelineRes.data);
+    const fetchLiveAdvice = async () => {
+        try {
+            const res = await api.get(`/analytics/ai-chat/live-advice/${store?.id}`);
+            setAdvices(res.data || []);
+        } catch (err) { console.warn('Advice failed', err); }
+    };
 
-            // AI Insights and Predictions are secondary/optional - Lazy Load to save tokens
-            // api.get(`/analytics/ai-insights/${store.id}`)
-            //     .then(res => setAiInsights(res.data))
-            //     .catch(err => console.warn('AI Insights failed', err));
-
-            // api.get(`/analytics/ai-predictions/${store.id}`)
-            //     .then(res => setPredictions(res.data))
-            //     .catch(err => console.warn('AI Predictions failed', err));
-
+    const switchSession = async (id: string) => {
+        setCurrentSessionId(id);
+        setLoading(true);
+        try {
+            const res = await api.get(`/analytics/ai-chat/history/${store?.id}/${id}`);
+            setMessages(res.data?.messages || []);
         } catch (err) {
-            console.error('Analytics Fetch Error:', err);
+            console.error('Session load failed', err);
         } finally {
             setLoading(false);
         }
     };
 
-    const refreshAi = async () => {
-        if (!store?.id) return;
-        setIsGenerating(true);
+    const handleNewChat = async () => {
+        setLoading(true);
         try {
-            // Fetch both in parallel, but handle errors individually so one failure doesn't break the UI
-            const [aiRes, predRes] = await Promise.all([
-                api.get(`/analytics/ai-insights/${store.id}`).catch(() => ({ data: [] })),
-                api.get(`/analytics/ai-predictions/${store.id}`).catch(() => ({ data: { nextMonthRevenue: 0, growthConfidence: 0, predictedHighDemand: [] } }))
-            ]);
-
-            setAiInsights(aiRes.data || []);
-            setPredictions(predRes.data || { nextMonthRevenue: 0, growthConfidence: 0, predictedHighDemand: [] });
+            const res = await api.post(`/analytics/ai-chat/new/${store?.id}`, { title: 'New Analysis' });
+            setConversations(prev => [res.data, ...prev]);
+            setCurrentSessionId(res.data.id);
+            setMessages([]);
+        } catch (err) {
+            console.error('New chat failed', err);
         } finally {
-            setIsGenerating(false);
+            setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchData();
-    }, [store?.id, timeRange]);
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const userMsg = input.trim();
+        if (!userMsg || loading) return;
 
-    if (loading) {
-        return (
-            <div className="h-[60vh] flex flex-col items-center justify-center space-y-4">
-                <div className="relative">
-                    <Loader2 className="w-12 h-12 text-primary animate-spin" />
-                    <BrainCircuit className="w-6 h-6 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                </div>
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] animate-pulse">Syncing Real-time Intelligence...</p>
-            </div>
-        );
-    }
+        setInput('');
+        const optimisticMsg = { role: 'user', content: userMsg, createdAt: new Date() };
+        setMessages(prev => [...prev, optimisticMsg]);
+        setLoading(true);
 
-    const funnel = stats?.funnel || { sessions: 0, productViews: 0, addToCart: 0, checkout: 0 };
-    const conversionRate = funnel.sessions > 0 ? ((funnel.checkout / funnel.sessions) * 100).toFixed(2) : '3.42';
-
-    // Chart logic
-    const chartWidth = 1000;
-    const chartHeight = 350;
-    const padding = 50;
-    const maxRevenue = Math.max(...timeline.map(t => t.revenue), 1000);
-    const points = timeline.map((t, i) => {
-        const x = (i / (timeline.length - 1)) * chartWidth;
-        const y = chartHeight - (t.revenue / maxRevenue) * (chartHeight - padding);
-        return { x, y };
-    });
-    const pathData = points.length > 0 ? `M${points[0].x},${points[0].y} ` + points.slice(1).map(p => `L${p.x},${p.y}`).join(' ') : '';
-    const areaData = pathData + ` L${chartWidth},${chartHeight} L0,${chartHeight} Z`;
-
-    return (
-        <div className="space-y-8 pb-20 overflow-x-hidden">
-            {/* Header section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
-                    <div className="flex items-center gap-3 mb-1">
-                        <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center">
-                            <TrendingUp className="w-5 h-5 text-primary" />
-                        </div>
-                        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Real-time Analytics</h1>
-                    </div>
-                    <p className="text-slate-500 font-medium">Monitoring your store's pulse with live AI forecasting</p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <div className="bg-white border border-slate-200 rounded-2xl p-1.5 flex items-center shadow-sm">
-                        {['7D', '30D', '90D', 'All'].map((range) => (
-                            <button
-                                key={range}
-                                onClick={() => setTimeRange(range)}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${timeRange === range
-                                    ? 'bg-slate-900 text-white shadow-md'
-                                    : 'text-slate-400 hover:text-slate-600'
-                                    }`}
-                            >
-                                {range}
-                            </button>
-                        ))}
-                    </div>
-                    <button className="h-11 px-6 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-900 shadow-sm hover:bg-slate-50 transition-colors flex items-center gap-2">
-                        <Download className="w-3.5 h-3.5" />
-                        Export
-                    </button>
-                </div>
-            </div>
-
-            {/* Quick Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <MetricCard
-                    label="Live Revenue"
-                    value={formatPrice(stats?.totalRevenue || 0)}
-                    trend="+12.5%"
-                    isPositive={true}
-                    icon={<DollarSign className="w-4 h-4" />}
-                    color="emerald"
-                />
-                <MetricCard
-                    label="Active Orders"
-                    value={stats?.totalOrders || 0}
-                    trend="+5.2%"
-                    isPositive={true}
-                    icon={<ShoppingBag className="w-4 h-4" />}
-                    color="blue"
-                />
-                <MetricCard
-                    label="Conv. Rate"
-                    value={`${conversionRate}%`}
-                    trend="-0.4%"
-                    isPositive={false}
-                    icon={<Target className="w-4 h-4" />}
-                    color="amber"
-                />
-                <MetricCard
-                    label="Store Pulse"
-                    value={funnel.sessions >= 1000 ? `${(funnel.sessions / 1000).toFixed(1)}K` : funnel.sessions}
-                    trend="+24%"
-                    isPositive={true}
-                    icon={<Users className="w-4 h-4" />}
-                    color="purple"
-                />
-            </div>
-
-            {/* Main Content Area */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                <div className="xl:col-span-2 space-y-8">
-                    {/* Revenue Chart */}
-                    <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm relative overflow-hidden h-[450px] flex flex-col">
-                        <div className="flex items-center justify-between mb-10">
-                            <div className="flex items-center gap-3">
-                                <BarChart3 className="w-5 h-5 text-primary" />
-                                <div>
-                                    <h3 className="text-xl font-black text-slate-900 leading-none mb-1">Revenue Performance</h3>
-                                    <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Real-time tracking enabled</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 rounded-full">
-                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                                <span className="text-[9px] font-black text-emerald-600 uppercase">Live Data</span>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 w-full relative">
-                            <svg className="w-full h-full" viewBox="0 0 1000 400" preserveAspectRatio="none">
-                                <defs>
-                                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.2" />
-                                        <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
-                                    </linearGradient>
-                                </defs>
-                                <motion.path d={areaData} fill="url(#chartGradient)" />
-                                <motion.path
-                                    initial={{ pathLength: 0 }}
-                                    animate={{ pathLength: 1 }}
-                                    transition={{ duration: 1.5, ease: "easeOut" }}
-                                    d={pathData}
-                                    fill="none"
-                                    stroke="var(--primary)"
-                                    strokeWidth="4"
-                                    strokeLinecap="round"
-                                />
-                                {points.map((p, i) => (
-                                    <circle key={i} cx={p.x} cy={p.y} r="6" fill="white" stroke="var(--primary)" strokeWidth="3" />
-                                ))}
-                            </svg>
-                        </div>
-
-                        <div className="flex justify-between mt-6">
-                            {timeline.map((t, idx) => (
-                                <span key={idx} className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.date}</span>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Funnel & Conversion Stats */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-8">Sales Funnel</h3>
-                            <div className="space-y-6">
-                                <FunnelStep label="Visitors" value={funnel.sessions} total={funnel.sessions} />
-                                <FunnelStep label="Cart Additions" value={funnel.addToCart} total={funnel.sessions} />
-                                <FunnelStep label="Orders" value={funnel.checkout} total={funnel.sessions} />
-                            </div>
-                        </div>
-                        <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm">
-                            <h3 className="text-xl font-black text-slate-900 leading-none mb-8">Top Products</h3>
-                            <div className="space-y-6">
-                                {stats?.topProducts?.map((p: any) => (
-                                    <TopProductItem key={p.id} name={p.name} sales={p.sales} revenue={formatPrice(p.earnings)} growth="+12%" />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="space-y-8">
-                    {/* Predictive Intelligence Card */}
-                    <div className="bg-primary rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-emerald-200">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2"></div>
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-8">
-                                <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
-                                    <Sparkles className="w-5 h-5 text-white" />
-                                </div>
-                                <div>
-                                    <h4 className="text-sm font-black uppercase tracking-widest leading-none">AI Predictions</h4>
-                                    <p className="text-white/60 text-[8px] font-black uppercase tracking-[0.2em] mt-1">Next 30 Days Forecast</p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-6">
-                                <div>
-                                    <p className="text-[9px] font-black text-white/60 uppercase tracking-widest mb-1">Expected Revenue</p>
-                                    <p className="text-3xl font-black">{formatPrice(predictions?.nextMonthRevenue || 0)}</p>
-                                </div>
-
-                                <div className="bg-white/10 rounded-2xl p-4 border border-white/10">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-[9px] font-black uppercase tracking-widest">Confidence Score</span>
-                                        <span className="text-[9px] font-black">{predictions?.growthConfidence || 0}%</span>
-                                    </div>
-                                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                        <div className="h-full bg-white rounded-full" style={{ width: `${predictions?.growthConfidence || 0}%` }}></div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <p className="text-[9px] font-black text-white/60 uppercase tracking-widest mb-3">Trending Soon</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {predictions?.predictedHighDemand?.map((item: string) => (
-                                            <span key={item} className="px-3 py-1.5 bg-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest border border-white/5">
-                                                {item}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* AI Insights Box */}
-                    <div className="bg-slate-950 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-8">
-                                <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
-                                    <BrainCircuit className="w-5 h-5 text-primary" />
-                                </div>
-                                <h4 className="text-sm font-black uppercase tracking-widest">Growth Insights</h4>
-                            </div>
-
-                            <div className="space-y-6">
-                                <AnimatePresence mode="popLayout">
-                                    {aiInsights.length > 0 ? aiInsights.map((insight, idx) => (
-                                        <motion.div
-                                            key={insight.title}
-                                            initial={{ opacity: 0, x: 20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: idx * 0.1 }}
-                                        >
-                                            <AiTip
-                                                icon={insight.type === 'INVENTORY' ? '📦' : insight.type === 'PRICING' ? '💎' : '🚀'}
-                                                title={insight.title}
-                                                desc={insight.description}
-                                            />
-                                        </motion.div>
-                                    )) : (
-                                        <div className="py-10 text-center">
-                                            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Ready to find growth opportunities?</p>
-                                        </div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-
-                            <button
-                                onClick={refreshAi}
-                                disabled={isGenerating}
-                                className="w-full mt-10 bg-white/10 hover:bg-white/20 transition-all py-4 rounded-3xl text-[10px] font-black uppercase tracking-widest backdrop-blur-md border border-white/5 flex items-center justify-center gap-2 group disabled:opacity-50"
-                            >
-                                {isGenerating ? 'Recalculating...' : 'Uncover More Growth'}
-                                <Zap className={`w-3 h-3 text-primary ${isGenerating ? 'animate-spin' : 'group-hover:animate-pulse'}`} />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Traffic Sources */}
-                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-8 text-center">Customer Sentiment</h3>
-                        <div className="flex flex-col items-center justify-center py-4">
-                            <div className="w-32 h-32 rounded-full border-8 border-emerald-50 relative flex items-center justify-center mb-4">
-                                <div className="absolute inset-0 border-8 border-emerald-500 rounded-full border-t-transparent animate-[spin_3s_linear_infinite]"></div>
-                                <span className="text-3xl font-black text-slate-900">94%</span>
-                            </div>
-                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Excellent Sentiment</p>
-                        </div>
-                        <p className="text-[10px] text-slate-400 text-center leading-relaxed font-medium px-4">Your customers love the shopping experience! 94% of recent interactions are positive.</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Floating AI Bubble */}
-            {store?.id && <FloatingAiAdvisor storeId={store.id} />}
-        </div>
-    );
-}
-
-function MetricCard({ label, value, trend, isPositive, icon, color }: { label: string; value: string | number; trend: string; isPositive: boolean; icon: React.ReactNode; color: string }) {
-    const colorClasses: Record<string, string> = {
-        emerald: 'bg-emerald-50 text-emerald-600',
-        blue: 'bg-blue-50 text-blue-600',
-        amber: 'bg-amber-50 text-amber-600',
-        purple: 'bg-purple-50 text-purple-600'
+        try {
+            const res = await api.post('/analytics/ai-chat/message', {
+                storeId: store?.id,
+                message: userMsg,
+                conversationId: currentSessionId
+            });
+            setMessages(prev => [...prev, res.data]);
+            // Refresh conversation list to show updated title/time if needed
+            fetchConversations();
+        } catch (err) {
+            console.error('Send failed', err);
+            setMessages(prev => [...prev, { role: 'assistant', content: "Connection interrupted. Let's try again." }]);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm group hover:shadow-xl transition-all duration-500">
-            <div className="flex items-start justify-between mb-4">
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm ${colorClasses[color]}`}>
-                    {icon}
-                </div>
-                <div className={`px-2 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 ${isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
-                    {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                    {trend}
-                </div>
-            </div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-            <p className="text-2xl font-black text-slate-900 tracking-tight">{value}</p>
-        </div>
-    );
-}
+        <div className="fixed inset-0 top-20 left-24 right-0 bottom-0 flex bg-white font-sans overflow-hidden">
+            {/* Left Sidebar: Session History */}
+            <div className="w-72 border-r border-slate-100 flex flex-col bg-slate-50/50 p-4 shrink-0">
+                <button
+                    onClick={handleNewChat}
+                    className="w-full mb-6 flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-2xl hover:border-indigo-300 hover:shadow-md transition-all group"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 group-hover:scale-105 transition-transform">
+                            <Plus size={18} />
+                        </div>
+                        <span className="text-[12px] font-black uppercase tracking-widest text-slate-800">New Analysis</span>
+                    </div>
+                </button>
 
-function TopProductItem({ name, sales, revenue, growth }: { name: string; sales: number; revenue: string; growth: string }) {
-    return (
-        <div className="flex items-center justify-between p-4 hover:bg-slate-50 rounded-[1.5rem] transition-all group">
-            <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl shadow-inner group-hover:scale-110 transition-transform">
-                    📦
+                <div className="flex-1 overflow-y-auto no-scrollbar space-y-6">
+                    <div>
+                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 px-2">Store Management</p>
+                        <div className="space-y-1">
+                            {conversations.map(c => (
+                                <SidebarItem
+                                    key={c.id}
+                                    active={currentSessionId === c.id}
+                                    title={c.title || 'Analysis Session'}
+                                    date={new Date(c.updatedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                    onClick={() => switchSession(c.id)}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <h4 className="text-sm font-black text-slate-900">{name}</h4>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{sales} Sold this period</p>
-                </div>
-            </div>
-            <div className="text-right">
-                <p className="text-sm font-black text-slate-900">{revenue}</p>
-                <div className="flex items-center justify-end gap-1">
-                    <TrendingUp className="w-3 h-3 text-emerald-500" />
-                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{growth}</p>
-                </div>
-            </div>
-        </div>
-    );
-}
 
-function AiTip({ icon, title, desc }: { icon: string, title: string, desc: string }) {
-    return (
-        <div className="flex gap-4 group cursor-default">
-            <span className="text-xl shrink-0 group-hover:scale-125 transition-transform duration-500">{icon}</span>
-            <div>
-                <h5 className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">{title}</h5>
-                <p className="text-[11px] text-white/60 leading-relaxed font-medium">{desc}</p>
+                <div className="mt-auto px-2 pt-4 border-t border-slate-100 italic opacity-50">
+                    <p className="text-[9px] font-bold text-slate-400">Powered by BigT Intelligence v2.0</p>
+                </div>
             </div>
-        </div>
-    );
-}
 
-function FunnelStep({ label, value, total }: { label: string, value: number, total: number }) {
-    const percentage = total > 0 ? (value / total) * 100 : 0;
-    return (
-        <div className="space-y-2">
-            <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{label}</span>
-                <span className="text-xs font-black text-slate-900">{value}</span>
+            {/* Center Area: Chat Interface */}
+            <div className="flex-1 flex flex-col relative bg-white">
+                {/* Minimal Header */}
+                <div className="px-8 py-4 border-b border-slate-50 flex justify-between items-center shrink-0">
+                    <div className="flex items-center gap-3">
+                        <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">
+                            {conversations.find(c => c.id === currentSessionId)?.title || 'Analysis Arena'}
+                        </h3>
+                        <div className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase rounded-full">Secure Context</div>
+                    </div>
+                </div>
+
+                {/* Messages Arena */}
+                <div className="flex-1 overflow-y-auto p-10 space-y-12 no-scrollbar scroll-smooth">
+                    {messages.length === 0 && !loading && (
+                        <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto pb-20">
+                            <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center mb-8 shadow-2xl rotate-3">
+                                <Bot size={36} className="text-white" />
+                            </div>
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tighter mb-4 leading-none">
+                                Ready to analyze, {store?.ownerName || 'Samstar'}?
+                            </h2>
+                            <p className="text-sm font-bold text-slate-400 leading-relaxed mb-10">
+                                I've mapped your store's performance. Ask me about inventory gaps, marketing ROI, or next month's projections.
+                            </p>
+                            <div className="grid grid-cols-2 gap-3 w-full">
+                                {[
+                                    "Run inventory audit",
+                                    "Suggest traffic plan",
+                                    "Analyze top trends",
+                                    "Check daily velocity"
+                                ].map(q => (
+                                    <button
+                                        key={q}
+                                        onClick={() => setInput(q)}
+                                        className="p-4 bg-slate-50 rounded-2xl text-[11px] font-bold text-slate-700 hover:bg-slate-900 hover:text-white transition-all text-left flex items-center justify-between group"
+                                    >
+                                        {q} <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {messages.map((msg, idx) => (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            key={idx}
+                            className={`flex gap-8 max-w-4xl mx-auto ${msg.role === 'user' ? 'justify-end' : ''}`}
+                        >
+                            {msg.role === 'assistant' && (
+                                <div className="w-10 h-10 rounded-2xl bg-slate-900 shadow-xl flex items-center justify-center shrink-0 border border-slate-800">
+                                    <Bot size={20} className="text-white" />
+                                </div>
+                            )}
+
+                            <div className={`space-y-3 max-w-[85%] ${msg.role === 'user' ? 'text-right' : ''}`}>
+                                <div className={`text-[14px] leading-relaxed whitespace-pre-wrap font-medium ${msg.role === 'user'
+                                        ? 'bg-indigo-600 text-white p-5 rounded-[2rem] rounded-tr-none shadow-xl shadow-indigo-100'
+                                        : 'text-slate-800 pt-2'
+                                    }`}>
+                                    {msg.content}
+                                </div>
+                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-300 px-1">
+                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                            </div>
+
+                            {msg.role === 'user' && (
+                                <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100">
+                                    <UserIcon size={18} className="text-indigo-600" />
+                                </div>
+                            )}
+                        </motion.div>
+                    ))}
+
+                    {loading && (
+                        <div className="flex gap-8 max-w-4xl mx-auto animate-pulse">
+                            <div className="w-10 h-10 rounded-2xl bg-slate-900 flex items-center justify-center">
+                                <Bot size={20} className="text-white" />
+                            </div>
+                            <div className="flex items-center gap-3 pt-3">
+                                <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Processing live data...</span>
+                            </div>
+                        </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input Area */}
+                <div className="p-8 bg-white border-t border-slate-50 shrink-0">
+                    <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative group">
+                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+                            <Sparkles size={18} />
+                        </div>
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Message BigT about your business..."
+                            className="w-full bg-slate-50 border-2 border-transparent rounded-[2rem] pl-16 pr-16 py-6 text-sm font-bold focus:outline-none focus:bg-white focus:border-indigo-600/10 focus:shadow-2xl transition-all shadow-inner placeholder:text-slate-400"
+                        />
+                        <button
+                            type="submit"
+                            disabled={!input.trim() || loading}
+                            className="absolute right-3 top-3 bottom-3 px-6 bg-slate-900 hover:bg-slate-800 text-white rounded-[1.5rem] disabled:opacity-30 disabled:grayscale transition-all shadow-lg active:scale-95 flex items-center justify-center"
+                        >
+                            <Send size={18} />
+                        </button>
+                    </form>
+                    <p className="text-[9px] text-center mt-4 text-slate-400 font-bold uppercase tracking-widest leading-none">
+                        Analysis based on real-time database logs. Factual and data-driven only.
+                    </p>
+                </div>
             </div>
-            <div className="w-full h-3 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
-                <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${percentage}%` }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    className="h-full bg-primary rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-                />
+
+            {/* Right Pane: Intelligence Stream */}
+            <div className="w-80 border-l border-slate-100 bg-white flex flex-col p-6 shrink-0 z-10">
+                <IntelligenceStream advices={advices} notifications={notifications} />
             </div>
         </div>
     );

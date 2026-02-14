@@ -122,20 +122,61 @@ export class ProductsService {
 
     // Log manual stock adjustment if changed
     if (data.stock !== undefined && data.stock !== existingProduct.stock) {
+      const adjustment = updatedProduct.stock - existingProduct.stock;
+      const isRestock = adjustment > 0;
+
       await this.prisma.eventLog.create({
         data: {
           tenantId: updatedProduct.tenantId,
           storeId: updatedProduct.storeId,
-          eventType: 'STOCK_ADJUSTED_MANUALLY',
+          eventType: isRestock ? 'PRODUCT_RESTOCKED' : 'STOCK_ADJUSTED_MANUALLY',
           payload: {
             productId: updatedProduct.id,
             productName: updatedProduct.name,
             prevStock: existingProduct.stock,
             newStock: updatedProduct.stock,
-            adjustment: updatedProduct.stock - existingProduct.stock,
+            adjustment,
           },
         },
       });
+
+      // If stock went UP, record restock in Inventory
+      if (isRestock) {
+        const inventory = await this.prisma.inventory.findUnique({
+          where: { productId: id },
+        });
+
+        const restockEntry = {
+          date: new Date().toISOString(),
+          prevQuantity: existingProduct.stock,
+          newQuantity: updatedProduct.stock,
+          added: adjustment,
+        };
+
+        if (inventory) {
+          const currentHistory = (inventory.restockHistory as any[]) || [];
+          await this.prisma.inventory.update({
+            where: { productId: id },
+            data: {
+              quantity: updatedProduct.stock,
+              lastRestockedAt: new Date(),
+              restockHistory: [...currentHistory, restockEntry],
+            },
+          });
+        } else {
+          // Create inventory record if it doesn't exist
+          await this.prisma.inventory.create({
+            data: {
+              tenantId: updatedProduct.tenantId,
+              storeId: updatedProduct.storeId,
+              productId: id,
+              quantity: updatedProduct.stock,
+              lastRestockedAt: new Date(),
+              restockHistory: [restockEntry],
+            },
+          });
+        }
+      }
     }
 
     return updatedProduct;
