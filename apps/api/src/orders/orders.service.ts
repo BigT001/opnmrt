@@ -334,4 +334,17 @@ export class OrdersService {
       },
     });
   }
+  async updateStatusBySeller(userId: string, orderId: string, status: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { store: true },
+    });
+
+    if (!order) throw new Error('Order not found');
+    if (order.store.ownerId !== userId) {
+      throw new Error('Unauthorized access');
+    }
+
+    return this.updateOrderStatus(orderId, status);
+  }
 }

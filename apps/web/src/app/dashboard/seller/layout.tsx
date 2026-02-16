@@ -158,6 +158,20 @@ export default function SellerLayout({
 
     return (
         <div className="h-screen bg-slate-50 flex overflow-hidden font-sans relative">
+            <AnimatePresence>
+                {isNotificationsOpen && (
+                    <div className="fixed inset-0 z-[2000] flex items-start justify-center pt-24 px-4 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsNotificationsOpen(false)}>
+                        <div onClick={e => e.stopPropagation()}>
+                            <NotificationDropdown
+                                storeId={store?.id || ''}
+                                isOpen={isNotificationsOpen}
+                                onClose={() => setIsNotificationsOpen(false)}
+                            />
+                        </div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             {/* Mobile Menu Overlay */}
             <AnimatePresence>
                 {isMobileMenuOpen && (
@@ -176,19 +190,30 @@ export default function SellerLayout({
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                             className="fixed inset-y-0 left-0 w-72 bg-white z-[110] lg:hidden shadow-2xl flex flex-col"
                         >
-                            <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-                                <div className="flex items-center space-x-3 text-slate-900">
-                                    <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-emerald-200 shrink-0">
-                                        <span className="text-white text-md font-bold font-mono">O</span>
+                            <div className="p-6 border-b border-slate-50 flex flex-col gap-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-3 text-slate-900">
+                                        <div className="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-black overflow-hidden shadow-lg">
+                                            {store?.logo ? (
+                                                <img src={store.logo} alt="" className="w-full h-full object-cover" />
+                                            ) : (
+                                                store?.name?.[0]?.toUpperCase() || 'S'
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-black tracking-tight leading-none">{store?.name || 'My Store'}</span>
+                                            <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">
+                                                {store?.subdomain ? `${store.subdomain}.opnmart.com` : 'Dashboard'}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <span className="text-md font-bold tracking-tight">OPNMRT</span>
+                                    <button
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="p-2 hover:bg-slate-50 rounded-lg transition-colors"
+                                    >
+                                        <span className="text-xl">✕</span>
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="p-2 hover:bg-slate-50 rounded-lg transition-colors"
-                                >
-                                    <span className="text-xl">✕</span>
-                                </button>
                             </div>
                             <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar">
                                 <SidebarNav pathname={pathname} unreadCount={unreadCount} setIsMobileMenuOpen={setIsMobileMenuOpen} />
@@ -205,149 +230,128 @@ export default function SellerLayout({
                 {/* Independent Scroll for Sidebar */}
                 <div className="flex-1 flex flex-col overflow-y-auto no-scrollbar">
                     <div className="p-5 pb-2">
-                        <div className={`flex items-center space-x-3 text-slate-900 mb-4 overflow-hidden ${isCollapsed ? 'justify-center pr-0' : ''}`}>
-                            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200 shrink-0">
-                                <span className="text-white text-lg font-bold font-mono">O</span>
+                        {/* Store Branding & User Profile */}
+                        <div className={`flex flex-col mb-6 overflow-hidden ${isCollapsed ? 'items-center px-0' : 'px-2'}`}>
+                            <div className={`flex items-center gap-4 ${isCollapsed ? 'justify-center' : ''}`}>
+                                <div className={`bg-slate-900 rounded-2xl flex items-center justify-center text-white font-black overflow-hidden shadow-lg shrink-0 transition-all ${isCollapsed ? 'w-10 h-10' : 'w-14 h-14 ring-4 ring-white'}`}>
+                                    {store?.logo ? (
+                                        <img src={store.logo} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                        store?.name?.[0]?.toUpperCase() || 'S'
+                                    )}
+                                </div>
+                                {!isCollapsed && (
+                                    <div className="flex flex-col min-w-0">
+                                        <h2 className="text-sm font-black text-slate-900 truncate tracking-tight">{store?.name || 'My Store'}</h2>
+                                        <p className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest truncate">
+                                            {store?.subdomain ? `${store.subdomain}.opnmart.com` : 'Dashboard'}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
-                            {!isCollapsed && <span className="text-lg font-bold tracking-tight whitespace-nowrap">OPNMRT</span>}
+
+                            {/* Integrated Search Bar */}
+                            {!isCollapsed && (
+                                <div className="mt-6 relative group" onClick={() => setIsSearchOpen(true)}>
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-hover:text-primary">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+                                    <div className="w-full bg-slate-50 border border-slate-50 rounded-2xl pl-11 pr-4 py-3 text-[11px] font-bold text-slate-400 cursor-pointer hover:bg-white hover:border-slate-200 transition-all select-none">
+                                        Search project...
+                                    </div>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-white border border-slate-100 rounded-md text-[8px] font-black text-slate-300">
+                                        CTRL K
+                                    </div>
+                                </div>
+                            )}
+
+
                         </div>
 
                         <SidebarNav pathname={pathname} unreadCount={unreadCount} isCollapsed={isCollapsed} />
                     </div>
 
-                    {/* Upgrade Card / AI Assistant Card */}
-                    <AnimatePresence>
+                    <div className="mt-auto flex flex-col">
+                        {/* Compact Upgrade Card */}
                         {!isCollapsed && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                className="p-5 mt-auto"
-                            >
-                                <div className="bg-primary/5 rounded-[2rem] p-5 border border-primary/20 relative overflow-hidden group shadow-sm">
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-                                    <div className="relative z-10 text-center">
-                                        <div className="w-10 h-10 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-3 text-xl ring-1 ring-slate-100">
-                                            🛍️
-                                        </div>
-                                        <h4 className="font-bold text-slate-900 text-xs mb-1">Upgrade your plan</h4>
-                                        <p className="text-[10px] text-slate-500 mb-3 px-1 leading-tight">Unlock advanced AI insights and custom domains.</p>
-                                        <button className="w-full bg-primary text-white py-2.5 rounded-xl text-[10px] font-bold hover:brightness-110 transition-all shadow-lg shadow-emerald-900/10">
-                                            Upgrade now →
-                                        </button>
+                            <div className="px-5 mb-4">
+                                <div className="bg-primary/5 rounded-2xl p-3 border border-primary/20 relative overflow-hidden group shadow-sm flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-white rounded-xl shadow-sm flex items-center justify-center text-md shrink-0 ring-1 ring-slate-100">
+                                        🛍️
                                     </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-bold text-slate-900 text-[10px] truncate uppercase tracking-tight">BigT Pro</h4>
+                                        <p className="text-[8px] text-slate-500 truncate mt-0.5">Scale with AI Analysis</p>
+                                    </div>
+                                    <button className="bg-primary text-white w-6 h-6 rounded-lg text-[10px] font-bold hover:brightness-110 transition-all flex items-center justify-center shrink-0">
+                                        →
+                                    </button>
                                 </div>
-                            </motion.div>
+                            </div>
                         )}
-                    </AnimatePresence>
 
-                    {isCollapsed && (
-                        <div className="mt-auto p-4 flex flex-col items-center space-y-4">
-                            <button className="w-10 h-10 bg-slate-950 rounded-xl flex items-center justify-center text-lg shadow-lg">🤖</button>
-                            <button className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-lg shadow-lg">✨</button>
-                        </div>
-                    )}
+                        {/* Sidebar Footer with Logout */}
+                        {!isCollapsed && (
+                            <div className="p-4 border-t border-slate-50">
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full flex items-center space-x-3 p-2.5 rounded-xl text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition-all group"
+                                >
+                                    <span className="text-md opacity-60 group-hover:opacity-100">🚪</span>
+                                    <span className="text-[11px] font-black uppercase tracking-widest text-left">Logout</span>
+                                </button>
+                            </div>
+                        )}
+
+                        {isCollapsed && (
+                            <div className="p-4 flex flex-col items-center space-y-4">
+                                <button title="Logout" onClick={handleLogout} className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center text-lg hover:bg-rose-50 hover:text-rose-600 transition-all">🚪</button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Sidebar Toggle Button (Floating Hook) */}
-                <button
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="absolute -right-3 top-10 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm z-50 hover:bg-slate-50 transition-colors"
-                >
-                    <svg
-                        className={`w-3 h-3 text-slate-400 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                {/* Sidebar Toggle Button (Floating Hook) - Hidden on Analytics page */}
+                {pathname !== '/dashboard/seller/analytics' && (
+                    <button
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        className="absolute -right-3 top-10 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm z-50 hover:bg-slate-50 transition-colors"
                     >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7"></path>
-                    </svg>
-                </button>
+                        <svg
+                            className={`w-3 h-3 text-slate-400 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                )}
             </aside>
 
             {/* Main Content Area - Independent Scroll */}
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                <header className="h-20 bg-white/50 backdrop-blur-md flex items-center justify-between px-6 lg:px-10 shrink-0 border-b border-slate-100/50 relative z-[500]">
-                    <div className="flex items-center space-x-4 lg:w-1/4">
-                        <button
-                            onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden w-10 h-10 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-slate-600"
-                        >
-                            <span className="text-xl">☰</span>
-                        </button>
-                        <div className="hidden lg:flex flex-col">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Good Morning,</span>
-                            <span className="text-sm font-bold text-slate-900 mt-1">{user?.name?.split(' ')[0] || 'User'}</span>
-                        </div>
-                    </div>
+                {/* Content Header (Floating Actions) - REMOVED PER USER REQUEST */}
+                <SearchModal
+                    isOpen={isSearchOpen}
+                    onClose={() => setIsSearchOpen(false)}
+                    storeId={store?.id || ''}
+                />
 
-                    {/* Centered Store Name */}
-                    <div className="flex flex-col items-center justify-center flex-1">
-                        <h1 className="text-xl font-black text-slate-900 tracking-tight">
-                            {store?.name || 'My Store'}
-                        </h1>
-                        <div className="flex flex-col items-center mt-1">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                {store?.subdomain ? `${store.subdomain}.opnmart.com` : 'Store Dashboard'}
-                            </span>
-                            {/* Debug info */}
-                            <span className="text-[8px] font-mono text-slate-300">
-                                Subdomain: {store?.subdomain}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-end space-x-4 lg:w-1/4">
-                        <div className="flex space-x-2 relative">
-                            <HeaderButton icon="🔍" onClick={() => setIsSearchOpen(true)} />
-                            <div className="relative">
-                                <HeaderButton
-                                    icon="🔔"
-                                    badge={notificationsCount > 0}
-                                    onClick={() => {
-                                        setIsNotificationsOpen(!isNotificationsOpen);
-                                        setIsUserMenuOpen(false);
-                                    }}
-                                />
-                                <NotificationDropdown
-                                    storeId={store?.id || ''}
-                                    isOpen={isNotificationsOpen}
-                                    onClose={() => setIsNotificationsOpen(false)}
-                                />
-                            </div>
-                        </div>
-                        <div className="h-8 w-px bg-slate-200 mx-2" />
-                        <div className="relative">
-                            <div
-                                onClick={() => {
-                                    setIsUserMenuOpen(!isUserMenuOpen);
-                                    setIsNotificationsOpen(false);
-                                }}
-                                className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-slate-200 to-slate-100 flex items-center justify-center text-slate-600 font-bold overflow-hidden shadow-inner cursor-pointer hover:ring-2 ring-primary/20 transition-all"
+                <main className="flex-1 overflow-y-auto bg-slate-50/30 lg:p-10 pt-10 lg:pt-16 no-scrollbar">
+                    <div className="max-w-[1600px] mx-auto px-4 lg:px-0">
+                        {/* Mobile Toggle Button (Only visible on mobile) */}
+                        <div className="flex items-center justify-between lg:hidden mb-10">
+                            <button
+                                onClick={() => setIsMobileMenuOpen(true)}
+                                className="w-12 h-12 bg-white rounded-2xl shadow-xl shadow-slate-200 border border-slate-100 flex items-center justify-center text-slate-600 transition-all hover:scale-105 active:scale-95"
                             >
-                                {store?.logo ? (
-                                    <img src={store.logo} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                    user.name.charAt(0).toUpperCase()
-                                )}
+                                <span className="text-xl">☰</span>
+                            </button>
+                            <div className="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-black overflow-hidden">
+                                {store?.logo ? <img src={store.logo} alt="" className="w-full h-full object-cover" /> : store?.name?.[0]?.toUpperCase()}
                             </div>
-                            <UserMenu
-                                user={user}
-                                store={store}
-                                isOpen={isUserMenuOpen}
-                                onClose={() => setIsUserMenuOpen(false)}
-                                onLogout={handleLogout}
-                            />
                         </div>
-                    </div>
-
-                    <SearchModal
-                        isOpen={isSearchOpen}
-                        onClose={() => setIsSearchOpen(false)}
-                        storeId={store?.id || ''}
-                    />
-                </header>
-
-                <main className="flex-1 overflow-y-auto bg-slate-50/30 p-4 lg:p-10 pt-6 no-scrollbar">
-                    <div className="max-w-[1600px] mx-auto">
                         {children}
                     </div>
                 </main>
@@ -362,9 +366,8 @@ function SidebarNav({ pathname, unreadCount, isCollapsed = false, setIsMobileMen
     };
 
     return (
-        <div className="space-y-3">
-            <div>
-                {!isCollapsed && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1">General</p>}
+        <div className="space-y-4">
+            <CollapsibleSection title="General" icon="📁" isCollapsed={isCollapsed}>
                 <nav className="space-y-0.5">
                     <SidebarLink href="/dashboard/seller" icon="📊" label="Dashboard" active={pathname === '/dashboard/seller'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
                     <SidebarLink href="/dashboard/seller/orders" icon="📦" label="Orders" active={pathname === '/dashboard/seller/orders'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
@@ -381,34 +384,67 @@ function SidebarNav({ pathname, unreadCount, isCollapsed = false, setIsMobileMen
                     />
                     <SidebarLink href="/dashboard/seller/customers" icon="👥" label="Customers" active={pathname === '/dashboard/seller/customers'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
                 </nav>
-            </div>
+            </CollapsibleSection>
 
-            {/* AI Section (Infused) */}
-            <div>
-                {!isCollapsed && <p className="text-[9px] font-bold text-primary/80 uppercase tracking-widest px-2 mb-1 flex items-center">
-                    AI Engine <span className="ml-2 px-1 bg-primary/10 text-primary rounded-[4px] text-[7px]">ACTIVE</span>
-                </p>}
+            <CollapsibleSection title="AI Engine" icon="🤖" isCollapsed={isCollapsed} badge="ACTIVE">
                 <nav className="space-y-0.5">
                     <SidebarLink href="/dashboard/seller/analytics" icon="📈" label="Store Analytics" active={pathname === '/dashboard/seller/analytics'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
                 </nav>
-            </div>
+            </CollapsibleSection>
 
-            {/* Customization Section */}
-            <div>
-                {!isCollapsed && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1">Customization</p>}
+            <CollapsibleSection title="Customization" icon="🎨" isCollapsed={isCollapsed}>
                 <nav className="space-y-0.5">
                     <SidebarLink href="/dashboard/seller/themes" icon="🎨" label="Themes" active={pathname.startsWith('/dashboard/seller/themes')} isCollapsed={isCollapsed} onClick={handleLinkClick} />
                 </nav>
-            </div>
+            </CollapsibleSection>
 
-            <div>
-                {!isCollapsed && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1">Help & Settings</p>}
+            <CollapsibleSection title="Help & Settings" icon="⚙️" isCollapsed={isCollapsed}>
                 <nav className="space-y-0.5">
                     <SidebarLink href="/dashboard/seller/payments" icon="💰" label="Payments" active={pathname === '/dashboard/seller/payments'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
                     <SidebarLink href="/dashboard/seller/support" icon="🎧" label="Support" active={pathname === '/dashboard/seller/support'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
                     <SidebarLink href="/dashboard/seller/settings" icon="⚙️" label="Settings" active={pathname === '/dashboard/seller/settings'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
                 </nav>
-            </div>
+            </CollapsibleSection>
+        </div>
+    );
+}
+
+function CollapsibleSection({ title, icon, isCollapsed = false, children, badge }: { title: string; icon: string; isCollapsed?: boolean; children: React.ReactNode; badge?: string }) {
+    const [isOpen, setIsOpen] = React.useState(false);
+
+    if (isCollapsed) return <>{children}</>;
+
+    return (
+        <div className="space-y-1">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex items-center justify-between px-2 py-1.5 hover:bg-slate-50 rounded-lg transition-colors group"
+            >
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</span>
+                    {badge && <span className="px-1 bg-primary/10 text-primary rounded-[4px] text-[7px] font-black">{badge}</span>}
+                </div>
+                <svg
+                    className={`w-3 h-3 text-slate-300 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="pt-1">
+                            {children}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

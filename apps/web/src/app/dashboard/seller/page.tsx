@@ -6,11 +6,15 @@ import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import { RechartsAreaChart } from '@/components/dashboard/RechartsAreaChart';
 
 interface Stats {
     totalOrders: number;
+    activeOrders: number;
     totalRevenue: number;
     totalProducts: number;
+    totalProductsSold: number;
+    totalCustomers: number;
     topProducts: {
         id: string;
         name: string;
@@ -26,6 +30,7 @@ interface Stats {
         addToCart: number;
         checkout: number;
     };
+    weeklySales: { name: string; value: number }[];
 }
 
 export default function SellerDashboardPage() {
@@ -69,71 +74,82 @@ export default function SellerDashboardPage() {
             <div className="xl:col-span-3 space-y-8">
 
                 {/* 1. HERO SECTION */}
-                <div className="bg-gradient-to-br from-[#2E6B4E] via-[#1F4D36] to-[#153625] rounded-[2.5rem] p-8 text-white relative overflow-hidden group min-h-[220px] flex items-center shadow-2xl shadow-emerald-900/10">
-                    <div className="relative z-10 max-w-md">
-                        <span className="text-xs font-bold uppercase tracking-widest text-emerald-300/80 mb-2 block">Weekly Sales Performance</span>
-                        <h2 className="text-3xl font-extrabold leading-tight">
-                            {formatPrice(Number(stats?.totalRevenue || 0))} <span className="text-sm font-medium opacity-60 ml-2">Total revenue</span>
-                        </h2>
-                        <div className="flex items-center space-x-2 text-xs mt-3 mb-6">
-                            <span className="bg-white/10 backdrop-blur-md text-emerald-100 px-2 py-1 rounded-lg font-bold border border-white/10">{stats?.totalOrders || 0} Orders</span>
-                            <span className="text-emerald-300 font-medium">Verified Growth</span>
+                <div className="bg-gradient-to-br from-[#2E6B4E] via-[#1F4D36] to-[#153625] rounded-[2rem] p-6 lg:p-8 text-white relative overflow-hidden group min-h-[180px] flex items-center shadow-2xl shadow-emerald-900/10">
+                    <div className="relative z-10 w-full flex flex-col md:flex-row items-center justify-between gap-8">
+                        {/* Left Side: Metrics */}
+                        <div className="max-w-md w-full md:w-auto text-center md:text-left">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-300/80 mb-2 block">Weekly Sales Performance</span>
+                            <h2 className="text-3xl font-black leading-tight mb-1">
+                                {formatPrice(Number(stats?.totalRevenue || 0))}
+                            </h2>
+                            <p className="text-xs text-emerald-100/70 font-medium mb-6">Total revenue generated</p>
+
+                            <div className="flex items-center justify-center md:justify-start space-x-3 mb-6">
+                                <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/5 flex items-center space-x-2">
+                                    <span className="text-emerald-300">📦</span>
+                                    <span className="font-bold text-sm">{stats?.totalOrders || 0}</span>
+                                    <span className="text-[10px] uppercase tracking-wide opacity-70">Orders</span>
+                                </div>
+                                <div className="bg-emerald-500/20 px-3 py-1.5 rounded-lg border border-emerald-500/20 flex items-center space-x-1">
+                                    <span className="text-emerald-400 text-xs">📈</span>
+                                    <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wide">Verified Growth</span>
+                                </div>
+                            </div>
                         </div>
-                        <Link href="/dashboard/seller/analytics" className="bg-primary inline-block text-white px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition-all shadow-lg shadow-orange-950/20 text-xs">
-                            View Detailed Report
-                        </Link>
-                    </div>
-                    {/* Polished Illustration */}
-                    <div className="absolute right-0 top-0 bottom-0 w-1/2 flex items-center justify-center pointer-events-none overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl animate-pulse"></div>
-                        <div className="text-8xl opacity-20 filter blur-[1px] transform rotate-12">📦</div>
-                        <div className="text-[10rem] ml-10 translate-y-8 filter drop-shadow-2xl">📈</div>
+
+                        {/* Right Side: Graph Visual */}
+                        <div className="w-full md:w-1/2 h-40 hidden md:block relative">
+                            <div className="absolute inset-0 bg-gradient-to-l from-[#153625] to-transparent z-10 pointer-events-none" />
+                            <RechartsAreaChart className="w-full h-full" data={stats?.weeklySales || []} />
+                        </div>
                     </div>
                 </div>
 
                 {/* 2. TOP STATS */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <InfusedStat label="Active Orders" value={stats?.totalOrders.toString() || "0"} sub="Total Lifetime" color="text-emerald-600" icon="📦" />
-                    <InfusedStat label="Products" value={stats?.totalProducts.toString() || "0"} sub="Live items" color="text-primary" icon="🏷️" />
-                    <InfusedStat label="Total Stores" value="1" sub="Single Space" color="text-rose-500" icon="🏛️" />
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                    <InfusedStat label="Active Orders" value={stats?.activeOrders?.toString() || "0"} color="text-indigo-600" bgColor="bg-indigo-50" icon="⚡" />
+                    <InfusedStat label="Orders" value={stats?.totalOrders.toString() || "0"} color="text-emerald-600" bgColor="bg-emerald-50" icon="📦" />
+                    <InfusedStat label="Products sold" value={stats?.totalProductsSold?.toString() || "0"} color="text-blue-600" bgColor="bg-blue-50" icon="🏷️" />
+                    <InfusedStat label="New Customers" value={stats?.totalCustomers?.toString() || "0"} color="text-amber-600" bgColor="bg-amber-50" icon="👥" />
+                    <InfusedStat label="Website Visits" value={stats?.funnel?.sessions?.toString() || "0"} color="text-rose-600" bgColor="bg-rose-50" icon="🌍" />
                 </div>
 
                 {/* Sales Funnel Section */}
-                <div className="bg-white rounded-[2.5rem] p-6 lg:p-10 shadow-sm border border-slate-100">
-                    <div className="flex justify-between items-center mb-10">
-                        <h3 className="text-xl font-bold text-slate-900">Sales funnel</h3>
+                <div className="bg-white rounded-[2rem] p-6 lg:p-8 shadow-sm border border-slate-100">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-lg font-bold text-slate-900">Sales funnel</h3>
                         <button className="w-8 h-8 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 font-bold tracking-widest px-2">•••</button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <FunnelStat
                             label="All sessions"
                             value={funnel.sessions >= 1000 ? `${(funnel.sessions / 1000).toFixed(1)}K` : funnel.sessions.toString()}
-                            trend="+8.32%"
-                            sub={`No activity ${(100 - (funnel.productViews / (funnel.sessions || 1) * 100)).toFixed(1)}%`}
+                            trend={null}
+                            sub={funnel.sessions > 0 ? `No activity ${(100 - (funnel.productViews / (funnel.sessions || 1) * 100)).toFixed(1)}%` : 'No data yet'}
                         />
                         <FunnelStat
                             label="Product views"
                             value={funnel.productViews >= 1000 ? `${(funnel.productViews / 1000).toFixed(1)}K` : funnel.productViews.toString()}
-                            trend="+8.32%"
-                            sub={`No cart add ${(100 - (funnel.addToCart / (funnel.productViews || 1) * 100)).toFixed(1)}%`}
+                            trend={null}
+                            sub={funnel.productViews > 0 ? `No cart add ${(100 - (funnel.addToCart / (funnel.productViews || 1) * 100)).toFixed(1)}%` : 'No data yet'}
                         />
                         <FunnelStat
                             label="Add to cart"
                             value={funnel.addToCart >= 1000 ? `${(funnel.addToCart / 1000).toFixed(1)}K` : funnel.addToCart.toString()}
-                            trend="+8.32%"
-                            sub={`Abandoned ${(100 - (funnel.checkout / (funnel.addToCart || 1) * 100)).toFixed(1)}%`}
+                            trend={null}
+                            sub={funnel.addToCart > 0 ? `Abandoned ${(100 - (funnel.checkout / (funnel.addToCart || 1) * 100)).toFixed(1)}%` : 'No data yet'}
                         />
                         <FunnelStat
                             label="Checkout"
                             value={funnel.checkout >= 1000 ? `${(funnel.checkout / 1000).toFixed(1)}K` : funnel.checkout.toString()}
-                            trend="+8.32%"
+                            trend={null}
                             sub="Completed Orders"
                         />
                     </div>
 
                     {/* Chart visual placeholder */}
-                    <div className="h-40 relative flex items-end space-x-0.5 mt-8 overflow-hidden rounded-2xl bg-slate-50/50 p-4">
+                    <div className="h-32 relative flex items-end space-x-0.5 mt-4 overflow-hidden rounded-2xl bg-slate-50/50 p-4">
                         {[...Array(40)].map((_, i) => (
                             <div key={i} className="flex-1 bg-emerald-500/20 rounded-t-sm" style={{ height: `${Math.random() * 80 + 20}%` }}></div>
                         ))}
@@ -184,66 +200,59 @@ export default function SellerDashboardPage() {
             </div>
 
             {/* Right Widget Rail */}
-            <div className="space-y-8">
+            <div className="space-y-6 xl:sticky xl:top-6 self-start">
                 {/* Top Categories Gauge Widget */}
-                <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
-                    <div className="flex justify-between items-center mb-8">
+                <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
+                    <div className="flex justify-between items-center mb-6">
                         <h3 className="text-md font-bold text-slate-900">Top categories</h3>
                         <button className="text-slate-400 font-bold tracking-widest">•••</button>
                     </div>
                     {/* Gauge placeholder */}
-                    <div className="relative h-48 flex items-center justify-center mb-8">
-                        <div className="w-40 h-40 border-[16px] border-slate-100 rounded-full"></div>
-                        <div className="absolute w-40 h-40 border-[16px] border-emerald-500 border-b-transparent border-l-transparent rotate-45 rounded-full"></div>
-                        <div className="absolute text-center">
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Sales</p>
-                            <p className="text-2xl font-extrabold text-slate-900">24,329,7</p>
+                    <div className="relative h-40 flex items-center justify-center mb-6">
+                        <div className="w-32 h-32 border-[12px] border-slate-100 rounded-full"></div>
+                        <div className="absolute w-32 h-32 border-[12px] border-emerald-500 border-b-transparent border-l-transparent rotate-45 rounded-full"></div>
+                        <div className="absolute text-center px-4">
+                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Revenue</p>
+                            <p className="text-lg font-extrabold text-slate-900 truncate w-24">
+                                {formatPrice(Number(stats?.totalRevenue || 0))}
+                            </p>
                         </div>
                     </div>
-                    <div className="space-y-4">
-                        <CategoryStat label="Fashion" value="80.02%" color="bg-primary" />
-                        <CategoryStat label="Electronics" value="24.53%" color="bg-emerald-500" />
-                        <CategoryStat label="Food" value="16.47%" color="bg-amber-400" />
+                    <div className="space-y-3">
+                        <CategoryStat label="General" value="100%" color="bg-primary" />
+                        <p className="text-[9px] text-slate-400 mt-2 italic px-2">Categorized sales will appear here</p>
                     </div>
-                    <Link href="/dashboard/seller/analytics" className="w-full mt-8 py-4 border border-slate-100 rounded-2xl text-[10px] font-bold text-slate-600 uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center">
+                    <Link href="/dashboard/seller/analytics" className="w-full mt-6 py-3 border border-slate-100 rounded-xl text-[10px] font-bold text-slate-600 uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center">
                         View details ↗
                     </Link>
                 </div>
 
-                {/* Next Upcoming Event */}
-                <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
-                    <div className="flex justify-between items-center mb-8">
-                        <h3 className="text-md font-bold text-slate-900">Next Upcoming Event</h3>
+                {/* OpenMart News / Updates */}
+                <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-md font-bold text-slate-900">OpenMart News</h3>
                         <button className="text-slate-400 font-bold tracking-widest">•••</button>
                     </div>
-                    <div className="bg-primary/5 rounded-3xl p-4 mb-4 flex items-center justify-center h-48 relative overflow-hidden">
-                        <div className="text-6xl z-10">⏳</div>
-                        <div className="absolute inset-0 bg-slate-100/50 flex flex-col justify-end p-4">
-                            <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                                <div className="w-2/3 h-full bg-primary"></div>
-                            </div>
+                    <div className="bg-primary/5 rounded-2xl p-4 flex items-center justify-center h-32 relative overflow-hidden">
+                        <div className="text-5xl z-10 opacity-40">🗞️</div>
+                        <div className="absolute inset-0 flex flex-col justify-center items-center p-6 text-center">
+                            <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">Coming Soon</p>
+                            <p className="text-[9px] text-slate-400 font-bold leading-tight">Platform updates and business tips will appear here.</p>
                         </div>
                     </div>
-                    <div className="space-y-6">
-                        <EventItem date="12-14 December 2024" time="20:00" title="Lazada 12.12 event special sales" />
-                        <EventItem date="12-14 December 2024" time="20:00" title="Free shipping worldwide" />
-                    </div>
-                    <button className="w-full mt-8 py-4 border border-slate-100 rounded-2xl text-[10px] font-bold text-slate-600 uppercase tracking-widest hover:bg-slate-50 transition-all">
-                        View event calendar ↗
-                    </button>
                 </div>
             </div>
         </div>
     );
 }
 
-function FunnelStat({ label, value, trend, sub }: { label: string; value: string; trend: string; sub: string }) {
+function FunnelStat({ label, value, trend, sub }: { label: string; value: string; trend: string | null; sub: string }) {
     return (
         <div className="space-y-2">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{label}</p>
             <div className="flex items-center space-x-2">
                 <p className="text-2xl font-extrabold text-slate-900">{value}</p>
-                <span className="text-[10px] bg-emerald-50 text-emerald-500 px-1.5 py-0.5 rounded-full font-bold">%{trend}</span>
+                {trend && <span className="text-[10px] bg-emerald-50 text-emerald-500 px-1.5 py-0.5 rounded-full font-bold">%{trend}</span>}
             </div>
             <p className="text-[10px] text-slate-400 font-medium italic">{sub}</p>
         </div>
@@ -266,9 +275,8 @@ function ProductRow({ name, stocks, price, sales, earnings, image }: { name: str
             <td className="py-5 text-slate-500">{stocks}</td>
             <td className="py-5 text-slate-500">{price}</td>
             <td className="py-5 text-slate-500">{sales}</td>
-            <td className="py-5 text-right flex items-center justify-end space-x-2">
+            <td className="py-5 text-right">
                 <span>{earnings}</span>
-                <span className="text-[8px] text-emerald-500">+8.32%</span>
             </td>
         </tr>
     );
@@ -298,18 +306,15 @@ function EventItem({ date, time, title }: { date: string; time: string; title: s
     );
 }
 
-function InfusedStat({ label, value, sub, color, icon }: { label: string; value: string; sub: string; color: string; icon: string }) {
+function InfusedStat({ label, value, color, bgColor, icon }: { label: string; value: string; color: string; bgColor: string; icon: string }) {
     return (
-        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex items-center space-x-6 transition-all hover:shadow-md group">
-            <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                {icon}
+        <div className={`${bgColor} rounded-[1.5rem] p-5 flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm`}>
+            <div className="flex flex-col">
+                <p className="text-2xl font-black text-slate-900 leading-none mb-2">{value}</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide leading-tight">{label}</p>
             </div>
-            <div>
-                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-                <div className="flex items-baseline space-x-2">
-                    <p className={`text-3xl font-black ${color}`}>{value}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{sub}</p>
-                </div>
+            <div className={`w-10 h-10 rounded-xl bg-white flex items-center justify-center text-lg shadow-sm ${color} shrink-0 ml-3`}>
+                {icon}
             </div>
         </div>
     );

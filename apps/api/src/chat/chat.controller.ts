@@ -6,7 +6,7 @@ import { GetUser } from '../common/decorators/get-user.decorator';
 @Controller('chat')
 @UseGuards(AuthGuard('jwt'))
 export class ChatController {
-  constructor(private chatService: ChatService) {}
+  constructor(private chatService: ChatService) { }
 
   @Post('send')
   async sendMessage(
@@ -60,5 +60,26 @@ export class ChatController {
     @Body() data: { otherUserId: string; storeId: string },
   ) {
     return this.chatService.markAsRead(userId, data.otherUserId, data.storeId);
+  }
+
+  @Post('toggle-ai')
+  async toggleAiMode(
+    @GetUser('userId') userId: string,
+    @Body() data: { storeId: string; enabled: boolean },
+  ) {
+    return this.chatService.toggleAiMode(data.storeId, data.enabled);
+  }
+
+  @Post('ai-suggestion')
+  async getAiSuggestion(
+    @GetUser('userId') userId: string,
+    @Body() data: { storeId: string; otherUserId: string; currentMessage: string },
+  ) {
+    const suggestion = await this.chatService.getAiSuggestion(
+      data.storeId,
+      data.otherUserId,
+      data.currentMessage,
+    );
+    return { suggestion };
   }
 }

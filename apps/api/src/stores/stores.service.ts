@@ -72,7 +72,7 @@ export class StoresService {
     try {
       console.log('[GET_STATS] Starting for storeId:', storeId);
 
-      const [totalOrders, totalRevenue, totalProducts, topProducts, funnelData] =
+      const [totalOrders, totalRevenue, totalProducts, topProducts, funnelData, totalProductsSoldData, totalCustomers, activeOrders, weeklySalesData] =
         await Promise.all([
           this.prisma.order.count({ where: { storeId } }),
           this.prisma.order.aggregate({
@@ -104,6 +104,46 @@ export class StoresService {
             by: ['eventType'],
             where: { storeId },
             _count: { id: true },
+          }),
+          // Total Products Sold (Quantity)
+          this.prisma.orderItem.aggregate({
+            where: {
+              order: {
+                storeId,
+                status: 'PAID',
+              },
+            },
+            _sum: {
+              quantity: true,
+            },
+          }),
+          // Total Customers
+          this.prisma.user.count({
+            where: {
+              role: 'BUYER',
+              storeId: storeId,
+            },
+          }),
+          // Active Orders
+          this.prisma.order.count({
+            where: {
+              storeId,
+              status: { in: ['PAID', 'SHIPPED'] },
+            },
+          }),
+          // Weekly Sales Chart Data (Last 7 Days)
+          this.prisma.order.groupBy({
+            by: ['createdAt'],
+            where: {
+              storeId,
+              status: 'PAID',
+              createdAt: {
+                gte: new Date(new Date().setDate(new Date().getDate() - 7)),
+              },
+            },
+            _sum: {
+              totalAmount: true,
+            },
           }),
         ]);
 
@@ -151,22 +191,40 @@ export class StoresService {
           funnel.checkout = item._count.id;
       });
 
-      // Fallback/Mock Ratios if no events yet
-      if (funnel.sessions === 0 && funnel.productViews === 0) {
-        funnel.sessions = Math.max(totalOrders * 12, 142);
-        funnel.productViews = Math.max(totalOrders * 8, 86);
-        funnel.addToCart = Math.max(totalOrders * 3, 24);
-        funnel.checkout = totalOrders;
-      }
+      // Process Weekly Sales Data
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return {
+          date: d.toISOString().split('T')[0],
+          dayName: days[d.getDay()],
+        };
+      });
 
-      console.log('[GET_STATS] Success');
+      const weeklySales = last7Days.map((day) => {
+        // Since we grouped by createdAt (timestamp), we need to aggregate by day in JS
+        const salesForDay = weeklySalesData.filter((item) => {
+          const itemDate = new Date(item.createdAt).toISOString().split('T')[0];
+          return itemDate === day.date;
+        });
+        const total = salesForDay.reduce((acc, curr) => acc + (Number(curr._sum.totalAmount) || 0), 0);
+        return { name: day.dayName, value: total };
+      });
+
+      // Remove Fallback/Mock Ratios to ensure accurate data for new accounts
+      // console.log('[GET_STATS] Success');
 
       return {
         totalOrders,
         totalRevenue: Number(totalRevenue._sum.totalAmount || 0),
         totalProducts,
+        totalProductsSold: totalProductsSoldData._sum.quantity || 0,
+        totalCustomers,
+        activeOrders,
         topProducts: topProductsWithDetails.filter(Boolean),
         funnel,
+        weeklySales,
       };
     } catch (error) {
       console.error('[GET_STORE_STATS_SERVICE_ERROR]', {

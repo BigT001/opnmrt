@@ -17,6 +17,7 @@ interface Store {
     theme?: string;
     themeConfig?: any;
     paystackPublicKey?: string | null;
+    chatAiEnabled?: boolean;
     // NOTE: Secret key is NEVER sent to frontend for security reasons
 }
 

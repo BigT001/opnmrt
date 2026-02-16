@@ -38,4 +38,12 @@ export class OrdersController {
   ) {
     return this.ordersService.trackAbandonment(orderId, data.reason);
   }
+  @Patch(':orderId/status')
+  async updateStatus(
+    @GetUser('userId') userId: string,
+    @Param('orderId') orderId: string,
+    @Body('status') status: string,
+  ) {
+    return this.ordersService.updateStatusBySeller(userId, orderId, status);
+  }
 }

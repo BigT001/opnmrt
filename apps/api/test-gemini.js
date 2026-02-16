@@ -2,7 +2,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 require('dotenv').config();
 
 async function testGemini() {
-    const apiKey = "AIzaSyDC3-6dWJCgxkqWYmK5efKKcp5GzhhDJEw"; // From your .env
+    const apiKey = process.env.GEMINI_API_KEY; // From your .env
     console.log('Testing Gemini with key:', apiKey.substring(0, 10) + '...');
 
     try {

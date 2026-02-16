@@ -2,7 +2,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 require('dotenv').config();
 
 async function listModels() {
-    const apiKey = "AIzaSyDC3-6dWJCgxkqWYmK5efKKcp5GzhhDJEw";
+    const apiKey = process.env.GEMINI_API_KEY;
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
         // The SDK doesn't have a direct 'listModels' in the top-level GenAI class usually

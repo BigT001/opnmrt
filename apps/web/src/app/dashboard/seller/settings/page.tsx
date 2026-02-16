@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('general');
@@ -21,6 +22,7 @@ export default function SettingsPage() {
         theme: 'MINIMAL_LUXE',
         whatsappNumber: '',
         useWhatsAppCheckout: false,
+        chatAiEnabled: false,
     });
 
     const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -43,6 +45,7 @@ export default function SettingsPage() {
                 theme: (store as any).theme || 'MINIMAL_LUXE',
                 whatsappNumber: (store as any).whatsappNumber || '',
                 useWhatsAppCheckout: (store as any).useWhatsAppCheckout || false,
+                chatAiEnabled: (store as any).chatAiEnabled || false,
             });
             setLogoPreview((store as any).logo || null);
             setHeroPreview((store as any).heroImage || null);
@@ -346,7 +349,56 @@ export default function SettingsPage() {
                         </section>
                     )}
 
-                    {['domains', 'payments', 'ai'].includes(activeTab) && (
+                    {activeTab === 'ai' && (
+                        <div className="space-y-8">
+                            <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div>
+                                        <h3 className="text-xl font-black text-slate-900 flex items-center gap-3">
+                                            BigT AI Support Engine
+                                            <span className="text-[10px] bg-indigo-500 text-white px-2 py-0.5 rounded-full uppercase">Pro</span>
+                                        </h3>
+                                        <p className="text-xs text-slate-500 mt-1">Automate your customer service with human-like intelligence.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setFormData(prev => ({ ...prev, chatAiEnabled: !prev.chatAiEnabled }))}
+                                        className={`w-14 h-8 rounded-full relative transition-colors duration-300 ${formData.chatAiEnabled ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-slate-200'}`}
+                                    >
+                                        <motion.div
+                                            animate={{ x: formData.chatAiEnabled ? 28 : 4 }}
+                                            className="w-6 h-6 bg-white rounded-full absolute top-1 shadow-sm"
+                                        />
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                                        <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-2">Automated Discovery</h4>
+                                        <p className="text-[11px] text-slate-500 leading-relaxed font-medium">BigT will analyze customer messages and provide instant support based on your store inventory and policy.</p>
+                                    </div>
+                                    <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 opacity-50">
+                                        <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-2">Voice Consistency (Soon)</h4>
+                                        <p className="text-[11px] text-slate-500 leading-relaxed font-medium">Train BigT to match your specific brand voice using past emails and social posts.</p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className="p-8 rounded-[2.5rem] bg-indigo-900 text-white relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl" />
+                                <div className="relative z-10 flex items-center justify-between">
+                                    <div className="max-w-md">
+                                        <h3 className="text-2xl font-black tracking-tight mb-2">Upgrade to Pro AI</h3>
+                                        <p className="text-sm text-indigo-100/70 font-medium">Unlock deep sentiment analysis, 24/7 proactive selling, and multilingual support patterns.</p>
+                                    </div>
+                                    <button className="px-8 py-3 bg-white text-indigo-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform">
+                                        View Plans
+                                    </button>
+                                </div>
+                            </section>
+                        </div>
+                    )}
+
+                    {['domains', 'payments'].includes(activeTab) && (
                         <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 py-20 flex flex-col items-center justify-center text-center">
                             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                                 <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -375,6 +427,7 @@ export default function SettingsPage() {
                                         theme: (store as any).theme || 'MINIMAL_LUXE',
                                         whatsappNumber: (store as any).whatsappNumber || '',
                                         useWhatsAppCheckout: (store as any).useWhatsAppCheckout || false,
+                                        chatAiEnabled: (store as any).chatAiEnabled || false,
                                     });
                                     setLogoPreview((store as any).logo || null);
                                     setHeroPreview((store as any).heroImage || null);

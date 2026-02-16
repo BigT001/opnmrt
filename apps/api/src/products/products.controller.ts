@@ -15,17 +15,46 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from './products.service';
+import { ProductAiService } from './product-ai.service';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from '../common/decorators/get-user.decorator';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) { }
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly productAiService: ProductAiService,
+    private readonly prisma: PrismaService,
+  ) { }
 
   @Get('seller')
   @UseGuards(AuthGuard('jwt'))
   async getSellerProducts(@GetUser('userId') userId: string) {
     return this.productsService.findBySellerUserId(userId);
+  }
+
+  @Post('analyze')
+  @UseGuards(AuthGuard('jwt'))
+  async analyzeProduct(@Body() body: any) {
+    let storeContext = {};
+    if (body.storeId) {
+      const store = await this.prisma.store.findUnique({
+        where: { id: body.storeId },
+        select: { name: true, biography: true }
+      });
+      if (store) {
+        storeContext = {
+          storeName: store.name,
+          storeDescription: store.biography
+        };
+      }
+    }
+
+    return this.productAiService.analyzeProduct({
+      ...body,
+      ...storeContext
+    });
   }
 
   @Post()
@@ -54,6 +83,7 @@ export class ProductsController {
       category: body.category,
       colors: body.colors ? JSON.parse(body.colors) : [],
       sizes: body.sizes ? JSON.parse(body.sizes) : [],
+      tags: body.tags ? JSON.parse(body.tags) : [],
     };
 
     const storeId = body.storeId;
@@ -83,6 +113,7 @@ export class ProductsController {
     if (body.stock !== undefined) data.stock = parseInt(body.stock, 10);
     if (body.colors) data.colors = JSON.parse(body.colors);
     if (body.sizes) data.sizes = JSON.parse(body.sizes);
+    if (body.tags) data.tags = JSON.parse(body.tags);
     if (body.existingImages)
       data.existingImages = JSON.parse(body.existingImages);
 

@@ -66,6 +66,7 @@ model Store {
   paystackPublicKey     String?
   paystackSecretKey     String?
   paystackWebhookSecret String?
+  chatAiEnabled         Boolean     @default(false)
   analytics             Analytics[]
   inventory             Inventory[]
   messages              Message[]
@@ -91,6 +92,7 @@ model Product {
   sizes         String[]
   discountPrice Decimal?    @db.Decimal(10, 2)
   category      String?
+  tags          String[]    @default([])
   inventory     Inventory?
   orderItems    OrderItem[]
   reviews       Review[]

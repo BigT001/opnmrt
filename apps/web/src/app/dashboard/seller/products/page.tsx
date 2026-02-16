@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Plus, X, Upload, Loader2, Package } from 'lucide-react';
+import { Plus, X, Upload, Loader2, Package, Sparkles, Wand2, ArrowRight } from 'lucide-react';
 import api from '@/lib/api';
 
 interface Product {
@@ -16,6 +16,7 @@ interface Product {
     images: string[];
     colors?: string[];
     sizes?: string[];
+    tags?: string[];
     status?: string; // Derived or stored
 }
 
@@ -189,14 +190,20 @@ function ProductStatCard({ label, value, color = 'text-slate-900' }: { label: st
 
 function ProductDetailView({ product, onClose, onUpdate }: { product: Product; onClose: () => void; onUpdate: () => void }) {
     const [loading, setLoading] = useState(false);
+    const [name, setName] = useState(product.name);
     const [stock, setStock] = useState(product.stock);
     const [price, setPrice] = useState(product.price);
     const [discountPrice, setDiscountPrice] = useState(product.discountPrice || '');
     const [colors, setColors] = useState(product.colors?.join(', ') || '');
     const [sizes, setSizes] = useState(product.sizes?.join(', ') || '');
+    const [category, setCategory] = useState(product.category || '');
+    const [tags, setTags] = useState(product.tags?.join(', ') || '');
+    const [description, setDescription] = useState(product.description || '');
     const [existingImages, setExistingImages] = useState<string[]>(product.images);
     const [newFiles, setNewFiles] = useState<File[]>([]);
     const [newPreviews, setNewPreviews] = useState<string[]>([]);
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiSuggestion, setAiSuggestion] = useState<any>(null);
 
     const handleNewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
@@ -224,17 +231,41 @@ function ProductDetailView({ product, onClose, onUpdate }: { product: Product; o
         setNewPreviews(prev => prev.filter((_, i) => i !== index));
     };
 
+    const handleAiAnalyze = async () => {
+        try {
+            setAiLoading(true);
+            const res = await api.post('/products/analyze', {
+                name,
+                category,
+                description,
+                imageUrls: [...existingImages, ...newPreviews],
+                storeId: product.storeId
+            });
+            setAiSuggestion(res.data);
+        } catch (error) {
+            console.error('AI Analysis failed', error);
+            alert('AI Analysis failed. Please try again.');
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
     const handleQuickUpdate = async () => {
         setLoading(true);
         const data = new FormData();
+        data.append('name', name);
         data.append('stock', stock.toString());
         data.append('price', price.toString());
         if (discountPrice) data.append('discountPrice', discountPrice.toString());
+        data.append('category', category);
+        data.append('description', description);
 
         const colorsArray = colors.split(',').map(s => s.trim()).filter(Boolean);
         const sizesArray = sizes.split(',').map(s => s.trim()).filter(Boolean);
+        const tagsArray = tags.split(',').map(s => s.trim()).filter(Boolean);
         data.append('colors', JSON.stringify(colorsArray));
         data.append('sizes', JSON.stringify(sizesArray));
+        data.append('tags', JSON.stringify(tagsArray));
 
         // Fix for image disappearance: send remaining existing images
         data.append('existingImages', JSON.stringify(existingImages));
@@ -266,7 +297,7 @@ function ProductDetailView({ product, onClose, onUpdate }: { product: Product; o
     };
 
     return (
-        <div className="bg-slate-50 rounded-3xl p-8 border border-slate-200 shadow-inner animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="bg-slate-50 rounded-3xl p-8 border border-slate-200 shadow-inner animate-in fade-in slide-in-from-top-4 duration-300 relative z-[600]">
             <div className="flex flex-col md:flex-row gap-8">
                 {/* Images Preview */}
                 <div className="md:w-1/3">
@@ -319,14 +350,14 @@ function ProductDetailView({ product, onClose, onUpdate }: { product: Product; o
                         <div>
                             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Inventory Stock</label>
                             <div className="flex items-center gap-2">
-                                <button onClick={() => setStock(Math.max(0, stock - 1))} className="w-10 h-10 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center font-bold">-</button>
+                                <button type="button" onClick={() => setStock(Math.max(0, stock - 1))} className="w-10 h-10 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center font-bold">-</button>
                                 <input
                                     type="number"
                                     value={stock}
                                     onChange={e => setStock(Number(e.target.value))}
                                     className="w-full h-10 bg-white border border-slate-200 rounded-xl text-center font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                                 />
-                                <button onClick={() => setStock(stock + 1)} className="w-10 h-10 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center font-bold">+</button>
+                                <button type="button" onClick={() => setStock(stock + 1)} className="w-10 h-10 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center font-bold">+</button>
                             </div>
                         </div>
                         <div>
@@ -350,44 +381,150 @@ function ProductDetailView({ product, onClose, onUpdate }: { product: Product; o
                         </div>
                     </div>
 
+                    <div className="pt-2">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Product Title</label>
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            className="w-full h-12 bg-white border border-slate-200 rounded-xl px-4 font-black text-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-slate-900"
+                            placeholder="e.g. Vintage Silk Shirt"
+                        />
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Available Colors (Comma separated)</label>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Category</label>
                             <input
                                 type="text"
-                                value={colors}
-                                onChange={e => setColors(e.target.value)}
-                                className="w-full h-10 bg-white border border-slate-200 rounded-xl px-4 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                placeholder="e.g. Red, Blue, Green"
+                                value={category}
+                                onChange={e => setCategory(e.target.value)}
+                                className="w-full h-12 bg-white border border-slate-200 rounded-xl px-4 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                placeholder="e.g. Fashion"
                             />
                         </div>
                         <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Available Sizes (Comma separated)</label>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Keywords (Tags)</label>
                             <input
                                 type="text"
-                                value={sizes}
-                                onChange={e => setSizes(e.target.value)}
-                                className="w-full h-10 bg-white border border-slate-200 rounded-xl px-4 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                placeholder="e.g. S, M, L, XL"
+                                value={tags}
+                                onChange={e => setTags(e.target.value)}
+                                className="w-full h-12 bg-white border border-slate-200 rounded-xl px-4 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                placeholder="SEO keywords..."
                             />
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-end pt-4 border-t border-slate-200">
-                        <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Description Overview</span>
-                            <p className="text-xs text-slate-600 line-clamp-2 max-w-md">{product.description}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Available Colors</label>
+                            <input
+                                type="text"
+                                value={colors}
+                                onChange={e => setColors(e.target.value)}
+                                className="w-full h-11 bg-white border border-slate-200 rounded-xl px-4 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                placeholder="Red, Blue..."
+                            />
                         </div>
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Available Sizes</label>
+                            <input
+                                type="text"
+                                value={sizes}
+                                onChange={e => setSizes(e.target.value)}
+                                className="w-full h-11 bg-white border border-slate-200 rounded-xl px-4 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                placeholder="S, M, L..."
+                            />
+                        </div>
+                    </div>
+
+                    <div className="pt-2">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Description Overview</label>
+                        <textarea
+                            rows={4}
+                            value={description}
+                            onChange={e => setDescription(e.target.value)}
+                            className="w-full p-4 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                            placeholder="Detailed description..."
+                        />
+                    </div>
+
+                    {/* AI Suggestions Box */}
+                    {aiSuggestion && (
+                        <div className="bg-emerald-50 border border-emerald-100 rounded-[2rem] p-6 space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4 text-emerald-600" />
+                                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">BigT AI Suggestions</span>
+                                </div>
+                                <button type="button" onClick={() => setAiSuggestion(null)} className="text-emerald-400 hover:text-emerald-600">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[9px] font-black text-emerald-700 uppercase tracking-wider">Suggested Category</p>
+                                        <button type="button" onClick={() => setCategory(aiSuggestion.suggestedCategory)} className="text-[8px] font-black text-emerald-600 underline">Apply</button>
+                                    </div>
+                                    <div className="p-3 bg-white/60 rounded-xl border border-emerald-100 text-xs font-bold text-slate-700 uppercase tracking-tight">
+                                        {aiSuggestion.suggestedCategory}
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[9px] font-black text-emerald-700 uppercase tracking-wider">Suggested Tags</p>
+                                        <button type="button" onClick={() => setTags(aiSuggestion.tags?.join(', '))} className="text-[8px] font-black text-emerald-600 underline">Apply All</button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1">
+                                        {aiSuggestion.tags?.map((t: string) => (
+                                            <span key={t} className="px-2 py-1 bg-white border border-emerald-100 text-emerald-600 text-[9px] font-bold rounded-lg">{t}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-[9px] font-black text-emerald-700 uppercase tracking-wider">Suggested SEO Description</p>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDescription(aiSuggestion.suggestedDescription)}
+                                        className="flex items-center gap-1.5 text-[9px] font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-800"
+                                    >
+                                        Apply to Description <ArrowRight className="w-3 h-3" />
+                                    </button>
+                                </div>
+                                <div className="p-4 bg-white/60 rounded-xl border border-emerald-100 text-xs text-slate-600 leading-relaxed font-medium max-h-32 overflow-y-auto">
+                                    {aiSuggestion.suggestedDescription}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex justify-between items-center pt-2">
+                        <button
+                            type="button"
+                            onClick={handleAiAnalyze}
+                            disabled={aiLoading || loading}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-600 hover:border-emerald-200 hover:text-emerald-600 transition-all group"
+                        >
+                            {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 text-emerald-500 group-hover:scale-110 transition-transform" />}
+                            {aiLoading ? 'Analyzing with BigT...' : 'Analyze with BigT Agent'}
+                        </button>
                         <div className="flex gap-3">
                             <button
+                                type="button"
                                 onClick={onClose}
                                 className="px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
+                                type="button"
                                 onClick={handleQuickUpdate}
-                                disabled={loading}
+                                disabled={loading || aiLoading}
                                 className="px-8 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 flex items-center gap-2"
                             >
                                 {loading && <Loader2 className="w-3 h-3 animate-spin" />}
@@ -403,6 +540,8 @@ function ProductDetailView({ product, onClose, onUpdate }: { product: Product; o
 
 function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: boolean; onClose: () => void; onSuccess: () => void; storeId?: string }) {
     const [loading, setLoading] = useState(false);
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiSuggestion, setAiSuggestion] = useState<any>(null);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [formData, setFormData] = useState({
@@ -414,6 +553,7 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: bool
         category: '',
         colors: '',
         sizes: '',
+        tags: '',
     });
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -440,6 +580,37 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: bool
         setImagePreviews(prev => prev.filter((_, i) => i !== index));
     };
 
+    const handleAiAnalyze = async () => {
+        if (!formData.name) {
+            alert('Please provide a Product Title first so BigT can understand what you are selling.');
+            return;
+        }
+        try {
+            setAiLoading(true);
+            const res = await api.post('/products/analyze', {
+                name: formData.name,
+                category: formData.category,
+                description: formData.description,
+                imageUrls: imagePreviews,
+                storeId
+            });
+            // Auto-fill logic
+            if (res.data) {
+                setFormData(prev => ({
+                    ...prev,
+                    category: res.data.suggestedCategory || prev.category,
+                    description: res.data.suggestedDescription || prev.description,
+                    tags: res.data.tags ? res.data.tags.join(', ') : prev.tags
+                }));
+            }
+        } catch (error) {
+            console.error('AI Analysis failed', error);
+            alert('BigT analysis failed. Please try again.');
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!storeId) return;
@@ -456,9 +627,11 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: bool
 
         const colorsArray = formData.colors.split(',').map(s => s.trim()).filter(Boolean);
         const sizesArray = formData.sizes.split(',').map(s => s.trim()).filter(Boolean);
+        const tagsArray = formData.tags.split(',').map(s => s.trim()).filter(Boolean);
 
         data.append('colors', JSON.stringify(colorsArray));
         data.append('sizes', JSON.stringify(sizesArray));
+        data.append('tags', JSON.stringify(tagsArray));
 
         selectedFiles.forEach(file => {
             data.append('images', file);
@@ -472,9 +645,13 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: bool
 
             if (res.ok) {
                 onSuccess();
+                // Reset form
+                setFormData({ name: '', description: '', price: '', discountPrice: '', stock: '', category: '', colors: '', sizes: '', tags: '' });
+                setImagePreviews([]);
+                setSelectedFiles([]);
+                setAiSuggestion(null);
             } else {
                 const errorText = await res.text();
-                console.error('Failed to create product:', res.status, errorText);
                 alert(`Error: ${res.status} - ${errorText}`);
             }
         } catch (error) {
@@ -487,12 +664,17 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: bool
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-[2.5rem] w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] border border-slate-200">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-6xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] border border-slate-200">
                 <div className="px-10 py-8 flex justify-between items-center bg-white shrink-0">
-                    <div>
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Add New Product</h2>
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Provide specific details to help your products appear in Google Search results</p>
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center">
+                            <Plus className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Add New Product</h2>
+                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Provide specific details to help your products appear in Google Search results</p>
+                        </div>
                     </div>
                     <button onClick={onClose} className="p-3 hover:bg-slate-100 rounded-2xl transition-all group">
                         <X className="w-6 h-6 text-slate-400 group-hover:text-primary transition-colors" />
@@ -501,49 +683,77 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: bool
 
                 <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
                     <div className="flex-1 overflow-y-auto px-10 pb-10">
-                        <div className="flex flex-col md:flex-row gap-12">
-                            {/* Left Column: Images */}
-                            <div className="md:w-1/3">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Product Gallery ({selectedFiles.length}/5)</label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {imagePreviews.map((preview, index) => (
-                                        <div key={index} className="relative aspect-square rounded-[1.5rem] overflow-hidden border border-slate-100 group shadow-sm">
-                                            <img src={preview} alt={`Preview ${index}`} className="w-full h-full object-cover" />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeImage(index)}
-                                                className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-xl opacity-0 group-hover:opacity-100 transition-all shadow-sm hover:bg-rose-50"
-                                            >
-                                                <X className="w-3 h-3 text-rose-500" />
-                                            </button>
-                                            {index === 0 && (
-                                                <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 rounded-lg text-[8px] font-black text-white uppercase tracking-widest">Primary</div>
-                                            )}
-                                        </div>
-                                    ))}
-                                    {selectedFiles.length < 5 && (
-                                        <div className="relative aspect-square">
-                                            <div className="w-full h-full rounded-[1.5rem] border-2 border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/20 flex flex-col items-center justify-center transition-all bg-slate-50 cursor-pointer group">
-                                                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm mb-2 group-hover:scale-110 transition-transform">
-                                                    <Upload className="w-4 h-4 text-primary" />
-                                                </div>
-                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Add Photo</span>
+                        <div className="flex flex-col lg:flex-row gap-12">
+                            {/* Left Column: Images & Pricing */}
+                            <div className="lg:w-72 space-y-8 shrink-0">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Product Gallery ({selectedFiles.length}/5)</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {imagePreviews.map((preview, index) => (
+                                            <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border border-slate-100 group shadow-sm bg-slate-50">
+                                                <img src={preview} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(index)}
+                                                    className="absolute top-1.5 right-1.5 p-1.5 bg-white/90 rounded-xl opacity-0 group-hover:opacity-100 transition-all shadow-sm hover:bg-rose-50"
+                                                >
+                                                    <X className="w-3 h-3 text-rose-500" />
+                                                </button>
                                             </div>
+                                        ))}
+                                        {selectedFiles.length < 5 && (
+                                            <div className="relative aspect-square">
+                                                <div className="w-full h-full rounded-2xl border-2 border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/20 flex flex-col items-center justify-center transition-all bg-slate-50 cursor-pointer group">
+                                                    <Upload className="w-5 h-5 text-slate-300 group-hover:text-primary transition-all mb-1" />
+                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Add Photo</span>
+                                                </div>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    multiple
+                                                    onChange={handleImageChange}
+                                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Base Price (₦)</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
                                             <input
-                                                type="file"
-                                                accept="image/*"
-                                                multiple
-                                                onChange={handleImageChange}
-                                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                                type="number"
+                                                required
+                                                value={formData.price}
+                                                onChange={e => setFormData({ ...formData, price: e.target.value })}
+                                                className="w-full pl-8 pr-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:border-primary transition-all placeholder:text-slate-300 shadow-inner"
+                                                placeholder="0.00"
                                             />
                                         </div>
-                                    )}
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="block text-[10px] font-black text-emerald-500 uppercase tracking-widest">Sale Price (₦)</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 font-bold">₦</span>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={formData.discountPrice}
+                                                onChange={e => setFormData({ ...formData, discountPrice: e.target.value })}
+                                                className="w-full pl-8 pr-5 py-3.5 bg-emerald-50/50 border border-emerald-100 rounded-2xl text-sm font-black text-primary focus:outline-none focus:border-primary transition-all placeholder:text-emerald-200 shadow-inner"
+                                                placeholder="Offer"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Middle Column: Core Info */}
+                            {/* Center Column: Core Info & AI */}
                             <div className="flex-1 space-y-8">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="col-span-2">
                                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Product Title</label>
                                         <input
@@ -551,122 +761,117 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: bool
                                             required
                                             value={formData.name}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all placeholder:text-slate-300"
+                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-300"
                                             placeholder="What are you selling?"
                                         />
                                     </div>
 
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                            Category <span className="text-emerald-500 ml-1 px-1.5 py-0.5 bg-emerald-50 rounded text-[8px]">SEO CRUCIAL</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.category}
-                                            onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all placeholder:text-slate-300"
-                                            placeholder="e.g. Summer Vintage Shirts"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Internal Stock</label>
-                                        <input
-                                            type="number"
-                                            required
-                                            value={formData.stock}
-                                            onChange={e => setFormData({ ...formData, stock: e.target.value })}
-                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all"
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Product Description</label>
-                                    <textarea
-                                        rows={6}
-                                        value={formData.description}
-                                        onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-medium text-slate-600 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all resize-none"
-                                        placeholder="Detailed description for your customers..."
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Right Column: Pricing */}
-                            <div className="md:w-64 space-y-8">
-                                <div className="bg-slate-50 rounded-[2rem] p-6 border border-slate-100 space-y-6">
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Base Price</label>
-                                        <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₦</span>
+                                    <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-between">
+                                                Category <span className="text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-md text-[8px]">BOUTIQUE STYLE</span>
+                                            </label>
                                             <input
-                                                type="number"
-                                                step="0.01"
+                                                type="text"
                                                 required
-                                                value={formData.price}
-                                                onChange={e => setFormData({ ...formData, price: e.target.value })}
-                                                className="w-full pl-8 pr-5 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-black text-slate-900 focus:outline-none focus:border-primary transition-all shadow-sm"
-                                                placeholder="0.00"
+                                                value={formData.category}
+                                                onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
+                                                placeholder="e.g. Traditional Wedding Attire"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Inventory Stock</label>
+                                            <input
+                                                type="number"
+                                                required
+                                                value={formData.stock}
+                                                onChange={e => setFormData({ ...formData, stock: e.target.value })}
+                                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
+                                                placeholder="0"
                                             />
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-primary uppercase tracking-widest mb-2">Offer Price</label>
-                                        <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-bold">₦</span>
+
+                                    <div className="col-span-2 space-y-4">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-between">
+                                                SEO Discovery Keywords (Tags) <span className="text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md text-[8px]">SEARCH OPTIMIZED</span>
+                                            </label>
                                             <input
-                                                type="number"
-                                                step="0.01"
-                                                value={formData.discountPrice}
-                                                onChange={e => setFormData({ ...formData, discountPrice: e.target.value })}
-                                                className="w-full pl-8 pr-5 py-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl text-sm font-black text-primary focus:outline-none focus:border-primary transition-all placeholder:text-emerald-200"
-                                                placeholder="Offer"
+                                                type="text"
+                                                value={formData.tags}
+                                                onChange={e => setFormData({ ...formData, tags: e.target.value })}
+                                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-600 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
+                                                placeholder="e.g. Authentic Coral Beads, Edo Bride Attire..."
                                             />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Colors</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.colors}
+                                                    onChange={e => setFormData({ ...formData, colors: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-500"
+                                                    placeholder="Red, Blue..."
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Sizes</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.sizes}
+                                                    onChange={e => setFormData({ ...formData, sizes: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-500"
+                                                    placeholder="S, M, L..."
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Available Colors</label>
-                                        <input
-                                            type="text"
-                                            value={formData.colors}
-                                            onChange={e => setFormData({ ...formData, colors: e.target.value })}
-                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:border-primary transition-all shadow-sm"
-                                            placeholder="Red, Blue..."
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Product Description</label>
+                                        <button
+                                            type="button"
+                                            onClick={handleAiAnalyze}
+                                            disabled={aiLoading}
+                                            className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md shadow-emerald-500/20"
+                                        >
+                                            {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                                            Analyze with BigT AI
+                                        </button>
+                                    </div>
+                                    <div className="relative">
+                                        <textarea
+                                            rows={8}
+                                            value={formData.description}
+                                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-medium text-slate-600 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all resize-none shadow-inner"
+                                            placeholder="Tell your customers about the magic of this product..."
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Available Sizes</label>
-                                        <input
-                                            type="text"
-                                            value={formData.sizes}
-                                            onChange={e => setFormData({ ...formData, sizes: e.target.value })}
-                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:border-primary transition-all shadow-sm"
-                                            placeholder="S, M, L..."
-                                        />
-                                    </div>
+
+
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="px-10 py-6 border-t border-slate-50 bg-white flex justify-end gap-4 shrink-0">
+                    <div className="px-10 py-8 border-t border-slate-50 bg-white flex justify-end gap-4 shrink-0">
                         <button
                             type="button"
                             onClick={onClose}
                             className="px-8 py-4 bg-slate-50 text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all"
                         >
-                            Back
+                            Cancel
                         </button>
                         <button
                             type="submit"
-                            disabled={loading || !formData.name || !formData.price}
-                            className="px-12 py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:brightness-110 transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-3"
+                            disabled={loading || !formData.name || !formData.price || aiLoading}
+                            className="px-12 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-900/20 disabled:opacity-50 flex items-center gap-3"
                         >
                             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                             Launch Product

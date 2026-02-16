@@ -21,6 +21,7 @@ export class ProductsService {
       category?: string;
       colors?: string[];
       sizes?: string[];
+      tags?: string[];
     },
     files?: Express.Multer.File[],
   ) {
@@ -57,7 +58,7 @@ export class ProductsService {
     }
 
     try {
-      return await this.prisma.product.create({
+      const newProduct = await this.prisma.product.create({
         data: {
           ...data,
           images: imageUrls,
@@ -65,6 +66,24 @@ export class ProductsService {
           tenantId: store.tenantId,
         },
       });
+
+      // Track product creation event for BigT
+      await this.prisma.eventLog.create({
+        data: {
+          tenantId: store.tenantId,
+          storeId,
+          eventType: 'PRODUCT_CREATED',
+          payload: {
+            productId: newProduct.id,
+            productName: newProduct.name,
+            name: newProduct.name,
+            initialStock: newProduct.stock,
+            price: newProduct.price,
+          },
+        },
+      }).catch(err => console.error('[PRODUCT_CREATED_EVENT_ERROR]', err));
+
+      return newProduct;
     } catch (error) {
       console.error('Error creating product in database:', error);
       throw error;
@@ -82,6 +101,7 @@ export class ProductsService {
       category?: string;
       colors?: string[];
       sizes?: string[];
+      tags?: string[];
       existingImages?: string[];
     },
     files?: Express.Multer.File[],
@@ -119,6 +139,23 @@ export class ProductsService {
       where: { id },
       data: prismaUpdate,
     });
+
+    // Track product update event (for non-stock changes)
+    const hasNonStockChanges = Object.keys(updateData).some(key => key !== 'stock');
+    if (hasNonStockChanges) {
+      await this.prisma.eventLog.create({
+        data: {
+          tenantId: updatedProduct.tenantId,
+          storeId: updatedProduct.storeId,
+          eventType: 'PRODUCT_UPDATED',
+          payload: {
+            productId: updatedProduct.id,
+            productName: updatedProduct.name,
+            updatedFields: Object.keys(updateData),
+          },
+        },
+      }).catch(err => console.error('[PRODUCT_UPDATED_EVENT_ERROR]', err));
+    }
 
     // Log manual stock adjustment if changed
     if (data.stock !== undefined && data.stock !== existingProduct.stock) {

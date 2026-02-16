@@ -17,6 +17,8 @@ export default function SellerMessagesPage() {
     const [loading, setLoading] = useState(true);
     const [msgLoading, setMsgLoading] = useState(false);
     const [sending, setSending] = useState(false);
+    const [aiEnabled, setAiEnabled] = useState(store?.chatAiEnabled || false);
+    const [aiSuggesting, setAiSuggesting] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -111,6 +113,44 @@ export default function SellerMessagesPage() {
         }
     }, [messages]);
 
+    // Sync with store state
+    useEffect(() => {
+        if (store?.chatAiEnabled !== undefined) {
+            setAiEnabled(store.chatAiEnabled);
+        }
+    }, [store?.chatAiEnabled]);
+
+    const toggleAiMode = async () => {
+        if (!store) return;
+        const newState = !aiEnabled;
+        setAiEnabled(newState);
+        try {
+            const res = await api.post('/chat/toggle-ai', { storeId: store.id, enabled: newState });
+            // Update global store
+            useAuthStore.getState().setStore({ ...store, chatAiEnabled: res.data.chatAiEnabled });
+        } catch (error) {
+            console.error("Failed to toggle AI mode:", error);
+            setAiEnabled(!newState);
+        }
+    };
+
+    const handleSmartSuggest = async () => {
+        if (!selectedUserId || !store) return;
+        setAiSuggesting(true);
+        try {
+            const res = await api.post('/chat/ai-suggestion', {
+                storeId: store.id,
+                otherUserId: selectedUserId,
+                currentMessage: messages[messages.length - 1]?.content || ''
+            });
+            setNewMessage(res.data.suggestion);
+        } catch (error) {
+            console.error("Failed to get suggestion:", error);
+        } finally {
+            setAiSuggesting(false);
+        }
+    };
+
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newMessage.trim() || !selectedUserId || !store) return;
@@ -147,10 +187,29 @@ export default function SellerMessagesPage() {
 
     return (
         <div className="h-[calc(100vh-12rem)] flex flex-col space-y-6 lg:space-y-8">
-            <div className="flex justify-between items-end shrink-0">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shrink-0 px-4 lg:px-0">
                 <div>
-                    <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight px-4 lg:px-0">Messages</h1>
-                    <p className="text-slate-500 mt-1 text-xs lg:text-sm px-4 lg:px-0">Direct customer support management</p>
+                    <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">Messages</h1>
+                    <p className="text-slate-500 mt-1 text-xs lg:text-sm tracking-tight">Direct customer support management</p>
+                </div>
+
+                {/* AI Toggle Component */}
+                <div onClick={toggleAiMode} className={`group cursor-pointer flex items-center gap-3 px-4 py-2 rounded-2xl border transition-all duration-500 ${aiEnabled
+                    ? 'bg-emerald-50/50 border-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.1)]'
+                    : 'bg-slate-50 border-slate-100 hover:border-slate-200'}`}>
+                    <div className="flex flex-col items-end">
+                        <span className={`text-[9px] font-black tracking-widest uppercase transition-colors duration-500 ${aiEnabled ? 'text-emerald-500' : 'text-slate-400'}`}>
+                            {aiEnabled ? 'AI Response Active' : 'Manual Response Only'}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-900">
+                            BigT Support Engine
+                        </span>
+                    </div>
+                    <div className={`w-10 h-6 rounded-full p-1 transition-all duration-500 relative ${aiEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                        <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-500 flex items-center justify-center transform ${aiEnabled ? 'translate-x-4' : 'translate-x-0'}`}>
+                            {aiEnabled && <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" />}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -268,21 +327,36 @@ export default function SellerMessagesPage() {
 
                             {/* Footer */}
                             <form onSubmit={handleSend} className="p-4 lg:p-6 bg-slate-50/50 border-t border-slate-50">
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
-                                        placeholder="Type your reply here..."
-                                        className="w-full h-12 lg:h-14 pl-6 pr-16 bg-white border border-slate-100 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-200 transition-all text-slate-900 shadow-sm"
-                                    />
-                                    <button
-                                        type="submit"
-                                        disabled={sending || !newMessage.trim()}
-                                        className="absolute right-2 top-2 lg:top-2 w-8 h-8 lg:w-10 lg:h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-black transition-all disabled:opacity-50 shadow-lg shadow-slate-900/20"
-                                    >
-                                        {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                                    </button>
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={handleSmartSuggest}
+                                            disabled={aiSuggesting || !selectedUserId}
+                                            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-100 rounded-xl text-[9px] font-black text-slate-900 uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-500 transition-all shadow-sm disabled:opacity-50 group"
+                                        >
+                                            <div className={`w-1.5 h-1.5 rounded-full ${aiSuggesting ? 'bg-emerald-500 animate-ping' : 'bg-emerald-500'}`} />
+                                            {aiSuggesting ? 'BigT is thinking...' : 'Draft with BigT AI'}
+                                        </button>
+                                        <div className="h-px flex-1 bg-slate-100" />
+                                    </div>
+
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={newMessage}
+                                            onChange={(e) => setNewMessage(e.target.value)}
+                                            placeholder={aiEnabled ? "BigT is active and will auto-reply instantly..." : "Type your reply to the customer..."}
+                                            className="w-full h-12 lg:h-14 pl-6 pr-16 bg-white border border-slate-100 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-200 transition-all text-slate-900 shadow-sm"
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={sending || !newMessage.trim()}
+                                            className="absolute right-2 top-2 lg:top-2 w-8 h-8 lg:w-10 lg:h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-black transition-all disabled:opacity-50 shadow-lg shadow-slate-900/20"
+                                        >
+                                            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </>

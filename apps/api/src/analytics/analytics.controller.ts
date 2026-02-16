@@ -11,6 +11,11 @@ export class AnalyticsController {
         private storesService: StoresService
     ) { }
 
+    @Get('ai-status')
+    async getAiStatus() {
+        return this.aiService.getStatus();
+    }
+
     @Post('track')
     async track(@Body() body: { storeId: string; eventType: string; payload?: any; tenantId?: string }) {
         return this.analyticsService.trackEvent(body.storeId, body.eventType, body.payload, body.tenantId);
@@ -110,32 +115,72 @@ export class AnalyticsController {
 
     @Post('ai-chat/message')
     async postChatMessage(@Body() body: { storeId: string; message: string; conversationId?: string }) {
-        // Fetch rich context for BigT
+        console.log('[CHAT_MESSAGE] Received:', { storeId: body.storeId, message: body.message?.substring(0, 50), conversationId: body.conversationId });
+
+        // Build context gracefully — don't let one failure kill everything
+        const context: any = {
+            totalOrders: 0,
+            totalRevenue: 0,
+            totalProducts: 0,
+            topProducts: [],
+            funnel: {},
+            timeline: [],
+            inventory: { note: 'Inventory data unavailable' },
+            storeProfile: { name: 'Your Store' },
+        };
+
         try {
             const stats = await this.storesService.getStoreStats(body.storeId);
+            Object.assign(context, stats);
+            console.log('[CHAT_MESSAGE] Stats loaded');
+        } catch (err) {
+            console.warn('[CHAT_MESSAGE] Stats fetch failed (non-fatal):', err?.message || err);
+        }
+
+        try {
             const timeline = await this.analyticsService.getTimelineStats(body.storeId, 30);
+            context.timeline = timeline;
+        } catch (err) {
+            console.warn('[CHAT_MESSAGE] Timeline fetch failed (non-fatal):', err?.message || err);
+        }
 
-            // Fetch inventory data (stock levels + restock history)
+        try {
             const inventoryData = await this.analyticsService.getInventorySnapshot(body.storeId);
+            context.inventory = inventoryData;
+        } catch (err) {
+            console.warn('[CHAT_MESSAGE] Inventory fetch failed (non-fatal):', err?.message || err);
+        }
 
-            // Fetch store profile info (for marketing context)
+        try {
             const storeProfile = await this.storesService.findOne(body.storeId);
-
-            const context = {
-                ...stats,
-                timeline,
-                inventory: inventoryData,
-                storeProfile: {
-                    name: storeProfile.name,
-                    subdomain: storeProfile.subdomain,
-                    theme: storeProfile.theme,
-                    plan: storeProfile.plan,
-                }
+            context.storeProfile = {
+                name: storeProfile.name,
+                subdomain: storeProfile.subdomain,
+                theme: storeProfile.theme,
+                plan: storeProfile.plan,
             };
+        } catch (err) {
+            console.warn('[CHAT_MESSAGE] Store profile fetch failed (non-fatal):', err?.message || err);
+        }
 
-            return await this.aiService.processUserMessage(body.storeId, body.message, context, body.conversationId);
+        // CRITICAL: Trim context to save tokens and stay within TPM limits
+        if (context.timeline && context.timeline.length > 7) {
+            context.timeline = context.timeline.slice(-7); // Only last 7 days
+        }
+        if (context.topProducts && context.topProducts.length > 5) {
+            context.topProducts = context.topProducts.slice(0, 5);
+        }
+        if (context.inventory && context.inventory.snapshot && context.inventory.snapshot.length > 10) {
+            context.inventory.snapshot = context.inventory.snapshot.slice(0, 10);
+        }
+
+        try {
+            console.log('[CHAT_MESSAGE] Sending to AI with trimmed context');
+            const result = await this.aiService.processUserMessage(body.storeId, body.message, context, body.conversationId);
+            console.log('[CHAT_MESSAGE] AI responded successfully');
+            return result;
         } catch (error) {
-            console.error('[CHAT_MESSAGE_ERROR]', error);
+            console.error('[CHAT_MESSAGE_AI_ERROR]', error);
             throw new InternalServerErrorException('Failed to process message');
         }
     }

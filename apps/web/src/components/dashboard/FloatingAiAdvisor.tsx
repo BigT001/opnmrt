@@ -75,8 +75,8 @@ export function FloatingAiAdvisor({ storeId }: { storeId: string }) {
                                     className={`flex ${msg.role === 'ai' ? 'justify-start' : 'justify-end'}`}
                                 >
                                     <div className={`max-w-[85%] flex gap-2 ${msg.role === 'ai' ? 'flex-row' : 'flex-row-reverse'}`}>
-                                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${msg.role === 'ai' ? 'bg-primary text-white' : 'bg-slate-900 text-white'}`}>
-                                            {msg.role === 'ai' ? <Sparkles className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${msg.role === 'ai' ? '' : 'bg-slate-900 text-white'}`}>
+                                            {msg.role === 'ai' ? <img src="/bigt-avatar.svg" className="w-full h-full rounded-lg object-cover shadow-sm" alt="BigT" /> : <User className="w-3.5 h-3.5" />}
                                         </div>
                                         <div className={`p-3 rounded-2xl text-[12px] font-medium leading-relaxed ${msg.role === 'ai' ? 'bg-white text-slate-700 shadow-sm' : 'bg-primary text-white shadow-md shadow-emerald-200'}`}>
                                             {msg.content}

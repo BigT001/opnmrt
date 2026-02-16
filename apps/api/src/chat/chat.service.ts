@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChatGateway } from './chat.gateway';
+import { ChatAiService } from './chat-ai.service';
 
 @Injectable()
 export class ChatService {
   constructor(
     private prisma: PrismaService,
     private chatGateway: ChatGateway,
+    private ai: ChatAiService,
   ) { }
 
   async sendMessage(
@@ -48,12 +50,100 @@ export class ChatService {
       },
     });
 
-    // Notify recipient via WebSocket
+    // Notify recipients via WebSocket
     if (recipientId) {
       this.chatGateway.sendToUser(recipientId, 'newMessage', message);
     }
 
+    // AI AUTO-REPLY LOGIC:
+    // If a BUYER sends a message to a STORE, and that store has AI enabled, generate a response.
+    // We execute this in the background (no await) to keep the initial message send "instant".
+    if (user.role === 'BUYER' && recipientId) {
+      this.handleAiAutoReply(userId, data.storeId, data.content, recipientId);
+    }
+
     return message;
+  }
+
+  private async handleAiAutoReply(buyerId: string, storeId: string, content: string, ownerId: string) {
+    try {
+      const store = await this.prisma.store.findUnique({
+        where: { id: storeId },
+        // @ts-ignore
+        select: { chatAiEnabled: true, ownerId: true }
+      });
+
+      // @ts-ignore
+      if (store?.chatAiEnabled) {
+        // Get last few messages for context
+        const history = await this.prisma.message.findMany({
+          where: {
+            storeId: storeId,
+            OR: [
+              { senderId: buyerId, recipientId: ownerId },
+              { senderId: ownerId, recipientId: buyerId }
+            ]
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 5
+        });
+
+        // Generate AI response
+        const aiResponse = await this.ai.generateSupportResponse({
+          storeId: storeId,
+          buyerId: buyerId,
+          messageHistory: history.reverse(),
+          currentMessage: content
+        });
+
+        // Send the AI response as the store owner
+        if (aiResponse) {
+          setTimeout(async () => {
+            const aiMsg = await this.sendMessage(ownerId, {
+              content: aiResponse,
+              storeId: storeId,
+              recipientId: buyerId
+            });
+
+            // Notify the store owner dashboard as well
+            this.chatGateway.sendToUser(ownerId, 'newMessage', aiMsg);
+          }, 500); // Slightly reduced delay
+        }
+      }
+    } catch (err) {
+      console.error('[AI_AUTO_REPLY_ERROR]', err);
+    }
+  }
+
+  async toggleAiMode(storeId: string, enabled: boolean) {
+    return this.prisma.store.update({
+      where: { id: storeId },
+      // @ts-ignore - Temporary suppression: field exists in DB but Prisma client needs manual refresh (EPERM on generate)
+      data: { chatAiEnabled: enabled },
+      // @ts-ignore - Temporary suppression: field exists in DB but Prisma client needs manual refresh
+      select: { id: true, chatAiEnabled: true }
+    });
+  }
+
+  async getAiSuggestion(storeId: string, otherUserId: string, currentMessage: string) {
+    const history = await this.prisma.message.findMany({
+      where: {
+        storeId,
+        OR: [
+          { senderId: otherUserId },
+          { recipientId: otherUserId }
+        ]
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    });
+
+    return this.ai.generateSupportResponse({
+      storeId,
+      buyerId: otherUserId,
+      messageHistory: history.reverse(),
+      currentMessage
+    });
   }
 
   async getMessages(userId: string, storeId: string) {

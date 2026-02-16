@@ -78,6 +78,28 @@ export class AnalyticsService {
                             icon = '📉';
                             link = '/dashboard/seller/inventory';
                             break;
+                        case 'PRODUCT_CREATED':
+                        case 'NEW_PRODUCT_ADDED':
+                            const prod = event.payload as any;
+                            title = 'New Product Added 🎉';
+                            message = `"${prod?.productName || prod?.name || 'A new product'}" was just added to inventory${prod?.initialStock ? ` with ${prod.initialStock} units` : ''}.`;
+                            icon = '📦';
+                            link = '/dashboard/seller/products';
+                            break;
+                        case 'PRODUCT_UPDATED':
+                            title = 'Product Updated';
+                            message = `"${(event.payload as any)?.productName || 'A product'}" details were modified.`;
+                            icon = '✏️';
+                            link = '/dashboard/seller/products';
+                            break;
+                        case 'PRODUCT_RESTOCKED':
+                        case 'STOCK_ADJUSTED_MANUALLY':
+                            const restockProd = event.payload as any;
+                            title = 'Stock Replenished 📈';
+                            message = `"${restockProd?.productName || 'A product'}" restocked${restockProd?.quantityAdded ? ` (+${restockProd.quantityAdded} units)` : ''}.`;
+                            icon = '📦';
+                            link = '/dashboard/seller/inventory';
+                            break;
                         case 'USER_LOGIN':
                             title = 'Security Alert';
                             message = `${(event.payload as any)?.userName || 'A user'} logged in to the dashboard.`;
@@ -85,7 +107,7 @@ export class AnalyticsService {
                             break;
                         default:
                             title = event.eventType.replace(/_/g, ' ');
-                            message = 'A new activity was recorded in your store.';
+                            message = `A store activity (${title.toLowerCase()}) was recorded.`;
                             break;
                     }
 
@@ -181,10 +203,22 @@ export class AnalyticsService {
             const lowStockProducts = products.filter(p => p.stock <= (p.inventory?.lowStockAlert || 5));
             const outOfStockProducts = products.filter(p => p.stock === 0);
 
+            // Detect recently added products (within last 7 days)
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const recentlyAddedProducts = products.filter(p => new Date(p.updatedAt) > sevenDaysAgo);
+
             return {
                 totalProducts: products.length,
                 outOfStockCount: outOfStockProducts.length,
                 lowStockCount: lowStockProducts.length,
+                recentlyAddedCount: recentlyAddedProducts.length,
+                recentlyAddedProducts: recentlyAddedProducts.map(p => ({
+                    name: p.name,
+                    id: p.id,
+                    currentStock: p.stock,
+                    addedAt: p.updatedAt,
+                })),
                 outOfStockProducts: outOfStockProducts.map(p => ({ name: p.name, id: p.id })),
                 lowStockProducts: lowStockProducts.map(p => ({
                     name: p.name,

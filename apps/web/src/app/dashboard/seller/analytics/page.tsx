@@ -11,22 +11,26 @@ import {
     Plus,
     MessageSquare,
     Search,
-    Clock,
+    CheckCircle2,
+    AlertCircle,
+    Info,
+    Bell,
+    MoreHorizontal,
+    Lightbulb,
+    ArrowRight,
     Zap,
+    Clock,
     ChevronRight,
     LayoutDashboard,
     ShoppingBag,
     Users,
-    Package,
-    ArrowRight,
-    Lightbulb,
-    History,
-    MoreHorizontal
+    Package
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
+import { FormattedMessage } from '@/components/FormattedMessage';
 
 // --- Components ---
 
@@ -34,8 +38,8 @@ const SidebarItem = ({ active, title, onClick, icon: Icon = MessageSquare, date 
     <button
         onClick={onClick}
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${active
-                ? 'bg-slate-900 text-white shadow-lg'
-                : 'text-slate-500 hover:bg-slate-100'
+            ? 'bg-slate-900 text-white shadow-lg'
+            : 'text-slate-500 hover:bg-slate-100'
             }`}
     >
         <Icon size={14} className={active ? 'text-indigo-400' : 'text-slate-400'} />
@@ -47,13 +51,13 @@ const SidebarItem = ({ active, title, onClick, icon: Icon = MessageSquare, date 
     </button>
 );
 
-const AdviceCard = ({ content }: { content: string }) => (
+const AdviceCard = ({ content, onDiscuss }: { content: string, onDiscuss: (content: string) => void }) => (
     <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 group hover:border-indigo-300 transition-all cursor-default"
+        className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 group hover:border-indigo-300 transition-all cursor-default relative overflow-hidden"
     >
-        <div className="flex gap-3">
+        <div className="flex gap-3 mb-3">
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0 shadow-sm text-indigo-600">
                 <Lightbulb size={14} />
             </div>
@@ -61,45 +65,80 @@ const AdviceCard = ({ content }: { content: string }) => (
                 {content}
             </p>
         </div>
+        <button
+            onClick={() => onDiscuss(content)}
+            className="w-full py-2 bg-white border border-indigo-100 rounded-xl text-[10px] font-bold text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center gap-2 group-hover:shadow-md"
+        >
+            <span>Continue in Chat</span>
+            <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+        </button>
     </motion.div>
 );
 
-const IntelligenceStream = ({ advices, notifications }: any) => (
-    <div className="flex flex-col h-full space-y-8 overflow-y-auto no-scrollbar pt-2">
-        <div>
-            <div className="flex items-center justify-between mb-4">
+const IntelligenceStream = ({ advices, aiStatus, onDiscussAdvice, notifications }: any) => (
+    <div className="flex flex-col h-full overflow-hidden pt-2 pb-6">
+        {/* Advice Section - ON TOP */}
+        <div className="flex-1 flex flex-col min-h-0 mb-8 overflow-hidden">
+            <div className="flex items-center justify-between mb-4 shrink-0">
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                    <Zap size={12} className="text-amber-500" /> Live Advice Engine
+                    <Zap size={12} className="text-amber-500 fill-amber-500" /> Live Advice Engine
                 </h4>
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            </div>
-            <div className="space-y-3">
-                {advices.length > 0 ? (
-                    advices.map((a: string, i: number) => <AdviceCard key={i} content={a} />)
+                {aiStatus.circuitBroken ? (
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        <span className="text-[8px] font-black text-amber-600 uppercase tracking-tighter">Paused</span>
+                    </div>
                 ) : (
-                    <p className="text-[10px] text-slate-400 italic font-medium px-2">Gathering fresh store insights...</p>
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter">Live</span>
+                    </div>
                 )}
+            </div>
+            <div className="flex-1 overflow-y-auto no-scrollbar space-y-3 pr-1">
+                <AnimatePresence mode="popLayout">
+                    {advices.length > 0 ? (
+                        advices.map((a: string, i: number) => (
+                            <AdviceCard key={i} content={a} onDiscuss={onDiscussAdvice} />
+                        ))
+                    ) : (
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-[10px] text-slate-400 italic font-medium px-2"
+                        >
+                            Gathering fresh store insights...
+                        </motion.p>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
 
-        <div>
-            <div className="flex items-center justify-between mb-4">
+        {/* Notifications Section - BELOW */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex items-center justify-between mb-4 shrink-0">
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                    <History size={12} /> Pulse Feed
+                    <Bell size={12} className="text-primary" /> Activity Stream
                 </h4>
             </div>
-            <div className="space-y-5 px-1">
-                {notifications.slice(0, 8).map((n: any) => (
-                    <div key={n.id} className="flex gap-3">
-                        <div className="w-1 h-1 rounded-full bg-slate-300 mt-1.5 shrink-0" />
-                        <div>
-                            <p className="text-[10px] text-slate-700 font-bold leading-snug">{n.message}</p>
-                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 mt-1 block">
-                                {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
+            <div className="flex-1 overflow-y-auto no-scrollbar space-y-3 pr-1">
+                {notifications.length > 0 ? (
+                    notifications.map((n: any) => (
+                        <div key={n.id} className="p-4 bg-slate-50 border border-slate-50 rounded-2xl hover:border-slate-200 hover:bg-white transition-all group cursor-default shadow-sm hover:shadow-md">
+                            <div className="flex gap-3">
+                                <span className="text-xl opacity-80 group-hover:scale-110 transition-transform">{n.icon}</span>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[10px] font-black text-slate-900 leading-tight mb-1 uppercase tracking-tight">{n.title}</p>
+                                    <p className="text-[11px] text-slate-500 leading-normal line-clamp-2 font-medium">{n.message}</p>
+                                </div>
+                            </div>
                         </div>
+                    ))
+                ) : (
+                    <div className="p-8 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 text-center">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Quiet</p>
                     </div>
-                ))}
+                )}
             </div>
         </div>
     </div>
@@ -107,8 +146,19 @@ const IntelligenceStream = ({ advices, notifications }: any) => (
 
 // --- Main Page ---
 
+const QUICK_PROMPTS = [
+    { label: 'Inventory Audit', prompt: 'Run a full inventory audit and tell me which items are trending down.' },
+    { label: 'Traffic Boost', prompt: 'How can I increase traffic to my store this week?' },
+    { label: 'Trend Analysis', prompt: 'What are the top 3 trending products in my category right now?' },
+    { label: 'Sales Velocity', prompt: 'Calculate my daily sales velocity for the last 7 days.' },
+    { label: 'Future Predictions', prompt: 'Based on my recent sales, predict my revenue for next month.' },
+    { label: 'Marketing Copy', prompt: 'Write an email draft for a "flash sale" on my latest collection.' },
+    { label: 'Slow Stock', prompt: 'Which products haven\'t sold in the last 30 days?' },
+    { label: 'Growth Plan', prompt: 'Give me 3 actionable tips to grow my business today.' },
+];
+
 export default function AnalyticsPage() {
-    const { store } = useAuthStore();
+    const { store, user } = useAuthStore();
     const [conversations, setConversations] = useState<any[]>([]);
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
     const [messages, setMessages] = useState<any[]>([]);
@@ -116,14 +166,32 @@ export default function AnalyticsPage() {
     const [loading, setLoading] = useState(false);
     const [advices, setAdvices] = useState<string[]>([]);
     const [notifications, setNotifications] = useState<any[]>([]);
+    const [aiStatus, setAiStatus] = useState<any>({ ready: true, circuitBroken: false });
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Initial Load
+    // Initial Load + Real-time polling
     useEffect(() => {
         if (!store?.id) return;
         fetchConversations();
         fetchNotifications();
         fetchLiveAdvice();
+        fetchAiStatus();
+
+        // 1. Poll for notifications frequently (every 10 seconds) - DB only
+        const notifyInterval = setInterval(() => {
+            fetchNotifications();
+            fetchAiStatus();
+        }, 10000);
+
+        // 2. Poll for AI advice occasionally (every 5 minutes) - AI limited
+        const adviceInterval = setInterval(() => {
+            fetchLiveAdvice();
+        }, 300000);
+
+        return () => {
+            clearInterval(notifyInterval);
+            clearInterval(adviceInterval);
+        };
     }, [store?.id]);
 
     useEffect(() => {
@@ -159,6 +227,13 @@ export default function AnalyticsPage() {
         } catch (err) { console.warn('Advice failed', err); }
     };
 
+    const fetchAiStatus = async () => {
+        try {
+            const res = await api.get('/analytics/ai-status');
+            setAiStatus(res.data);
+        } catch (err) { console.warn('Status check failed', err); }
+    };
+
     const switchSession = async (id: string) => {
         setCurrentSessionId(id);
         setLoading(true);
@@ -186,9 +261,9 @@ export default function AnalyticsPage() {
         }
     };
 
-    const handleSendMessage = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const userMsg = input.trim();
+    const handleSendMessage = async (e?: React.FormEvent, directMessage?: string) => {
+        if (e) e.preventDefault();
+        const userMsg = (directMessage || input).trim();
         if (!userMsg || loading) return;
 
         setInput('');
@@ -213,25 +288,34 @@ export default function AnalyticsPage() {
         }
     };
 
+    const handleDiscussAdvice = (advice: string) => {
+        // Clean up advice if it is already quoted
+        const cleanAdvice = advice.replace(/^"|"$/g, '');
+        const prompt = `I'd like to discuss this advice: "${cleanAdvice}". What specific steps should I take?`;
+        setInput(prompt);
+        // Optional: Auto-submit
+        // handleSendMessage({ preventDefault: () => {} } as any, prompt);
+    };
+
     return (
-        <div className="fixed inset-0 top-20 left-24 right-0 bottom-0 flex bg-white font-sans overflow-hidden">
+        <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 lg:left-24 flex bg-white font-sans overflow-hidden transition-all duration-500">
             {/* Left Sidebar: Session History */}
-            <div className="w-72 border-r border-slate-100 flex flex-col bg-slate-50/50 p-4 shrink-0">
+            <div className="w-72 border-r border-slate-50/50 flex flex-col bg-slate-50/20 p-6 shrink-0 transition-all duration-300">
                 <button
                     onClick={handleNewChat}
-                    className="w-full mb-6 flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-2xl hover:border-indigo-300 hover:shadow-md transition-all group"
+                    className="w-full mb-10 flex items-center justify-between px-6 py-4 bg-white border border-slate-100 rounded-[2rem] hover:border-emerald-200 hover:shadow-2xl hover:shadow-emerald-900/10 transition-all group"
                 >
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 group-hover:scale-105 transition-transform">
-                            <Plus size={18} />
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-2xl bg-slate-900 flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-105 group-hover:bg-emerald-600">
+                            <Plus size={20} />
                         </div>
                         <span className="text-[12px] font-black uppercase tracking-widest text-slate-800">New Analysis</span>
                     </div>
                 </button>
 
-                <div className="flex-1 overflow-y-auto no-scrollbar space-y-6">
+                <div className="flex-1 overflow-y-auto no-scrollbar space-y-8">
                     <div>
-                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 px-2">Store Management</p>
+                        <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4 px-2">Store Records</p>
                         <div className="space-y-1">
                             {conversations.map(c => (
                                 <SidebarItem
@@ -246,49 +330,54 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
 
-                <div className="mt-auto px-2 pt-4 border-t border-slate-100 italic opacity-50">
-                    <p className="text-[9px] font-bold text-slate-400">Powered by BigT Intelligence v2.0</p>
+                <div className="mt-auto px-2 pt-6 border-t border-slate-100">
+                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest leading-loose">Powered by<br /><span className="text-emerald-500">BigT Intelligence v3.0</span></p>
                 </div>
             </div>
 
             {/* Center Area: Chat Interface */}
-            <div className="flex-1 flex flex-col relative bg-white">
-                {/* Minimal Header */}
-                <div className="px-8 py-4 border-b border-slate-50 flex justify-between items-center shrink-0">
-                    <div className="flex items-center gap-3">
-                        <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">
-                            {conversations.find(c => c.id === currentSessionId)?.title || 'Analysis Arena'}
-                        </h3>
-                        <div className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase rounded-full">Secure Context</div>
-                    </div>
-                </div>
-
+            <div className="flex-1 flex flex-col relative bg-white overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.02)]">
                 {/* Messages Arena */}
-                <div className="flex-1 overflow-y-auto p-10 space-y-12 no-scrollbar scroll-smooth">
+                <div className="flex-1 overflow-y-auto p-8 lg:p-14 space-y-12 no-scrollbar scroll-smooth relative">
+                    {/* Background decoration */}
+                    <div className="absolute inset-0 bg-[radial-gradient(#f8fafc_2px,transparent_2px)] [background-size:40px_40px] opacity-60 pointer-events-none" />
+
+                    {loading && messages.length === 0 && (
+                        <div className="h-full flex flex-col items-center justify-center space-y-4">
+                            <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Syncing with history...</p>
+                        </div>
+                    )}
+
                     {messages.length === 0 && !loading && (
-                        <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto pb-20">
-                            <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center mb-8 shadow-2xl rotate-3">
-                                <Bot size={36} className="text-white" />
-                            </div>
-                            <h2 className="text-3xl font-black text-slate-900 tracking-tighter mb-4 leading-none">
-                                Ready to analyze, {store?.ownerName || 'Samstar'}?
+                        <div className="h-full flex flex-col items-center justify-center text-center max-w-2xl mx-auto pb-20 relative z-10 px-6">
+                            <h2 className="text-6xl font-black text-slate-900 tracking-tighter mb-2 leading-tight">
+                                <span className="text-slate-300 font-medium">Meet</span> <span className="text-emerald-600">BigT</span>
                             </h2>
-                            <p className="text-sm font-bold text-slate-400 leading-relaxed mb-10">
-                                I've mapped your store's performance. Ask me about inventory gaps, marketing ROI, or next month's projections.
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-8">
+                                Your Personal Store Manager
                             </p>
-                            <div className="grid grid-cols-2 gap-3 w-full">
-                                {[
-                                    "Run inventory audit",
-                                    "Suggest traffic plan",
-                                    "Analyze top trends",
-                                    "Check daily velocity"
-                                ].map(q => (
+
+                            <div className="max-w-xl mx-auto mb-16 space-y-3">
+                                <p className="text-base font-medium text-slate-800 leading-relaxed">
+                                    I track your sales as they happen to help you sell more.
+                                </p>
+                                <p className="text-sm text-slate-500 leading-relaxed">
+                                    Ask me anything about your stock, money, or what to do next to grow your business.
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-4xl mx-auto">
+                                {QUICK_PROMPTS.map((q, i) => (
                                     <button
-                                        key={q}
-                                        onClick={() => setInput(q)}
-                                        className="p-4 bg-slate-50 rounded-2xl text-[11px] font-bold text-slate-700 hover:bg-slate-900 hover:text-white transition-all text-left flex items-center justify-between group"
+                                        key={i}
+                                        onClick={() => handleSendMessage({ preventDefault: () => { } } as any, q.prompt)}
+                                        className="group p-6 bg-white border border-slate-100 hover:border-emerald-300 hover:bg-emerald-50/20 rounded-[2rem] text-left transition-all duration-300 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1"
                                     >
-                                        {q} <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                                        <div className="flex flex-col h-full justify-between gap-3">
+                                            <p className="text-[11px] font-black text-emerald-600 uppercase tracking-widest">{q.label}</p>
+                                            <p className="text-[11px] text-slate-500 font-medium leading-relaxed line-clamp-2">{q.prompt}</p>
+                                        </div>
                                     </button>
                                 ))}
                             </div>
@@ -300,78 +389,124 @@ export default function AnalyticsPage() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             key={idx}
-                            className={`flex gap-8 max-w-4xl mx-auto ${msg.role === 'user' ? 'justify-end' : ''}`}
+                            className={`flex gap-4 w-full px-4 mb-6 ${msg.role === 'user' ? 'justify-end' : ''}`}
                         >
                             {msg.role === 'assistant' && (
-                                <div className="w-10 h-10 rounded-2xl bg-slate-900 shadow-xl flex items-center justify-center shrink-0 border border-slate-800">
-                                    <Bot size={20} className="text-white" />
+                                <div className="w-10 h-10 rounded-2xl shadow-xl flex items-center justify-center shrink-0 border border-indigo-400 overflow-hidden bg-white">
+                                    <img src="/bigt-avatar.svg" className="w-full h-full object-cover" alt="BigT" />
                                 </div>
                             )}
 
-                            <div className={`space-y-3 max-w-[85%] ${msg.role === 'user' ? 'text-right' : ''}`}>
-                                <div className={`text-[14px] leading-relaxed whitespace-pre-wrap font-medium ${msg.role === 'user'
-                                        ? 'bg-indigo-600 text-white p-5 rounded-[2rem] rounded-tr-none shadow-xl shadow-indigo-100'
-                                        : 'text-slate-800 pt-2'
+                            <div className={`space-y-1.5 w-full flex flex-col ${msg.role === 'user' ? 'items-end' : ''}`}>
+                                {msg.role === 'assistant' && (
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 px-1">BigT Intelligence</p>
+                                )}
+                                <div className={`max-w-[92%] text-sm leading-relaxed ${msg.role === 'user'
+                                    ? 'bg-slate-900 text-white p-5 rounded-[2rem] rounded-tr-none shadow-sm font-medium'
+                                    : 'bg-white border border-slate-100 p-6 rounded-[2rem] rounded-tl-none shadow-sm w-full'
                                     }`}>
-                                    {msg.content}
+                                    {msg.role === 'assistant' ? (
+                                        <FormattedMessage content={msg.content} />
+                                    ) : (
+                                        <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                                    )}
                                 </div>
-                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-300 px-1">
-                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
+                                <div className={`flex items-center gap-2 px-2 mt-1 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-300">
+                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                    {msg.role === 'assistant' && (
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                                            <span className="text-[8px] font-bold text-emerald-500 uppercase tracking-tighter">Verified Data</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {msg.role === 'user' && (
-                                <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100">
-                                    <UserIcon size={18} className="text-indigo-600" />
+                                <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
+                                    <UserIcon size={18} className="text-slate-600" />
                                 </div>
                             )}
                         </motion.div>
                     ))}
 
                     {loading && (
-                        <div className="flex gap-8 max-w-4xl mx-auto animate-pulse">
-                            <div className="w-10 h-10 rounded-2xl bg-slate-900 flex items-center justify-center">
-                                <Bot size={20} className="text-white" />
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex gap-4 w-full pr-12"
+                        >
+                            <div className="w-10 h-10 rounded-2xl shadow-xl flex items-center justify-center shrink-0 border border-slate-100 overflow-hidden bg-white">
+                                <img src="/bigt-avatar.svg" className="w-full h-full object-cover animate-pulse" alt="Thinking..." />
                             </div>
-                            <div className="flex items-center gap-3 pt-3">
-                                <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Processing live data...</span>
+                            <div className="space-y-3 pt-2">
+                                <div className="flex gap-1.5 px-6 py-4 bg-white border border-slate-100 rounded-[2rem] rounded-tl-none shadow-sm">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.3s]" />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.15s]" />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" />
+                                </div>
+                                <p className="text-[8px] font-black uppercase tracking-widest text-slate-300 px-3 animate-pulse">BigT is analyzing your data...</p>
                             </div>
-                        </div>
+                        </motion.div>
                     )}
                     <div ref={messagesEndRef} />
                 </div>
 
                 {/* Input Area */}
-                <div className="p-8 bg-white border-t border-slate-50 shrink-0">
-                    <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative group">
-                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
-                            <Sparkles size={18} />
+                <div className="p-4 border-t border-slate-50 relative shrink-0 z-20 bg-white">
+                    <form
+                        onSubmit={(e) => {
+                            // Regular submit logic 
+                            handleSendMessage(e);
+                            // Reset height on submit
+                            const textarea = e.currentTarget.querySelector('textarea');
+                            if (textarea) textarea.style.height = 'auto';
+                        }}
+                        className="relative max-w-2xl mx-auto flex items-end gap-2 p-2 bg-slate-50 border border-slate-100 rounded-[1.5rem] focus-within:ring-2 focus-within:ring-indigo-100 focus-within:border-indigo-200 transition-all shadow-sm"
+                    >
+                        <div className="pl-3 pb-3 text-slate-400">
+                            <Sparkles size={18} className="text-slate-300" />
                         </div>
-                        <input
-                            type="text"
+                        <textarea
                             value={input}
-                            onChange={(e) => setInput(e.target.value)}
+                            onChange={(e) => {
+                                setInput(e.target.value);
+                                e.target.style.height = 'auto';
+                                e.target.style.height = `${Math.min(e.target.scrollHeight, 150)}px`;
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSendMessage(e as any);
+                                    e.currentTarget.style.height = 'auto'; // Reset height
+                                }
+                            }}
                             placeholder="Message BigT about your business..."
-                            className="w-full bg-slate-50 border-2 border-transparent rounded-[2rem] pl-16 pr-16 py-6 text-sm font-bold focus:outline-none focus:bg-white focus:border-indigo-600/10 focus:shadow-2xl transition-all shadow-inner placeholder:text-slate-400"
+                            className="flex-1 bg-transparent border-0 focus:ring-0 text-slate-800 placeholder-slate-400 font-medium text-sm py-3 px-2 resize-none max-h-[150px] overflow-y-auto"
+                            rows={1}
+                            style={{ height: 'auto', minHeight: '44px' }}
                         />
-                        <button
-                            type="submit"
-                            disabled={!input.trim() || loading}
-                            className="absolute right-3 top-3 bottom-3 px-6 bg-slate-900 hover:bg-slate-800 text-white rounded-[1.5rem] disabled:opacity-30 disabled:grayscale transition-all shadow-lg active:scale-95 flex items-center justify-center"
-                        >
-                            <Send size={18} />
-                        </button>
+                        <div className="pb-1 pr-1">
+                            <button
+                                type="submit"
+                                disabled={!input.trim() || loading}
+                                className="w-10 h-10 flex items-center justify-center bg-slate-900 text-white rounded-full hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                            >
+                                {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                            </button>
+                        </div>
                     </form>
-                    <p className="text-[9px] text-center mt-4 text-slate-400 font-bold uppercase tracking-widest leading-none">
+                    <p className="text-[10px] text-center text-slate-300 font-bold uppercase tracking-widest mt-3">
                         Analysis based on real-time database logs. Factual and data-driven only.
                     </p>
                 </div>
             </div>
 
             {/* Right Pane: Intelligence Stream */}
-            <div className="w-80 border-l border-slate-100 bg-white flex flex-col p-6 shrink-0 z-10">
-                <IntelligenceStream advices={advices} notifications={notifications} />
+            <div className="w-88 border-l border-slate-50 bg-white flex flex-col p-8 shrink-0 z-10 hidden xl:flex">
+                <IntelligenceStream advices={advices} aiStatus={aiStatus} onDiscussAdvice={handleDiscussAdvice} notifications={notifications} />
             </div>
         </div>
     );

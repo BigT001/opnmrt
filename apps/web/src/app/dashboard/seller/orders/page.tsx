@@ -51,8 +51,14 @@ export default function OrdersPage() {
     }, []);
 
     const filteredOrders = orders.filter(order => {
+        const s = order.status.toLowerCase();
         if (filter === 'All Orders') return true;
-        return order.status.toLowerCase() === filter.toLowerCase();
+
+        // Custom mapping for tabs
+        if (filter === 'Processing') return ['processing', 'paid', 'pending'].includes(s);
+        if (filter === 'Delivered') return ['delivered', 'completed'].includes(s);
+
+        return s === filter.toLowerCase();
     });
 
     const getCustomerHistory = (currentOrder: Order) => {
@@ -85,10 +91,24 @@ export default function OrdersPage() {
 
     const counts = {
         'All Orders': orders.length,
-        'Processing': orders.filter(o => o.status.toLowerCase() === 'processing').length,
+        'Processing': orders.filter(o => ['processing', 'paid', 'pending'].includes(o.status.toLowerCase())).length,
         'Shipped': orders.filter(o => o.status.toLowerCase() === 'shipped').length,
-        'Delivered': orders.filter(o => o.status.toLowerCase() === 'delivered' || o.status.toLowerCase() === 'paid').length,
+        'Delivered': orders.filter(o => ['delivered', 'completed'].includes(o.status.toLowerCase())).length,
         'Cancelled': orders.filter(o => o.status.toLowerCase() === 'cancelled').length,
+    };
+
+    const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+        try {
+            setLoading(true);
+            await api.patch(`/orders/${orderId}/status`, { status: newStatus });
+            // Update local state
+            setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+        } catch (error) {
+            console.error('Failed to update status:', error);
+            alert('Failed to update status');
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (loading) {
@@ -227,7 +247,7 @@ export default function OrdersPage() {
                                                                         <div key={hist.id} className="flex items-center justify-between text-xs p-2 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-slate-100">
                                                                             <div className="flex items-center gap-2">
                                                                                 <div className={`w-2 h-2 rounded-full ${hist.status === 'CANCELLED' ? 'bg-red-400' :
-                                                                                        hist.status === 'PAID' ? 'bg-emerald-400' : 'bg-slate-300'
+                                                                                    hist.status === 'PAID' ? 'bg-emerald-400' : 'bg-slate-300'
                                                                                     }`} />
                                                                                 <div className="flex flex-col">
                                                                                     <span className="font-bold text-slate-700">#{hist.id.slice(-6).toUpperCase()}</span>
@@ -250,6 +270,34 @@ export default function OrdersPage() {
                                                                     </p>
                                                                 </div>
                                                             )}
+                                                        </div>
+
+                                                        {/* Management Actions */}
+                                                        <div>
+                                                            <h3 className="text-[10px] uppercase tracking-widest font-black text-slate-400 mb-4 flex items-center gap-2">
+                                                                <Package className="w-4 h-4" /> Manage Order
+                                                            </h3>
+                                                            <div className="bg-white p-4 rounded-xl border border-slate-100 space-y-3">
+                                                                <p className="text-xs text-slate-500 font-medium">Update Order Status</p>
+                                                                <div className="grid grid-cols-2 gap-2">
+                                                                    {['PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((action) => (
+                                                                        <button
+                                                                            key={action}
+                                                                            onClick={() => handleStatusUpdate(order.id, action)}
+                                                                            disabled={order.status === action}
+                                                                            className={`px-3 py-2 rounded-lg text-[10px] font-bold border transition-all ${order.status === action
+                                                                                ? 'bg-slate-100 text-slate-400 border-transparent cursor-default'
+                                                                                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                                                                                }`}
+                                                                        >
+                                                                            {action}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                                <p className="text-[10px] text-slate-400 leading-relaxed pt-2">
+                                                                    Manually updating the status will notify the customer via email (if configured).
+                                                                </p>
+                                                            </div>
                                                         </div>
 
                                                     </div>
