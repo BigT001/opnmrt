@@ -59,8 +59,16 @@ export const useCartStore = create<CartState>()(
                 );
 
                 // Track analytics
-                import('@/lib/analytics').then(({ trackEvent, ANALYTICS_EVENTS }) => {
-                    trackEvent(item.storeId, ANALYTICS_EVENTS.ADD_TO_CART, { productId: item.id, quantity });
+                import('@/lib/analytics').then(async ({ trackEvent, ANALYTICS_EVENTS }) => {
+                    const { useAuthStore } = await import('./useAuthStore');
+                    const user = useAuthStore.getState().user;
+                    trackEvent(item.storeId, ANALYTICS_EVENTS.ADD_TO_CART, {
+                        productId: item.id,
+                        productName: item.name,
+                        quantity,
+                        userName: user?.name,
+                        customerName: user?.name // For backend consistency
+                    });
                 });
 
                 if (existingItem) {

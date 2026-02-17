@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../common/email.service';
+import { RealtimeService } from '../realtime/realtime.service';
 
 @Injectable()
 export class OrdersService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
+    private realtime: RealtimeService,
   ) { }
 
   async findByBuyerId(buyerId: string) {
@@ -253,10 +255,40 @@ export class OrdersService {
             },
           });
         }
+
+        // Record ORDER_PLACED event for notifications
+        await tx.eventLog.create({
+          data: {
+            tenantId: existingOrder.tenantId,
+            storeId: existingOrder.storeId,
+            eventType: 'ORDER_PLACED',
+            payload: {
+              orderId: existingOrder.id,
+              amount: Number(existingOrder.totalAmount),
+              customerName: result.buyer.name || 'A Customer',
+              customerId: result.buyer.id,
+              itemsCount: existingOrder.items.length
+            },
+          },
+        });
       }
 
       return result;
     });
+
+    // 4. Real-time updates for dashboard
+    if (status === 'PAID') {
+      this.realtime.emitStatsUpdate(updatedOrder.storeId);
+      this.realtime.emitNotification(updatedOrder.storeId, {
+        eventType: 'ORDER_PLACED',
+        payload: {
+          customerName: updatedOrder.buyer.name || 'A Customer',
+          amount: Number(updatedOrder.totalAmount),
+          orderId: updatedOrder.id
+        },
+        createdAt: new Date()
+      });
+    }
 
     // 4. Send emails (Deferred until after transaction success)
     if (status === 'PAID' && updatedOrder.buyer.email) {

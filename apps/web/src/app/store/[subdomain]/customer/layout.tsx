@@ -141,23 +141,24 @@ export default function CustomerDashboardLayout({
             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-10 py-6 lg:py-10 flex-grow relative">
                 {/* Sidebar - Desktop */}
                 <aside className="hidden lg:block lg:col-span-1 space-y-6 xl:pl-8">
-                    <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm sticky top-28 transition-colors duration-300">
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="w-12 h-12 bg-slate-900 dark:bg-white rounded-2xl flex items-center justify-center text-white dark:text-black font-bold text-lg overflow-hidden">
-                                {user?.image ? (
-                                    <img src={user.image} alt="Profile" className="w-full h-full object-cover" />
-                                ) : (
-                                    user?.name ? user.name.trim().split(/\s+/).map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) : '??'
-                                )}
-                            </div>
-                            <div>
-                                <h2 className="font-black text-slate-900 dark:text-white leading-tight">{user?.name || 'Customer'}</h2>
-                                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
-                                    ID: {user?.id ? `CUST-${user.id.slice(-6).toUpperCase()}` : `${subdomain.toUpperCase()}-USR`}
-                                </p>
-                            </div>
+                    {/* Sidebar Header - Moved Outside the box to align with content headers */}
+                    <div className="flex items-center gap-4 mb-8 px-8">
+                        <div className="w-12 h-12 bg-slate-100 dark:bg-white/10 rounded-full flex items-center justify-center text-slate-900 dark:text-white font-bold text-lg overflow-hidden shrink-0 border-2 border-white dark:border-slate-800 shadow-sm">
+                            {user?.image ? (
+                                <img src={user.image} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                user?.name ? user.name.trim().split(/\s+/).map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) : '??'
+                            )}
                         </div>
+                        <div className="min-w-0">
+                            <h2 className="font-black text-slate-900 dark:text-white leading-tight truncate">{user?.name || 'Customer'}</h2>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
+                                ID: {user?.id ? `CUST-${user.id.slice(-6).toUpperCase()}` : `${subdomain?.toUpperCase()}-USR`}
+                            </p>
+                        </div>
+                    </div>
 
+                    <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm sticky top-28 transition-colors duration-300">
                         <nav className="space-y-2">
                             {navItems.map((item) => {
                                 const isActive = pathname === item.href;

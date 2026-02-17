@@ -31,8 +31,8 @@ export default function InventoryPage() {
     const [isUpdating, setIsUpdating] = useState(false);
     const [history, setHistory] = useState<any[]>([]);
     const [isHistoryLoading, setIsHistoryLoading] = useState(false);
-    const [aiInsights, setAiInsights] = useState<any[]>([]);
-    const [isAiLoading, setIsAiLoading] = useState(false);
+    const [productInsights, setProductInsights] = useState<Record<string, any>>({});
+    const [analyzingIds, setAnalyzingIds] = useState<Set<string>>(new Set());
 
     const fetchInventory = async () => {
         try {
@@ -46,22 +46,9 @@ export default function InventoryPage() {
         }
     };
 
-    const fetchAiInsights = async () => {
-        if (!store?.id) return;
-        try {
-            setIsAiLoading(true);
-            const res = await api.get(`/analytics/ai-insights/${store.id}`);
-            setAiInsights(res.data);
-        } catch (err) {
-            console.error('Failed to fetch AI insights:', err);
-        } finally {
-            setIsAiLoading(false);
-        }
-    };
 
     useEffect(() => {
         fetchInventory();
-        fetchAiInsights();
     }, [store?.id]);
 
     const fetchHistory = async (productId: string) => {
@@ -139,11 +126,58 @@ export default function InventoryPage() {
         return { totalValue, lowStock, outOfStock, totalSKUs: products.length, critical };
     }, [products]);
 
-    // Match AI insights to products
-    const getProductInsight = (productName: string) => {
-        return aiInsights.find(insight =>
-            insight.description.toLowerCase().includes(productName.toLowerCase())
-        );
+    const handleAnalyzeProduct = async (e: React.MouseEvent, productId: string) => {
+        e.stopPropagation();
+        if (analyzingIds.has(productId)) return;
+
+        try {
+            setAnalyzingIds(prev => new Set(prev).add(productId));
+            const res = await api.get(`/analytics/ai-inventory-insight/${productId}`);
+            if (res.data) {
+                setProductInsights(prev => ({ ...prev, [productId]: res.data }));
+                if (expandedId !== productId) {
+                    // Automatically expand to show results
+                    setExpandedId(productId);
+                    setLocalStock(products.find(p => p.id === productId)?.stock ?? null);
+                    fetchHistory(productId);
+                }
+            }
+        } catch (err) {
+            console.error('Failed to analyze product:', err);
+        } finally {
+            setAnalyzingIds(prev => {
+                const next = new Set(prev);
+                next.delete(productId);
+                return next;
+            });
+        }
+    };
+
+    const inventoryAnalysis = useMemo(() => {
+        if (!products.length) return "Scanning your SKUs for high-value opportunities...";
+
+        if (stats.critical > 0) {
+            return `I've flagged ${stats.critical} items as CRITICAL. They are nearly gone—restock these immediately to protect your shelf value.`;
+        }
+
+        if (stats.lowStock > 0) {
+            return `You have ${stats.lowStock} items running low. A quick restock now will keep your sales momentum steady across your active categories.`;
+        }
+
+        if (stats.outOfStock > 0) {
+            return `You have ${stats.outOfStock} items out of stock. You're losing potential revenue every hour they remain invisible to buyers.`;
+        }
+
+        const topProduct = [...products].sort((a, b) => (Number(b.price) * b.stock) - (Number(a.price) * a.stock))[0];
+        if (topProduct) {
+            return `Inventory is healthy. ${topProduct.name} is your lead asset, holding ${formatPrice(Number(topProduct.price) * topProduct.stock)} in current liquidity.`;
+        }
+
+        return "Your inventory is currently optimized. I'll alert you if any SKU movements require your attention.";
+    }, [products, stats]);
+
+    const getProductInsight = (productId: string) => {
+        return productInsights[productId];
     };
 
     if (loading) {
@@ -196,37 +230,21 @@ export default function InventoryPage() {
 
                 <div className="bg-slate-950 rounded-[2.5rem] p-8 text-white relative overflow-hidden border border-white/5 shadow-2xl group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/30 transition-all"></div>
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md">
-                                <BrainCircuit className="w-4 h-4 text-primary" />
-                            </div>
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-white/70">AI Inventory Analyst</h4>
-                        </div>
+                    <div className="relative z-10 h-full flex flex-col justify-between">
 
-                        <div className="space-y-3">
-                            {isAiLoading ? (
-                                <div className="flex items-center gap-2 py-4">
-                                    <Loader2 className="w-4 h-4 text-primary animate-spin" />
-                                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Running Diagnostics...</span>
-                                </div>
-                            ) : aiInsights.length > 0 ? (
-                                <div className="space-y-3">
-                                    <div className="flex gap-3">
-                                        <Sparkles className="w-4 h-4 text-primary shrink-0" />
-                                        <p className="text-[11px] font-medium leading-relaxed text-slate-300">
-                                            {aiInsights.find(i => i.type === 'INVENTORY')?.description || "Your inventory is optimized for the current sales trend."}
-                                        </p>
-                                    </div>
-                                    <button onClick={fetchAiInsights} className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline flex items-center gap-1">
-                                        Refresh AI Audit <Zap className="w-2 h-2" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="py-4">
-                                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest italic">Waiting for enough data points...</p>
-                                </div>
-                            )}
+                        <div className="space-y-4">
+                            <div className="flex gap-3">
+                                <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                                <p className="text-[11px] font-bold leading-relaxed text-slate-400 italic">
+                                    "{inventoryAnalysis}"
+                                </p>
+                            </div>
+                            <div className="p-3 bg-white/5 rounded-2xl border border-white/5 group-hover:border-primary/30 transition-all cursor-pointer" onClick={() => window.location.href = '/dashboard/seller/analytics'}>
+                                <p className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center justify-between gap-2">
+                                    <span>Visit Store Analytics for More Analysis</span>
+                                    <ArrowRight className="w-3 h-3" />
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -246,7 +264,8 @@ export default function InventoryPage() {
                     </thead>
                     <tbody>
                         {filteredProducts.map((item) => {
-                            const productInsight = getProductInsight(item.name);
+                            const productInsight = getProductInsight(item.id);
+                            const isAnalyzing = analyzingIds.has(item.id);
                             return (
                                 <React.Fragment key={item.id}>
                                     <tr
@@ -284,11 +303,29 @@ export default function InventoryPage() {
                                         </td>
                                         <td className="py-4 pr-6 text-right rounded-r-2xl">
                                             <div className="flex items-center justify-end gap-3">
-                                                {productInsight && (
-                                                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center animate-pulse">
-                                                        <Sparkles className="w-3 h-3 text-primary" />
-                                                    </div>
-                                                )}
+                                                <button
+                                                    onClick={(e) => handleAnalyzeProduct(e, item.id)}
+                                                    disabled={isAnalyzing}
+                                                    className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${productInsight ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-900 text-white hover:bg-slate-800'
+                                                        }`}
+                                                >
+                                                    {isAnalyzing ? (
+                                                        <>
+                                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                                            Thinking...
+                                                        </>
+                                                    ) : productInsight ? (
+                                                        <>
+                                                            <BrainCircuit className="w-3 h-3" />
+                                                            Re-Analyze
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Zap className="w-3 h-3" />
+                                                            Analyze
+                                                        </>
+                                                    )}
+                                                </button>
                                                 <span className={`px-2.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest ${getStockColor(item.stock)}`}>
                                                     {getStockStatus(item.stock)}
                                                 </span>
@@ -314,7 +351,7 @@ export default function InventoryPage() {
                                                                     <div className="p-5 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
                                                                         <div className="flex items-center gap-2">
                                                                             <BrainCircuit className="w-4 h-4 text-primary" />
-                                                                            <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">Gemini 1.5 Growth Suggestion</h4>
+                                                                            <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">Big T Growth Suggestion</h4>
                                                                         </div>
                                                                         <p className="text-[13px] font-bold text-slate-700 leading-relaxed">
                                                                             {productInsight.description}
@@ -403,15 +440,6 @@ export default function InventoryPage() {
                                                                     </button>
                                                                 </div>
 
-                                                                <div className="bg-amber-50 rounded-2xl p-5 border border-amber-100/50 flex items-start gap-4">
-                                                                    <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-                                                                    <div>
-                                                                        <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-1">Stock Notice</p>
-                                                                        <p className="text-[11px] font-medium text-amber-700 leading-normal">
-                                                                            Stock updates are live immediately. This will affect your visibility on the storefront.
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
                                                             </div>
                                                         </div>
                                                     </motion.div>

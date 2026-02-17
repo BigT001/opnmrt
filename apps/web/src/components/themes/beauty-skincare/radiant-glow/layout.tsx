@@ -7,7 +7,12 @@ import { RadiantGlowFooter } from './Footer';
 import { RadiantGlowCartDrawer } from './CartDrawer';
 import { CartNotification } from '@/components/storefront/CartNotification';
 
+import { usePathname } from 'next/navigation';
+
 export const RadiantGlowLayout: React.FC<StoreThemeProps> = ({ store, children }) => {
+    const pathname = usePathname();
+    const isDashboard = pathname?.includes('/customer') || pathname?.includes('/dashboard');
+
     return (
         <div
             className="antialiased text-[#2D1E1E] bg-[#FFF9F0] min-h-screen flex flex-col selection:bg-[#C19A6B]/20"
@@ -86,7 +91,9 @@ export const RadiantGlowLayout: React.FC<StoreThemeProps> = ({ store, children }
             <RadiantGlowCartDrawer storeId={store.id} />
             <CartNotification />
             <main className="flex-grow pt-24 relative z-10">{children}</main>
-            <RadiantGlowFooter storeName={store.name} />
+            {!isDashboard && (
+                <RadiantGlowFooter storeName={store.name} />
+            )}
         </div>
     );
 };

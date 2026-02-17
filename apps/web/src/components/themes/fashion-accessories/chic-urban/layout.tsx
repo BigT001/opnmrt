@@ -7,7 +7,12 @@ import { ChicUrbanFooter } from './Footer';
 import { ChicUrbanCartDrawer } from './CartDrawer';
 import { CartNotification } from '@/components/storefront/CartNotification';
 
+import { usePathname } from 'next/navigation';
+
 export const ChicUrbanLayout: React.FC<StoreThemeProps> = ({ store, children }) => {
+    const pathname = usePathname();
+    const isDashboard = pathname?.includes('/customer') || pathname?.includes('/dashboard');
+
     return (
         <div className="font-sans antialiased text-black bg-white min-h-screen flex flex-col selection:bg-[#CCFF00] selection:text-black" data-theme="chic-urban">
             <style jsx global>{`
@@ -37,7 +42,9 @@ export const ChicUrbanLayout: React.FC<StoreThemeProps> = ({ store, children }) 
             <ChicUrbanCartDrawer storeId={store.id} />
             <CartNotification />
             <main className="flex-grow">{children}</main>
-            <ChicUrbanFooter storeName={store.name} />
+            {!isDashboard && (
+                <ChicUrbanFooter storeName={store.name} />
+            )}
         </div>
     );
 };

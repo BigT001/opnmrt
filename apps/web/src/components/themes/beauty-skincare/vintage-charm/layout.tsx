@@ -7,7 +7,12 @@ import { VintageCharmFooter } from './Footer';
 import { VintageCharmCartDrawer } from './CartDrawer';
 import { CartNotification } from '@/components/storefront/CartNotification';
 
+import { usePathname } from 'next/navigation';
+
 export const VintageCharmLayout: React.FC<StoreThemeProps> = ({ store, children }) => {
+    const pathname = usePathname();
+    const isDashboard = pathname?.includes('/customer') || pathname?.includes('/dashboard');
+
     return (
         <div className="font-serif text-stone-900 bg-[#F9F4EE] min-h-screen flex flex-col selection:bg-[#1B3022] selection:text-[#F9F4EE]" data-theme="vintage-charm">
             <style jsx global>{`
@@ -43,7 +48,9 @@ export const VintageCharmLayout: React.FC<StoreThemeProps> = ({ store, children 
             <VintageCharmCartDrawer storeId={store.id} />
             <CartNotification />
             <main className="flex-grow">{children}</main>
-            <VintageCharmFooter storeName={store.name} />
+            {!isDashboard && (
+                <VintageCharmFooter storeName={store.name} />
+            )}
         </div>
     );
 };

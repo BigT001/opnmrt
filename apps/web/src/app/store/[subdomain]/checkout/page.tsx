@@ -26,8 +26,13 @@ export default function CheckoutPage() {
 
                     // Track Checkout Start
                     if (data?.id && !trackedCheckoutRef.current) {
-                        import('@/lib/analytics').then(({ trackEvent, ANALYTICS_EVENTS }) => {
-                            trackEvent(data.id, ANALYTICS_EVENTS.CHECKOUT_START);
+                        import('@/lib/analytics').then(async ({ trackEvent, ANALYTICS_EVENTS }) => {
+                            const { useAuthStore } = await import('@/store/useAuthStore');
+                            const user = useAuthStore.getState().user;
+                            trackEvent(data.id, ANALYTICS_EVENTS.CHECKOUT_START, {
+                                userName: user?.name,
+                                customerName: user?.name
+                            });
                             trackedCheckoutRef.current = true;
                         });
                     }

@@ -143,7 +143,7 @@ export default async function ProductPage({
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
-            <TrackProductView storeId={store.id} productId={product.id} />
+            <TrackProductView storeId={store.id} productId={product.id} productName={product.name} />
             <ThemeProductPage
                 store={store}
                 product={{

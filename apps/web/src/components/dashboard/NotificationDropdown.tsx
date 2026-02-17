@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '@/lib/api';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
+import { useSocket } from '@/hooks/useSocket';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface Notification {
     id: string;
@@ -14,28 +16,41 @@ interface Notification {
     link: string;
     createdAt: string;
 }
-
 export function NotificationDropdown({ storeId, isOpen, onClose }: { storeId: string; isOpen: boolean; onClose: () => void }) {
+    const { user } = useAuthStore();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
+    const socket = useSocket(user?.id, storeId);
+
+    const fetchNotifications = async (silent = false) => {
+        try {
+            if (!silent) setLoading(true);
+            const res = await api.get(`/analytics/notifications/${storeId}`);
+            setNotifications(res.data);
+        } catch (err) {
+            console.error('Failed to fetch notifications:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        if (!isOpen || !storeId) return;
-
-        const fetchNotifications = async () => {
-            try {
-                setLoading(true);
-                const res = await api.get(`/analytics/notifications/${storeId}`);
-                setNotifications(res.data);
-            } catch (err) {
-                console.error('Failed to fetch notifications:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
+        if (!storeId || !isOpen) return;
         fetchNotifications();
     }, [isOpen, storeId]);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on('notification_received', () => {
+            console.log('[REALTIME] New activity detected, syncing dropdown...');
+            fetchNotifications(true);
+        });
+
+        return () => {
+            socket.off('notification_received');
+        };
+    }, [socket]);
 
     return (
         <AnimatePresence>
@@ -72,11 +87,14 @@ export function NotificationDropdown({ storeId, isOpen, onClose }: { storeId: st
                                                 {n.icon}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-slate-900 mb-1">{n.title}</p>
-                                                <p className="text-xs text-slate-500 leading-relaxed mb-2">{n.message}</p>
-                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                                    {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
-                                                </p>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <p className="text-sm font-black text-slate-900 uppercase tracking-tight">{n.title}</p>
+                                                    <span className="text-[10px] text-slate-300 font-bold">||</span>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                                                        {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                                                    </p>
+                                                </div>
+                                                <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{n.message}</p>
                                             </div>
                                             <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0 animate-pulse" />
                                         </Link>

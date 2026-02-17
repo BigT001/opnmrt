@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RealtimeService } from '../realtime/realtime.service';
 
 @Injectable()
 export class AnalyticsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private realtime: RealtimeService,
+    ) { }
 
     async trackEvent(storeId: string, eventType: string, payload: any, tenantId?: string) {
         try {
@@ -19,7 +23,7 @@ export class AnalyticsService {
 
             if (!finalTenantId) return null;
 
-            return await this.prisma.eventLog.create({
+            const log = await this.prisma.eventLog.create({
                 data: {
                     storeId,
                     tenantId: finalTenantId,
@@ -27,6 +31,19 @@ export class AnalyticsService {
                     payload: payload || {},
                 },
             });
+
+            if (log) {
+                // Immediate notification broadcast
+                this.realtime.emitNotification(storeId, log);
+
+                // Dashboard Stats broadcast if critical event
+                const statsEvents = ['ORDER_PLACED', 'PAYMENT_SUCCESS', 'PRODUCT_VIEW', 'ADD_TO_CART', 'CHECKOUT_START', 'SESSION_START'];
+                if (statsEvents.includes(eventType)) {
+                    this.realtime.emitStatsUpdate(storeId);
+                }
+            }
+
+            return log;
         } catch (error) {
             console.error('[ANALYTICS_TRACK_ERROR]', error);
             return null;
@@ -53,41 +70,65 @@ export class AnalyticsService {
                         case 'ORDER_CREATED':
                         case 'ORDER_PLACED':
                             const p = event.payload as any;
-                            title = 'New Order 💰';
-                            message = `${p?.customerName || 'A customer'} just spent ${p?.amount ? '₦' + p.amount : 'some money'}.`;
+                            title = 'NEW ORDER';
+                            message = `${p?.customerName || 'A customer'} just placed an order of ${p?.amount ? '₦' + p.amount.toLocaleString() : 'some value'}.`;
                             icon = '🛍️';
                             link = '/dashboard/seller/orders';
                             break;
                         case 'CUSTOMER_ACCOUNT_CREATED':
                         case 'NEW_CUSTOMER':
-                            title = 'New Member ✨';
+                            title = 'NEW MEMBER';
                             message = `${(event.payload as any)?.customerName || 'A new visitor'} just joined the store!`;
                             icon = '👤';
+                            link = '/dashboard/seller/customers';
                             break;
                         case 'PRODUCT_VIEW':
                         case 'PRODUCT_VIEWED':
-                            title = 'Browsing Activity';
-                            message = `Someone is viewing "${(event.payload as any)?.productName || 'a product'}" right now.`;
-                            icon = '👀';
+                            const vp = event.payload as any;
+                            const viewerName = vp?.customerName || vp?.userName;
+                            if (viewerName) {
+                                title = 'BROWSING';
+                                message = `${viewerName} is looking at "${vp?.productName || 'a product'}".`;
+                                icon = '👀';
+                            } else {
+                                title = 'VISITOR';
+                                message = `A guest is viewing "${vp?.productName || 'a product'}" right now.`;
+                                icon = '👣';
+                            }
+                            break;
+                        case 'ADD_TO_CART':
+                            const cp = event.payload as any;
+                            const cartUser = cp?.customerName || cp?.userName;
+                            title = 'CART';
+                            message = `${cartUser || 'A shopper'} added "${cp?.productName || 'an item'}" to their cart.`;
+                            icon = '🛒';
                             break;
                         case 'STOCK_REDUCED_BY_ORDER':
                         case 'STOCK_LOW':
                             const sp = event.payload as any;
-                            title = 'Inventory Alert';
-                            message = `${sp?.productName || 'A product'} is running low (${sp?.newStock || 0} left).`;
-                            icon = '📉';
+                            const stockLeft = sp?.newStock || 0;
+
+                            if (stockLeft <= 10) {
+                                title = 'LOW STOCK';
+                                message = `Urgent: "${sp?.productName || 'Product'}" is running low (${stockLeft} units left).`;
+                                icon = '⚠️';
+                            } else {
+                                title = 'STOCK';
+                                message = `"${sp?.productName || 'Product'}" inventory reduced to ${stockLeft} units.`;
+                                icon = '📉';
+                            }
                             link = '/dashboard/seller/inventory';
                             break;
                         case 'PRODUCT_CREATED':
                         case 'NEW_PRODUCT_ADDED':
                             const prod = event.payload as any;
-                            title = 'New Product Added 🎉';
-                            message = `"${prod?.productName || prod?.name || 'A new product'}" was just added to inventory${prod?.initialStock ? ` with ${prod.initialStock} units` : ''}.`;
+                            title = 'NEW PRODUCT';
+                            message = `"${prod?.productName || prod?.name || 'A new product'}" was added with ${prod?.initialStock || 0} units.`;
                             icon = '📦';
                             link = '/dashboard/seller/products';
                             break;
                         case 'PRODUCT_UPDATED':
-                            title = 'Product Updated';
+                            title = 'UPDATE';
                             message = `"${(event.payload as any)?.productName || 'A product'}" details were modified.`;
                             icon = '✏️';
                             link = '/dashboard/seller/products';
@@ -95,19 +136,36 @@ export class AnalyticsService {
                         case 'PRODUCT_RESTOCKED':
                         case 'STOCK_ADJUSTED_MANUALLY':
                             const restockProd = event.payload as any;
-                            title = 'Stock Replenished 📈';
-                            message = `"${restockProd?.productName || 'A product'}" restocked${restockProd?.quantityAdded ? ` (+${restockProd.quantityAdded} units)` : ''}.`;
-                            icon = '📦';
+                            const adjustmentCount = restockProd?.adjustment ?? restockProd?.quantityAdded ?? restockProd?.added ?? 0;
+                            const isPositive = adjustmentCount > 0;
+
+                            title = isPositive ? 'RESTOCK' : 'STOCK ADJUST';
+                            message = `"${restockProd?.productName || 'A product'}" ${isPositive ? 'restocked' : 'adjusted'} (${isPositive ? '+' : ''}${adjustmentCount} units).`;
+                            icon = isPositive ? '📦' : '🔧';
                             link = '/dashboard/seller/inventory';
                             break;
                         case 'USER_LOGIN':
-                            title = 'Security Alert';
+                            title = 'LOGIN';
                             message = `${(event.payload as any)?.userName || 'A user'} logged in to the dashboard.`;
                             icon = '🔑';
                             break;
+                        case 'SESSION_START':
+                        case 'VISIT':
+                            title = 'SESSION';
+                            message = 'A new shopping session started on your store.';
+                            icon = '🌐';
+                            break;
+                        case 'CHECKOUT_START':
+                            const chkP = event.payload as any;
+                            const checkoutUser = chkP?.customerName || chkP?.userName;
+                            title = 'CHECKOUT';
+                            message = `${checkoutUser || 'A customer'} started the checkout process.`;
+                            icon = '💳';
+                            break;
                         default:
-                            title = event.eventType.replace(/_/g, ' ');
-                            message = `A store activity (${title.toLowerCase()}) was recorded.`;
+                            title = event.eventType.replace(/_/g, ' ').toUpperCase();
+                            if (title.length > 15) title = 'ACTIVITY';
+                            message = `A store activity was recorded.`;
                             break;
                     }
 
@@ -248,6 +306,46 @@ export class AnalyticsService {
                 products: [],
                 recentStockEvents: [],
             };
+        }
+    }
+
+    async getProductAnalysis(productId: string) {
+        try {
+            const product = await this.prisma.product.findUnique({
+                where: { id: productId },
+                include: {
+                    inventory: true,
+                    orderItems: {
+                        where: {
+                            order: {
+                                status: 'PAID'
+                            }
+                        },
+                        select: {
+                            quantity: true,
+                            price: true
+                        }
+                    }
+                }
+            });
+
+            if (!product) return null;
+
+            const totalSold = product.orderItems.reduce((acc, item) => acc + item.quantity, 0);
+            const totalRevenue = product.orderItems.reduce((acc, item) => acc + (item.quantity * Number(item.price)), 0);
+
+            return {
+                id: product.id,
+                name: product.name,
+                currentStock: product.stock,
+                totalSold,
+                totalRevenue,
+                lastRestockedAt: product.inventory?.lastRestockedAt || null,
+                price: Number(product.price)
+            };
+        } catch (error) {
+            console.error('[GET_PRODUCT_ANALYSIS_ERROR]', error);
+            return null;
         }
     }
 }

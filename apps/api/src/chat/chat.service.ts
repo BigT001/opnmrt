@@ -166,7 +166,7 @@ export class ChatService {
       orderBy: { createdAt: 'desc' },
       include: {
         sender: {
-          select: { id: true, name: true, role: true },
+          select: { id: true, name: true, role: true, image: true },
         },
       },
     });
@@ -182,6 +182,7 @@ export class ChatService {
           conversationsMap.set(otherUserId, {
             userId: otherUserId,
             userName: isFromBuyer ? msg.sender.name : 'Customer',
+            userImage: isFromBuyer ? msg.sender.image : null,
             lastMessage: msg.content,
             time: msg.createdAt,
             unreadCount: 0,
@@ -203,6 +204,7 @@ export class ChatService {
           conversationsMap.get(otherUserId).userName === 'Customer'
         ) {
           conversationsMap.get(otherUserId).userName = msg.sender.name;
+          conversationsMap.get(otherUserId).userImage = msg.sender.image;
         }
       }
     });
@@ -213,7 +215,7 @@ export class ChatService {
       distinct: ['buyerId'],
       select: {
         buyer: {
-          select: { id: true, name: true, createdAt: true },
+          select: { id: true, name: true, createdAt: true, image: true },
         },
       },
     });
@@ -221,11 +223,11 @@ export class ChatService {
     // 3. Fetch users explicitly linked to this store (e.g. signed up on store domain)
     const storeUsers = await this.prisma.user.findMany({
       where: { storeId, role: 'BUYER' },
-      select: { id: true, name: true, createdAt: true },
+      select: { id: true, name: true, createdAt: true, image: true },
     });
 
     // 4. Merge all potential contacts
-    const allPotentialContacts = new Map<string, { id: string; name: string | null; createdAt: Date }>();
+    const allPotentialContacts = new Map<string, { id: string; name: string | null; createdAt: Date; image: string | null }>();
 
     orderBuyers.forEach((order) => {
       if (order.buyer) allPotentialContacts.set(order.buyer.id, order.buyer);
@@ -241,6 +243,7 @@ export class ChatService {
         conversationsMap.set(contact.id, {
           userId: contact.id,
           userName: contact.name || 'Customer',
+          userImage: contact.image,
           lastMessage: 'Start a conversation',
           time: contact.createdAt,
           unreadCount: 0,

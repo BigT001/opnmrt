@@ -67,11 +67,13 @@ export default function CustomerOrdersPage() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-end mb-8">
+        <div className="space-y-8">
+            <div className="flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">My Orders</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">Track and manage your recent purchases</p>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1 uppercase text-[10px] font-bold tracking-widest">
+                        Track and manage your recent purchases
+                    </p>
                 </div>
             </div>
 
@@ -93,8 +95,8 @@ export default function CustomerOrdersPage() {
                             <div
                                 key={order.id}
                                 className={`bg-white dark:bg-slate-950 rounded-[2.5rem] p-6 border transition-all duration-300 ${isPending
-                                        ? 'border-orange-200 dark:border-orange-900/30 shadow-lg shadow-orange-100 dark:shadow-none'
-                                        : 'border-slate-100 dark:border-slate-800 hover:border-slate-900 dark:hover:border-white hover:shadow-2xl hover:shadow-slate-200 dark:hover:shadow-none'
+                                    ? 'border-orange-200 dark:border-orange-900/30 shadow-lg shadow-orange-100 dark:shadow-none'
+                                    : 'border-slate-100 dark:border-slate-800 hover:border-slate-900 dark:hover:border-white hover:shadow-2xl hover:shadow-slate-200 dark:hover:shadow-none'
                                     }`}
                             >
                                 <div className="flex items-center justify-between">
@@ -103,8 +105,8 @@ export default function CustomerOrdersPage() {
                                         className="flex items-center gap-6 flex-1 cursor-pointer"
                                     >
                                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isPending
-                                                ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-500'
-                                                : 'bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500'
+                                            ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-500'
+                                            : 'bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500'
                                             }`}>
                                             {isPending ? <AlertCircle className="w-6 h-6" /> : <Package className="w-6 h-6" />}
                                         </div>

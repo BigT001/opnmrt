@@ -8,7 +8,17 @@ import { MinimalLuxeCartDrawer } from './CartDrawer';
 import { MinimalLuxeTopBar } from './TopBar';
 import { CartNotification } from '@/components/storefront/CartNotification';
 
+import { usePathname } from 'next/navigation';
+
 export const MinimalLuxeLayout: React.FC<StoreThemeProps> = ({ store, children }) => {
+    const pathname = usePathname();
+
+    // Debugging footer visibility
+    const isDashboard = pathname?.includes('/customer') ||
+        pathname?.includes('/dashboard') ||
+        pathname?.includes('/seller') ||
+        pathname?.includes('/messages');
+
     return (
         <div className="font-sans text-gray-900 bg-white min-h-screen flex flex-col" data-theme="minimal-luxe">
             <MinimalLuxeTopBar />
@@ -16,7 +26,9 @@ export const MinimalLuxeLayout: React.FC<StoreThemeProps> = ({ store, children }
             <MinimalLuxeCartDrawer storeId={store.id} />
             <CartNotification />
             <main className="flex-grow">{children}</main>
-            <MinimalLuxeFooter storeName={store.name} />
+            {!isDashboard && (
+                <MinimalLuxeFooter storeName={store.name} />
+            )}
         </div>
     );
 };

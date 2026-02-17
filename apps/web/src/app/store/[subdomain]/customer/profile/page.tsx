@@ -142,10 +142,12 @@ export default function CustomerProfilePage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto pb-20 px-4 sm:px-6 lg:px-8">
-            <div className="mb-10">
+        <div className="space-y-8">
+            <div className="shrink-0">
                 <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Profile Settings</h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">Manage your account information and preferences</p>
+                <p className="text-slate-500 dark:text-slate-400 mt-1 uppercase text-[10px] font-bold tracking-widest">
+                    Manage your account information and preferences
+                </p>
             </div>
 
             <div className="space-y-8">

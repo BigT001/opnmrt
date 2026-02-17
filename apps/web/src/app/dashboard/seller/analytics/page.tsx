@@ -31,6 +31,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
 import { FormattedMessage } from '@/components/FormattedMessage';
+import { AiAdvisor } from '@/components/dashboard/AiAdvisor';
 
 // --- Components ---
 
@@ -49,99 +50,6 @@ const SidebarItem = ({ active, title, onClick, icon: Icon = MessageSquare, date 
         </div>
         <MoreHorizontal size={14} className="opacity-0 group-hover:opacity-50 transition-opacity" />
     </button>
-);
-
-const AdviceCard = ({ content, onDiscuss }: { content: string, onDiscuss: (content: string) => void }) => (
-    <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 group hover:border-indigo-300 transition-all cursor-default relative overflow-hidden"
-    >
-        <div className="flex gap-3 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0 shadow-sm text-indigo-600">
-                <Lightbulb size={14} />
-            </div>
-            <p className="text-[11px] font-bold text-slate-800 leading-relaxed">
-                {content}
-            </p>
-        </div>
-        <button
-            onClick={() => onDiscuss(content)}
-            className="w-full py-2 bg-white border border-indigo-100 rounded-xl text-[10px] font-bold text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center gap-2 group-hover:shadow-md"
-        >
-            <span>Continue in Chat</span>
-            <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
-        </button>
-    </motion.div>
-);
-
-const IntelligenceStream = ({ advices, aiStatus, onDiscussAdvice, notifications }: any) => (
-    <div className="flex flex-col h-full overflow-hidden pt-2 pb-6">
-        {/* Advice Section - ON TOP */}
-        <div className="flex-1 flex flex-col min-h-0 mb-8 overflow-hidden">
-            <div className="flex items-center justify-between mb-4 shrink-0">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                    <Zap size={12} className="text-amber-500 fill-amber-500" /> Live Advice Engine
-                </h4>
-                {aiStatus.circuitBroken ? (
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100">
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        <span className="text-[8px] font-black text-amber-600 uppercase tracking-tighter">Paused</span>
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter">Live</span>
-                    </div>
-                )}
-            </div>
-            <div className="flex-1 overflow-y-auto no-scrollbar space-y-3 pr-1">
-                <AnimatePresence mode="popLayout">
-                    {advices.length > 0 ? (
-                        advices.map((a: string, i: number) => (
-                            <AdviceCard key={i} content={a} onDiscuss={onDiscussAdvice} />
-                        ))
-                    ) : (
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="text-[10px] text-slate-400 italic font-medium px-2"
-                        >
-                            Gathering fresh store insights...
-                        </motion.p>
-                    )}
-                </AnimatePresence>
-            </div>
-        </div>
-
-        {/* Notifications Section - BELOW */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center justify-between mb-4 shrink-0">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                    <Bell size={12} className="text-primary" /> Activity Stream
-                </h4>
-            </div>
-            <div className="flex-1 overflow-y-auto no-scrollbar space-y-3 pr-1">
-                {notifications.length > 0 ? (
-                    notifications.map((n: any) => (
-                        <div key={n.id} className="p-4 bg-slate-50 border border-slate-50 rounded-2xl hover:border-slate-200 hover:bg-white transition-all group cursor-default shadow-sm hover:shadow-md">
-                            <div className="flex gap-3">
-                                <span className="text-xl opacity-80 group-hover:scale-110 transition-transform">{n.icon}</span>
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-[10px] font-black text-slate-900 leading-tight mb-1 uppercase tracking-tight">{n.title}</p>
-                                    <p className="text-[11px] text-slate-500 leading-normal line-clamp-2 font-medium">{n.message}</p>
-                                </div>
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    <div className="p-8 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 text-center">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Quiet</p>
-                    </div>
-                )}
-            </div>
-        </div>
-    </div>
 );
 
 // --- Main Page ---
@@ -289,18 +197,15 @@ export default function AnalyticsPage() {
     };
 
     const handleDiscussAdvice = (advice: string) => {
-        // Clean up advice if it is already quoted
         const cleanAdvice = advice.replace(/^"|"$/g, '');
         const prompt = `I'd like to discuss this advice: "${cleanAdvice}". What specific steps should I take?`;
-        setInput(prompt);
-        // Optional: Auto-submit
-        // handleSendMessage({ preventDefault: () => {} } as any, prompt);
+        handleSendMessage({ preventDefault: () => { } } as any, prompt);
     };
 
     return (
         <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 lg:left-24 flex bg-white font-sans overflow-hidden transition-all duration-500">
             {/* Left Sidebar: Session History */}
-            <div className="w-72 border-r border-slate-50/50 flex flex-col bg-slate-50/20 p-6 shrink-0 transition-all duration-300">
+            <div className="w-72 border-r border-slate-200 flex flex-col bg-slate-50/20 p-6 shrink-0 transition-all duration-300">
                 <button
                     onClick={handleNewChat}
                     className="w-full mb-10 flex items-center justify-between px-6 py-4 bg-white border border-slate-100 rounded-[2rem] hover:border-emerald-200 hover:shadow-2xl hover:shadow-emerald-900/10 transition-all group"
@@ -505,8 +410,15 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Right Pane: Intelligence Stream */}
-            <div className="w-88 border-l border-slate-50 bg-white flex flex-col p-8 shrink-0 z-10 hidden xl:flex">
-                <IntelligenceStream advices={advices} aiStatus={aiStatus} onDiscussAdvice={handleDiscussAdvice} notifications={notifications} />
+            <div className="w-96 border-l border-slate-50 bg-white flex flex-col p-8 shrink-0 z-10 hidden xl:flex">
+                <div className="flex-1 overflow-y-auto no-scrollbar">
+                    <AiAdvisor
+                        storeId={store?.id || ''}
+                        advices={advices}
+                        notifications={notifications}
+                        onDiscuss={handleDiscussAdvice}
+                    />
+                </div>
             </div>
         </div>
     );

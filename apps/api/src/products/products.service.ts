@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { RealtimeService } from '../realtime/realtime.service';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class ProductsService {
   constructor(
     private prisma: PrismaService,
     private cloudinary: CloudinaryService,
+    private realtime: RealtimeService,
   ) { }
 
   async create(
@@ -82,6 +84,8 @@ export class ProductsService {
           },
         },
       }).catch(err => console.error('[PRODUCT_CREATED_EVENT_ERROR]', err));
+
+      this.realtime.emitStatsUpdate(storeId);
 
       return newProduct;
     } catch (error) {
@@ -215,6 +219,8 @@ export class ProductsService {
         }
       }
     }
+
+    this.realtime.emitStatsUpdate(updatedProduct.storeId);
 
     return updatedProduct;
   }

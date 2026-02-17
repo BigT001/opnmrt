@@ -195,17 +195,18 @@ export class AuthService {
         },
         store: store
           ? {
-              id: store.id,
-              name: store.name,
-              subdomain: store.subdomain,
-              logo: store.logo,
-              heroImage: store.heroImage,
-              primaryColor: store.primaryColor,
-              theme: store.theme,
-              themeConfig: store.themeConfig,
-              paystackPublicKey: store.paystackPublicKey,
-              // Secret key is NEVER sent to frontend for security
-            }
+            id: store.id,
+            name: store.name,
+            subdomain: store.subdomain,
+            logo: store.logo,
+            heroImage: store.heroImage,
+            primaryColor: store.primaryColor,
+            theme: store.theme,
+            themeConfig: store.themeConfig,
+            paystackPublicKey: store.paystackPublicKey,
+            chatAiEnabled: store.chatAiEnabled,
+            // Secret key is NEVER sent to frontend for security
+          }
           : null,
         ...tokens,
       };
@@ -224,8 +225,8 @@ export class AuthService {
       });
 
       if (!user) {
-        console.log(`Login failed: User not found for email ${input.email}`);
-        throw new UnauthorizedException('Invalid credentials');
+        console.error(`[AUTH_LOGIN_FAILED] User not found: ${input.email}`);
+        throw new UnauthorizedException('Invalid email or password. Please try again.');
       }
 
       const isPasswordValid = await bcrypt.compare(
@@ -233,19 +234,20 @@ export class AuthService {
         user.password,
       );
       if (!isPasswordValid) {
-        console.log(`Login failed: Invalid password for email ${input.email}`);
-        throw new UnauthorizedException('Invalid credentials');
+        console.error(`[AUTH_LOGIN_FAILED] Invalid password for: ${input.email}`);
+        throw new UnauthorizedException('Invalid email or password. Please try again.');
       }
 
       // Restrict Buyers to their specific store
       if (user.role === 'BUYER' && input.subdomain) {
+        console.log(`[AUTH_LOGIN] Checking BUYER store restriction: ${user.email} in ${input.subdomain}`);
         const targetStore = await this.prisma.store.findUnique({
           where: { subdomain: input.subdomain.toLowerCase() },
         });
 
         if (!targetStore || user.storeId !== targetStore.id) {
-          console.log(
-            `Login restricted: Buyer ${input.email} does not belong to store ${input.subdomain}`,
+          console.error(
+            `[AUTH_LOGIN_FAILED] Store mismatch for BUYER: ${input.email} trying to access ${input.subdomain}. Registered storeId: ${user.storeId}, Target storeId: ${targetStore?.id}`,
           );
           throw new UnauthorizedException(
             'This account is not registered with this store',
@@ -266,17 +268,18 @@ export class AuthService {
         },
         store: user.managedStore
           ? {
-              id: user.managedStore.id,
-              name: user.managedStore.name,
-              subdomain: user.managedStore.subdomain,
-              logo: user.managedStore.logo,
-              heroImage: user.managedStore.heroImage,
-              primaryColor: user.managedStore.primaryColor,
-              theme: user.managedStore.theme,
-              themeConfig: user.managedStore.themeConfig,
-              paystackPublicKey: user.managedStore.paystackPublicKey,
-              // Secret key is NEVER sent to frontend for security
-            }
+            id: user.managedStore.id,
+            name: user.managedStore.name,
+            subdomain: user.managedStore.subdomain,
+            logo: user.managedStore.logo,
+            heroImage: user.managedStore.heroImage,
+            primaryColor: user.managedStore.primaryColor,
+            theme: user.managedStore.theme,
+            themeConfig: user.managedStore.themeConfig,
+            paystackPublicKey: user.managedStore.paystackPublicKey,
+            chatAiEnabled: user.managedStore.chatAiEnabled,
+            // Secret key is NEVER sent to frontend for security
+          }
           : null,
         ...tokens,
       };
@@ -307,17 +310,18 @@ export class AuthService {
       },
       store: user.managedStore
         ? {
-            id: user.managedStore.id,
-            name: user.managedStore.name,
-            subdomain: user.managedStore.subdomain,
-            logo: user.managedStore.logo,
-            heroImage: user.managedStore.heroImage,
-            primaryColor: user.managedStore.primaryColor,
-            theme: user.managedStore.theme,
-            themeConfig: user.managedStore.themeConfig,
-            paystackPublicKey: user.managedStore.paystackPublicKey,
-            // Secret key is NEVER sent to frontend for security
-          }
+          id: user.managedStore.id,
+          name: user.managedStore.name,
+          subdomain: user.managedStore.subdomain,
+          logo: user.managedStore.logo,
+          heroImage: user.managedStore.heroImage,
+          primaryColor: user.managedStore.primaryColor,
+          theme: user.managedStore.theme,
+          themeConfig: user.managedStore.themeConfig,
+          paystackPublicKey: user.managedStore.paystackPublicKey,
+          chatAiEnabled: user.managedStore.chatAiEnabled,
+          // Secret key is NEVER sent to frontend for security
+        }
         : null,
     };
   }

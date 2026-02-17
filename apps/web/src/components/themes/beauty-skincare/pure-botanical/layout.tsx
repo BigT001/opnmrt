@@ -7,7 +7,12 @@ import { PureBotanicalFooter } from './Footer';
 import { PureBotanicalCartDrawer } from './CartDrawer';
 import { CartNotification } from '@/components/storefront/CartNotification';
 
+import { usePathname } from 'next/navigation';
+
 export const PureBotanicalLayout: React.FC<StoreThemeProps> = ({ store, children }) => {
+    const pathname = usePathname();
+    const isDashboard = pathname?.includes('/customer') || pathname?.includes('/dashboard');
+
     return (
         <div
             className="antialiased text-[#1C2B21] bg-[#F9FAF8] min-h-screen flex flex-col selection:bg-[#7C9082]/20"
@@ -67,7 +72,9 @@ export const PureBotanicalLayout: React.FC<StoreThemeProps> = ({ store, children
             <PureBotanicalCartDrawer storeId={store.id} />
             <CartNotification />
             <main className="flex-grow pt-20">{children}</main>
-            <PureBotanicalFooter storeName={store.name} />
+            {!isDashboard && (
+                <PureBotanicalFooter storeName={store.name} />
+            )}
         </div>
     );
 };

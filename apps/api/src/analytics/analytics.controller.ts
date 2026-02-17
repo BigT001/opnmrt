@@ -184,4 +184,16 @@ export class AnalyticsController {
             throw new InternalServerErrorException('Failed to process message');
         }
     }
+
+    @Get('ai-inventory-insight/:productId')
+    async getProductInventoryInsight(@Param('productId') productId: string) {
+        try {
+            const productData = await this.analyticsService.getProductAnalysis(productId);
+            if (!productData) return null;
+            return await this.aiService.generateProductInsight(productData);
+        } catch (error) {
+            console.error('[PRODUCT_INVENTORY_INSIGHT_ERROR]', error);
+            return null;
+        }
+    }
 }

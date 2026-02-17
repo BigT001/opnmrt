@@ -18,6 +18,7 @@ import { PrismaModule } from './prisma/prisma.module';
 
 import { SearchModule } from './search/search.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { RealtimeModule } from './realtime/realtime.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     PrismaModule,
     SearchModule,
     ReviewsModule,
+    RealtimeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

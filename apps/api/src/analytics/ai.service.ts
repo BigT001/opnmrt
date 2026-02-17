@@ -236,20 +236,14 @@ export class AiService {
                 const recentMessagesArr = historyForPrompt.slice(-11); // Include the latest user message
                 const recentMessages = recentMessagesArr.map(m => `${m.role}: ${m.content}`).join('\n');
 
-                // Smart greeting based on time and context
+                // Smart greeting based on time and context - MINIMAL
                 const hour = new Date().getHours();
-                let greeting = '';
-                let timeOfDay = '';
+                let timeGreeting = '';
 
-                if (hour < 12) {
-                    timeOfDay = 'morning';
-                    greeting = 'Good morning';
-                } else if (hour < 17) {
-                    timeOfDay = 'afternoon';
-                    greeting = 'Good afternoon';
-                } else {
-                    timeOfDay = 'evening';
-                    greeting = 'Good evening';
+                if (conversation.messages.length === 0) {
+                    if (hour < 12) timeGreeting = 'Good morning. ';
+                    else if (hour < 17) timeGreeting = 'Good afternoon. ';
+                    else timeGreeting = 'Good evening. ';
                 }
 
                 // Proactive status summary for first message
@@ -387,13 +381,13 @@ When asked about stock, restocking, or inventory:
 ---
 
 ## CONVERSATION RULES:
-- **Tone**: Professional but warm. Like a trusted business partner, not a robot.
-- **Be Specific**: Don't say "you should market more". Say "Post a 15-second Reel of your top product [name] with the trending audio [X] — products like this get 3x more engagement on Instagram"
-- **Use Real Data**: Reference actual numbers from the context above. If a number is 0, address it as 0.
-- **Be Proactive**: If you see low stock or a sales drop in the REAL data, mention it.
-- **Emojis**: Use sparingly (1-2 per message max)
-- **Length**: Keep answers concise but actionable. Use bullet points for lists.
-- **Markdown**: Use bold, headers, and lists for readability
+- **NO REPETITIVE GREETINGS**: Do not say "Hello BigT here" or "Good morning" if you just said it in previous messages. Skip the fluff and get straight to the business.
+- **ASK QUESTIONS**: Be proactive. Don't just answer; ask the store owner about their goals (e.g., "What is your target revenue for this month?" or "How much time can you spend on marketing daily?").
+- **STALKING SCALE**: Discuss scaling. Suggest when to hire marketers, budget for ads (start small, then scale), or when to wait for better organic traction before spending money.
+- **RUB MINDS**: Treat this as a collaborative "brainstorming" session. Offer ideas, then ask for the owner's feedback to refine them together.
+- **Tone**: Partner/Coach.
+- **Be Concise**: Short, high-impact messages. Use 1-2 emojis max.
+- **Action First**: Concrete next steps always.
 
 ---
 
@@ -402,7 +396,7 @@ ${recentMessages}
 
 User's Current Message: "${message}"
 
-Respond as BigT the Manager. Be 100% factual, data-driven, and actionable. If data is missing, admit it and suggest how we can start tracking it.
+Respond as BigT. Be a proactive partner. Ask questions. Get straight to the point. No redundant greetings.
 `;
                 // (Note: Re-using the same prompt structure but with more history)
                 // Using multi-model retry strategy (user requested models + fallbacks)
@@ -457,16 +451,22 @@ Respond as BigT the Manager. Be 100% factual, data-driven, and actionable. If da
             try {
                 // Focus on immediate, high-value actions
                 const prompt = `
-You are an AI store consultant. Based on this live data:
+You are Big T, an expert e-commerce growth advisor. Use this real-time data to help the seller SCALE:
 - Inventory: ${JSON.stringify(context.inventory?.snapshot ? context.inventory.snapshot.slice(0, 5) : [])}
 - Low Stock: ${context.inventory?.lowStockCount} items
 - Out of Stock: ${context.inventory?.outOfStockCount} items
 - Top Products: ${JSON.stringify(context.topProducts ? context.topProducts.slice(0, 3) : [])}
 
-Generate exactly 2 short, punchy, actionable advice snippets (max 15 words each).
-Focus on: Urgent Restocks, Price Adjustments, or Promotion Opportunities.
-Return a plain JSON array of strings. Example: ["Restock 'Blue Shirt' - losing ~$50/day.", "Bundle 'Socks' with 'Shoes' to clear stock."].
-                `;
+Generate exactly 6 powerful, actionable growth tips (max 20 words each).
+Focus on:
+1. Scaling: How to sell more of what's working.
+2. Traffic: Simple ways to get more eyes on the store (WhatsApp, Socials).
+3. Reputation: How to become a "Top Seller" (fast shipping, restocks, pricing).
+
+Use simple, encouraging English. No complex jargon.
+Return a plain JSON array of strings.
+Example: ["You've sold 10 'Red Bags' today - restock now to maintain your Top Seller momentum!", "Share your store link on WhatsApp status every morning to double your daily visitors."].
+`;
 
                 const result = await this.generateWithRetry(prompt);
                 const text = result.response.text();
@@ -487,7 +487,39 @@ Return a plain JSON array of strings. Example: ["Restock 'Blue Shirt' - losing ~
 
         return this.executeWithQueue(async () => {
             try {
-                const prompt = `Analyze store data and provide 3-5 JSON insights: ${JSON.stringify(storeData)}. Keys: title, description, impact, type.`;
+                const prompt = `
+You are **BigT**, a world-class retail operations manager and growth consultant. 
+Your goal is to provide deeply analytical, data-driven, and highly actionable insights for a store owner based on their current performance.
+
+DATA CONTEXT:
+${JSON.stringify(storeData)}
+
+YOUR MISSION:
+Analyze the provided store data (revenue, top products, sales funnel, customer retention) and generate 3-5 high-impact insights.
+
+REQUIRED CONTENT FOR EACH INSIGHT:
+1. **Product Performance**: For any product mentioned, report on its specific sales momentum (e.g., "moving 3 units/week") and its contribution to earnings.
+2. **Operational Status**: What is happening to this stock right now? (e.g., "Rising star", "Stagnant", "Underperforming").
+3. **Growth Strategy**: How can they sell MORE of this? Suggest specific channels (Instagram, WhatsApp, TikTok) or tactics (Bundles, Charm Pricing, Urgency).
+4. **Actionable Steps**: What exactly should the merchant do in the next 24 hours?
+
+OUTPUT FORMAT:
+Return ONLY a raw JSON array of objects.
+[
+  {
+    "title": "Short title using business terminology",
+    "description": "The full detailed report including sales performance, earnings, and specific marketing advice as requested.",
+    "impact": "HIGH | MEDIUM | LOW",
+    "type": "INVENTORY | SALES | MARKETING | CUSTOMER"
+  }
+]
+
+CRITICAL GUIDELINES:
+- **Simple Language**: Use words a 12-year-old knows. No "market momentum" or "sales velocity". Use "fast sales" or "making money".
+- **Conciseness**: Keep the description very short. 1 or 2 sentences max.
+- **Actions Only**: Focus on precise steps to sell more (WhatsApp, Status, Calling people).
+- **Brand Identity**: You are BigT. No mention of AI models.
+`;
                 const result = await this.generateWithRetry(prompt);
                 const text = result.response.text();
                 const cleanJson = text.replace(/```json|```/g, '').trim();
@@ -495,6 +527,7 @@ Return a plain JSON array of strings. Example: ["Restock 'Blue Shirt' - losing ~
                 this.setCache(cacheKey, data);
                 return data;
             } catch (error) {
+                console.error('[GENERATE_INSIGHTS_ERROR]', error);
                 return [];
             }
         });
@@ -508,7 +541,9 @@ Return a plain JSON array of strings. Example: ["Restock 'Blue Shirt' - losing ~
 
         return this.executeWithQueue(async () => {
             try {
-                const prompt = `Predict for 30 days based on: ${JSON.stringify(storeData)}. Return JSON: { "nextMonthRevenue": number, "growthConfidence": number, "predictedHighDemand": string[] }`;
+                const prompt = `You are Big T. Predict the next 30 days based on: ${JSON.stringify(storeData)}. 
+Use simple words. 
+Return JSON: { "nextMonthRevenue": number, "growthConfidence": number, "predictedHighDemand": string[] }`;
                 const result = await this.generateWithRetry(prompt);
                 const text = result.response.text();
                 const cleanJson = text.replace(/```json|```/g, '').trim();
@@ -525,10 +560,54 @@ Return a plain JSON array of strings. Example: ["Restock 'Blue Shirt' - losing ~
         if (!this.isReady()) return `BigT is offline. (${this.initError})`;
         return this.executeWithQueue(async () => {
             try {
-                const prompt = `You are BigT. Question: "${question}". Context: ${JSON.stringify(context)}. Short answer.`;
+                const prompt = `You are Big T, a helpful store manager. 
+Answer in very simple English that a 12-year-old can understand. 
+No big words. Be very short and tell the user what to do.
+
+Question: "${question}"
+Data Context: ${JSON.stringify(context)}`;
                 const result = await this.generateWithRetry(prompt);
                 return result.response.text();
             } catch (e: any) { return "Error: " + e.message; }
+        });
+    }
+
+    async generateProductInsight(productData: any) {
+        if (!this.isReady()) return null;
+
+        return this.executeWithQueue(async () => {
+            try {
+                const prompt = `
+You are Big T, a brilliant sales coach and retail expert. 
+Analyze this product data: ${JSON.stringify(productData)}
+
+YOUR GOAL: Give the owner 1-2 SHARP, PROFIT-FOCUSED steps to sell these items fast.
+
+Rules:
+1. Use very simple English (12-year-old level).
+2. Don't just suggest WhatsApp. Think BIGGER:
+   - "Create a fun TikTok/Instagram Reel showing how it works."
+   - "Run a small Facebook ad for people who like [category]."
+   - "Make a 24-hour flash sale with a countdown."
+   - "Bundle it with another popular item to clear stock."
+3. Mention actual numbers (sold count, money made, stock left).
+4. Be creative and smart—like a world-class salesperson.
+
+Return ONLY a JSON object:
+{
+  "description": "...",
+  "impact": "HIGH | MEDIUM | LOW",
+  "type": "INVENTORY | SALES | MARKETING"
+}
+`;
+                const result = await this.generateWithRetry(prompt);
+                const text = result.response.text();
+                const cleanJson = text.replace(/```json|```/g, '').trim();
+                return JSON.parse(cleanJson);
+            } catch (error) {
+                console.error('[GENERATE_PRODUCT_INSIGHT_ERROR]', error);
+                return null;
+            }
         });
     }
 }

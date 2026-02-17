@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { MessageCircle, Send, Loader2, Store, User } from 'lucide-react';
+import { MessageCircle, Send, Loader2, Store, User, ExternalLink } from 'lucide-react';
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocket } from '@/hooks/useSocket';
 import { useAuthStore } from '@/store/useAuthStore';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function CustomerMessagesPage() {
     const { subdomain } = useParams<{ subdomain: string }>();
@@ -98,21 +100,26 @@ export default function CustomerMessagesPage() {
     }
 
     return (
-        <div className="flex flex-col h-[700px] space-y-6">
+        <div className="flex flex-col h-[700px] space-y-8">
             <div className="shrink-0">
                 <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Messages</h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">Direct support from {storeInfo?.name || 'the seller'}</p>
+                <p className="text-slate-500 dark:text-slate-400 mt-1 uppercase text-[10px] font-bold tracking-widest">
+                    Direct support from {storeInfo?.name || 'the seller'}
+                </p>
             </div>
 
             <div className="flex-1 bg-white dark:bg-slate-950 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col overflow-hidden relative transition-colors duration-300">
-                {/* Chat Header */}
-                <div className="p-6 border-b border-slate-50 dark:border-slate-800 flex items-center gap-4 bg-slate-50/50 dark:bg-slate-900/50">
-                    <div className="w-12 h-12 bg-slate-900 dark:bg-white rounded-2xl flex items-center justify-center text-white dark:text-black">
-                        <Store className="w-6 h-6" />
+                {/* Chat Header - Significantly Reduced Height */}
+                <div className="h-14 px-6 border-b border-slate-100/50 dark:border-slate-800 flex items-center gap-3 bg-white dark:bg-slate-950 transition-colors duration-300">
+                    <div className="w-8 h-8 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-slate-900 dark:text-white overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0">
+                        {storeInfo?.logo ? (
+                            <img src={storeInfo.logo} alt={storeInfo.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <Store className="w-4 h-4" />
+                        )}
                     </div>
-                    <div>
-                        <h3 className="font-black text-slate-900 dark:text-white text-sm">{storeInfo?.name}</h3>
-                        <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Store Owner Online</p>
+                    <div className="min-w-0">
+                        <h3 className="font-black text-slate-900 dark:text-white text-[11px] uppercase tracking-widest truncate">{storeInfo?.name}</h3>
                     </div>
                 </div>
 
@@ -142,11 +149,30 @@ export default function CustomerMessagesPage() {
                                             }`}>
                                             {isMe ? <User className="w-4 h-4" /> : <Store className="w-4 h-4" />}
                                         </div>
-                                        <div className={`p-4 rounded-2xl text-[13px] leading-relaxed shadow-sm ${isMe
-                                            ? 'bg-slate-900 dark:bg-blue-600 text-white rounded-br-none'
+                                        <div className={`p-4 rounded-2xl text-[13px] leading-relaxed shadow-sm prose prose-sm max-w-none ${isMe
+                                            ? 'bg-slate-900 dark:bg-blue-600 text-white rounded-br-none prose-invert'
                                             : 'bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-100 dark:border-slate-800 rounded-bl-none'
                                             }`}>
-                                            {msg.content}
+                                            <ReactMarkdown
+                                                remarkPlugins={[remarkGfm]}
+                                                components={{
+                                                    p: ({ children }) => <p className="m-0 whitespace-pre-wrap">{children}</p>,
+                                                    a: ({ node, ...props }) => (
+                                                        <a
+                                                            {...props}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className={`inline-flex items-center gap-1 underline font-bold ${isMe ? 'text-blue-200 hover:text-white' : 'text-emerald-500 hover:text-emerald-400'}`}
+                                                        >
+                                                            {props.children}
+                                                            <ExternalLink className="w-3 h-3" />
+                                                        </a>
+                                                    ),
+                                                    strong: ({ children }) => <strong className="font-black">{children}</strong>
+                                                }}
+                                            >
+                                                {msg.content}
+                                            </ReactMarkdown>
                                             <div className={`text-[9px] mt-2 font-bold uppercase tracking-widest opacity-40 ${isMe ? 'text-right' : 'text-left'}`}>
                                                 {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </div>

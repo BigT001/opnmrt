@@ -16,6 +16,7 @@ interface Order {
         id: string;
         name: string;
         email: string;
+        image?: string;
     };
     items: {
         id: string;
@@ -181,8 +182,12 @@ export default function OrdersPage() {
                                         </td>
                                         <td className="py-5">
                                             <div className="flex items-center space-x-3">
-                                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] uppercase shrink-0">
-                                                    {order.buyer?.name ? order.buyer.name.charAt(0) : 'U'}
+                                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] uppercase shrink-0 overflow-hidden">
+                                                    {order.buyer?.image ? (
+                                                        <img src={order.buyer.image} alt={order.buyer.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        order.buyer?.name ? order.buyer.name.charAt(0) : 'U'
+                                                    )}
                                                 </div>
                                                 <div className="flex flex-col">
                                                     <span>{order.buyer?.name || 'Unknown Customer'}</span>

@@ -4,8 +4,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Send, Loader2, User, MessageSquare, ArrowRight } from 'lucide-react';
+import { Search, Send, Loader2, User, MessageSquare, ArrowRight, ExternalLink } from 'lucide-react';
 import { useSocket } from '@/hooks/useSocket';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function SellerMessagesPage() {
     const { store, user } = useAuthStore();
@@ -113,7 +115,7 @@ export default function SellerMessagesPage() {
         }
     }, [messages]);
 
-    // Sync with store state
+    // AI Toggle State: Sync with store on load/update
     useEffect(() => {
         if (store?.chatAiEnabled !== undefined) {
             setAiEnabled(store.chatAiEnabled);
@@ -186,190 +188,214 @@ export default function SellerMessagesPage() {
     const selectedChat = conversations.find(c => c.userId === selectedUserId);
 
     return (
-        <div className="h-[calc(100vh-12rem)] flex flex-col space-y-6 lg:space-y-8">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shrink-0 px-4 lg:px-0">
-                <div>
-                    <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">Messages</h1>
-                    <p className="text-slate-500 mt-1 text-xs lg:text-sm tracking-tight">Direct customer support management</p>
-                </div>
-
-                {/* AI Toggle Component */}
-                <div onClick={toggleAiMode} className={`group cursor-pointer flex items-center gap-3 px-4 py-2 rounded-2xl border transition-all duration-500 ${aiEnabled
+        <div className="h-[calc(100vh-6rem)] flex flex-col lg:flex-row lg:space-x-8 min-h-0 space-y-4 lg:space-y-0 pb-4 lg:pb-0">
+            {/* Chat List */}
+            <div className={`w-full lg:w-80 bg-white rounded-[2rem] lg:rounded-[2.5rem] p-4 lg:p-6 shadow-sm border border-slate-100 flex flex-col overflow-hidden ${selectedUserId ? 'hidden lg:flex' : 'flex'}`}>
+                {/* AI Toggle Component - Moved from Header */}
+                <div className={`mb-6 group flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border transition-all duration-500 ${aiEnabled
                     ? 'bg-emerald-50/50 border-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.1)]'
                     : 'bg-slate-50 border-slate-100 hover:border-slate-200'}`}>
-                    <div className="flex flex-col items-end">
-                        <span className={`text-[9px] font-black tracking-widest uppercase transition-colors duration-500 ${aiEnabled ? 'text-emerald-500' : 'text-slate-400'}`}>
-                            {aiEnabled ? 'AI Response Active' : 'Manual Response Only'}
+                    <div className="flex flex-col">
+                        <span className={`text-[8px] font-black tracking-widest uppercase transition-colors duration-500 ${aiEnabled ? 'text-emerald-500' : 'text-slate-400'}`}>
+                            {aiEnabled ? 'AI Response Active' : 'Manual Mode'}
                         </span>
-                        <span className="text-[10px] font-bold text-slate-900">
+                        <span className="text-[10px] font-bold text-slate-900 leading-tight">
                             BigT Support Engine
                         </span>
                     </div>
-                    <div className={`w-10 h-6 rounded-full p-1 transition-all duration-500 relative ${aiEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleAiMode();
+                        }}
+                        className={`w-10 h-6 rounded-full p-1 transition-all duration-500 relative shrink-0 cursor-pointer ${aiEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                    >
                         <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-500 flex items-center justify-center transform ${aiEnabled ? 'translate-x-4' : 'translate-x-0'}`}>
                             {aiEnabled && <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" />}
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div className="flex-1 flex flex-col lg:flex-row lg:space-x-8 min-h-0 space-y-4 lg:space-y-0 pb-4 lg:pb-0">
-                {/* Chat List */}
-                <div className={`w-full lg:w-80 bg-white rounded-[2rem] lg:rounded-[2.5rem] p-4 lg:p-6 shadow-sm border border-slate-100 flex flex-col overflow-hidden ${selectedUserId ? 'hidden lg:flex' : 'flex'}`}>
-                    <div className="px-2 mb-6 relative">
-                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search buyers..."
-                            className="w-full bg-slate-50 border border-slate-50 rounded-2xl pl-12 pr-4 py-3 text-xs font-bold outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100/50 transition-all placeholder:font-medium text-slate-900"
-                        />
-                    </div>
-                    <div className="flex-1 overflow-y-auto space-y-2 no-scrollbar px-2">
-                        {conversations.length === 0 ? (
-                            <p className="text-center text-[10px] text-slate-400 font-bold uppercase mt-10">No conversations</p>
-                        ) : (
-                            conversations.map((chat) => (
-                                <div
-                                    key={chat.userId}
-                                    onClick={() => setSelectedUserId(chat.userId)}
-                                    className={`p-3 rounded-2xl cursor-pointer transition-all relative flex items-center gap-3 ${selectedUserId === chat.userId ? 'bg-slate-900 text-white shadow-lg' : 'hover:bg-slate-50 text-slate-500'
-                                        }`}
-                                >
-                                    {/* Avatar */}
-                                    <div className="relative shrink-0">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-black shadow-sm ${selectedUserId === chat.userId ? 'bg-white/20 text-white ring-1 ring-white/30' : 'bg-slate-100 text-slate-900 border border-slate-200'
-                                            }`}>
-                                            {chat.userName?.[0]?.toUpperCase() || 'U'}
-                                        </div>
-                                        {/* Badge - Positioned Top Left as requested */}
-                                        {chat.unreadCount > 0 && selectedUserId !== chat.userId && (
-                                            <div className="absolute -top-1 -left-1 h-4 min-w-[16px] px-1 bg-emerald-500 text-white text-[9px] font-black rounded-full flex items-center justify-center ring-2 ring-white shadow-sm z-10 animate-in zoom-in duration-300">
-                                                {chat.unreadCount}
-                                            </div>
+                <div className="px-2 mb-6 relative">
+                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search buyers..."
+                        className="w-full bg-slate-50 border border-slate-50 rounded-2xl pl-12 pr-4 py-3 text-xs font-bold outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100/50 transition-all placeholder:font-medium text-slate-900"
+                    />
+                </div>
+                <div className="flex-1 overflow-y-auto space-y-2 no-scrollbar px-2">
+                    {conversations.length === 0 ? (
+                        <p className="text-center text-[10px] text-slate-400 font-bold uppercase mt-10">No conversations</p>
+                    ) : (
+                        conversations.map((chat) => (
+                            <div
+                                key={chat.userId}
+                                onClick={() => setSelectedUserId(chat.userId)}
+                                className={`p-3 rounded-2xl cursor-pointer transition-all relative flex items-center gap-3 ${selectedUserId === chat.userId ? 'bg-slate-900 text-white shadow-lg' : 'hover:bg-slate-50 text-slate-500'
+                                    }`}
+                            >
+                                {/* Avatar */}
+                                <div className="relative shrink-0">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-black shadow-sm overflow-hidden shrink-0 ${selectedUserId === chat.userId ? 'bg-white/20 text-white ring-1 ring-white/30' : 'bg-slate-100 text-slate-900 border border-slate-200'
+                                        }`}>
+                                        {(chat.userImage || chat.image) ? (
+                                            <img src={chat.userImage || chat.image} alt={chat.userName} className="w-full h-full object-cover" />
+                                        ) : (
+                                            chat.userName?.[0]?.toUpperCase() || 'U'
                                         )}
                                     </div>
-
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-center mb-0.5">
-                                            <span className={`text-xs font-black truncate ${selectedUserId === chat.userId ? 'text-white' : 'text-slate-900'}`}>
-                                                {chat.userName}
-                                            </span>
-                                            <span className="text-[9px] opacity-60 font-medium whitespace-nowrap ml-2">
-                                                {new Date(chat.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
+                                    {/* Badge - Positioned Top Left as requested */}
+                                    {chat.unreadCount > 0 && selectedUserId !== chat.userId && (
+                                        <div className="absolute -top-1 -left-1 h-4 min-w-[16px] px-1 bg-emerald-500 text-white text-[9px] font-black rounded-full flex items-center justify-center ring-2 ring-white shadow-sm z-10 animate-in zoom-in duration-300">
+                                            {chat.unreadCount}
                                         </div>
-                                        <p className={`text-[10px] line-clamp-1 italic ${chat.unreadCount > 0 ? 'font-bold text-slate-900' : 'opacity-70'}`}>
-                                            {chat.lastMessage}
-                                        </p>
-                                    </div>
+                                    )}
                                 </div>
-                            ))
-                        )}
-                    </div>
-                </div>
 
-                {/* Chat Area */}
-                <div className={`flex-1 bg-white rounded-[2rem] lg:rounded-[3rem] shadow-sm border border-slate-100 flex flex-col overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.02)] ${selectedUserId ? 'flex' : 'hidden lg:flex'}`}>
-                    {selectedUserId ? (
-                        <>
-                            {/* Chat Header */}
-                            <div className="p-4 lg:p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-                                <div className="flex items-center gap-4" onClick={() => {
-                                    // Reset unread locally
-                                    setConversations(prev => prev.map(c => c.userId === selectedUserId ? { ...c, unreadCount: 0 } : c));
-                                }}>
-                                    <button onClick={() => setSelectedUserId(null)} className="lg:hidden p-2 -ml-2 text-slate-400 hover:text-slate-900">
-                                        <ArrowRight className="w-5 h-5 rotate-180" />
-                                    </button>
-                                    <div className="w-10 h-10 lg:w-12 lg:h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-black text-xs lg:text-sm">
-                                        {selectedChat?.userName?.[0]?.toUpperCase() || 'U'}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex justify-between items-center mb-0.5">
+                                        <span className={`text-xs font-black truncate ${selectedUserId === chat.userId ? 'text-white' : 'text-slate-900'}`}>
+                                            {chat.userName}
+                                        </span>
+                                        <span className="text-[9px] opacity-60 font-medium whitespace-nowrap ml-2">
+                                            {new Date(chat.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
                                     </div>
-                                    <div>
-                                        <h3 className="font-black text-slate-900 text-xs lg:text-sm">{selectedChat?.userName}</h3>
-                                        <p className="text-[9px] lg:text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Customer Thread</p>
-                                    </div>
+                                    <p className={`text-[10px] line-clamp-1 italic ${chat.unreadCount > 0 ? 'font-bold text-slate-900' : 'opacity-70'}`}>
+                                        {chat.lastMessage}
+                                    </p>
                                 </div>
                             </div>
-
-                            {/* Messages */}
-                            <div
-                                ref={scrollRef}
-                                className="flex-1 overflow-y-auto p-4 lg:p-8 space-y-6 no-scrollbar"
-                            >
-                                {msgLoading ? (
-                                    <div className="h-full flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-slate-300" /></div>
-                                ) : (
-                                    messages.map((msg) => {
-                                        const isMe = msg.senderRole === 'SELLER';
-                                        return (
-                                            <motion.div
-                                                key={msg.id}
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
-                                            >
-                                                <div className={`flex items-end gap-3 max-w-[85%] lg:max-w-[80%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                                                    <div className={`p-4 rounded-2xl text-[12px] lg:text-[13px] leading-relaxed shadow-sm ${isMe
-                                                        ? 'bg-slate-900 text-white rounded-br-none'
-                                                        : 'bg-slate-50 text-slate-900 border border-slate-100 rounded-bl-none'
-                                                        }`}>
-                                                        {msg.content}
-                                                        <div className={`text-[9px] mt-2 font-bold uppercase tracking-widest opacity-40 ${isMe ? 'text-right' : 'text-left'}`}>
-                                                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        );
-                                    })
-                                )}
-                            </div>
-
-                            {/* Footer */}
-                            <form onSubmit={handleSend} className="p-4 lg:p-6 bg-slate-50/50 border-t border-slate-50">
-                                <div className="flex flex-col gap-3">
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={handleSmartSuggest}
-                                            disabled={aiSuggesting || !selectedUserId}
-                                            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-100 rounded-xl text-[9px] font-black text-slate-900 uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-500 transition-all shadow-sm disabled:opacity-50 group"
-                                        >
-                                            <div className={`w-1.5 h-1.5 rounded-full ${aiSuggesting ? 'bg-emerald-500 animate-ping' : 'bg-emerald-500'}`} />
-                                            {aiSuggesting ? 'BigT is thinking...' : 'Draft with BigT AI'}
-                                        </button>
-                                        <div className="h-px flex-1 bg-slate-100" />
-                                    </div>
-
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={newMessage}
-                                            onChange={(e) => setNewMessage(e.target.value)}
-                                            placeholder={aiEnabled ? "BigT is active and will auto-reply instantly..." : "Type your reply to the customer..."}
-                                            className="w-full h-12 lg:h-14 pl-6 pr-16 bg-white border border-slate-100 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-200 transition-all text-slate-900 shadow-sm"
-                                        />
-                                        <button
-                                            type="submit"
-                                            disabled={sending || !newMessage.trim()}
-                                            className="absolute right-2 top-2 lg:top-2 w-8 h-8 lg:w-10 lg:h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-black transition-all disabled:opacity-50 shadow-lg shadow-slate-900/20"
-                                        >
-                                            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </>
-                    ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center p-10 text-center">
-                            <div className="w-16 h-16 lg:w-24 lg:h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center text-4xl lg:text-5xl mb-6 shadow-inner ring-1 ring-slate-100">
-                                💬
-                            </div>
-                            <h3 className="text-xl font-black text-slate-900 mb-2">Select a conversation</h3>
-                            <p className="text-xs lg:text-sm text-slate-500 max-w-sm mb-8 leading-relaxed">View and respond to direct messages from your customers here. Your replies appear instantly to them.</p>
-                        </div>
+                        ))
                     )}
                 </div>
+            </div>
+
+            {/* Chat Area */}
+            <div className={`flex-1 bg-white rounded-[2rem] lg:rounded-[3rem] shadow-sm border border-slate-100 flex flex-col overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.02)] ${selectedUserId ? 'flex' : 'hidden lg:flex'}`}>
+                {selectedUserId ? (
+                    <>
+                        {/* Chat Header */}
+                        <div className="p-4 lg:p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+                            <div className="flex items-center gap-4" onClick={() => {
+                                // Reset unread locally
+                                setConversations(prev => prev.map(c => c.userId === selectedUserId ? { ...c, unreadCount: 0 } : c));
+                            }}>
+                                <button onClick={() => setSelectedUserId(null)} className="lg:hidden p-2 -ml-2 text-slate-400 hover:text-slate-900">
+                                    <ArrowRight className="w-5 h-5 rotate-180" />
+                                </button>
+                                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-black text-xs lg:text-sm overflow-hidden shrink-0">
+                                    {(selectedChat?.userImage || selectedChat?.image) ? (
+                                        <img src={selectedChat.userImage || selectedChat.image} alt={selectedChat.userName} className="w-full h-full object-cover" />
+                                    ) : (
+                                        selectedChat?.userName?.[0]?.toUpperCase() || 'U'
+                                    )}
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-slate-900 text-xs lg:text-sm">{selectedChat?.userName}</h3>
+                                    <p className="text-[9px] lg:text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Customer Thread</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Messages */}
+                        <div
+                            ref={scrollRef}
+                            className="flex-1 overflow-y-auto p-4 lg:p-8 space-y-6 no-scrollbar"
+                        >
+                            {msgLoading ? (
+                                <div className="h-full flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-slate-300" /></div>
+                            ) : (
+                                messages.map((msg) => {
+                                    const isMe = msg.senderRole === 'SELLER';
+                                    return (
+                                        <motion.div
+                                            key={msg.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                                        >
+                                            <div className={`flex items-end gap-3 max-w-[85%] lg:max-w-[80%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                                                <div className={`p-4 rounded-2xl text-[12px] lg:text-[13px] leading-relaxed shadow-sm prose prose-sm max-w-none ${isMe
+                                                    ? 'bg-slate-900 text-white rounded-br-none prose-invert'
+                                                    : 'bg-slate-50 text-slate-900 border border-slate-100 rounded-bl-none'
+                                                    }`}>
+                                                    <ReactMarkdown
+                                                        remarkPlugins={[remarkGfm]}
+                                                        components={{
+                                                            p: ({ children }) => <p className="m-0 whitespace-pre-wrap">{children}</p>,
+                                                            a: ({ node, ...props }) => (
+                                                                <a
+                                                                    {...props}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className={`inline-flex items-center gap-1 underline font-bold ${isMe ? 'text-emerald-400 hover:text-emerald-300' : 'text-primary hover:text-primary/80'}`}
+                                                                >
+                                                                    {props.children}
+                                                                    <ExternalLink className="w-3 h-3" />
+                                                                </a>
+                                                            ),
+                                                            strong: ({ children }) => <strong className="font-black">{children}</strong>
+                                                        }}
+                                                    >
+                                                        {msg.content}
+                                                    </ReactMarkdown>
+                                                    <div className={`text-[9px] mt-2 font-bold uppercase tracking-widest opacity-40 ${isMe ? 'text-right' : 'text-left'}`}>
+                                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <form onSubmit={handleSend} className="p-4 lg:p-6 bg-slate-50/50 border-t border-slate-50">
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleSmartSuggest}
+                                        disabled={aiSuggesting || !selectedUserId}
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-100 rounded-xl text-[9px] font-black text-slate-900 uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-500 transition-all shadow-sm disabled:opacity-50 group"
+                                    >
+                                        <div className={`w-1.5 h-1.5 rounded-full ${aiSuggesting ? 'bg-emerald-500 animate-ping' : 'bg-emerald-500'}`} />
+                                        {aiSuggesting ? 'BigT is thinking...' : 'Draft with BigT AI'}
+                                    </button>
+                                    <div className="h-px flex-1 bg-slate-100" />
+                                </div>
+
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={newMessage}
+                                        onChange={(e) => setNewMessage(e.target.value)}
+                                        placeholder={aiEnabled ? "BigT is active and will auto-reply instantly..." : "Type your reply to the customer..."}
+                                        className="w-full h-12 lg:h-14 pl-6 pr-16 bg-white border border-slate-100 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-200 transition-all text-slate-900 shadow-sm"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={sending || !newMessage.trim()}
+                                        className="absolute right-2 top-2 lg:top-2 w-8 h-8 lg:w-10 lg:h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-black transition-all disabled:opacity-50 shadow-lg shadow-slate-900/20"
+                                    >
+                                        {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </>
+                ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center p-10 text-center">
+                        <div className="w-16 h-16 lg:w-24 lg:h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center text-4xl lg:text-5xl mb-6 shadow-inner ring-1 ring-slate-100">
+                            💬
+                        </div>
+                        <h3 className="text-xl font-black text-slate-900 mb-2">Select a conversation</h3>
+                        <p className="text-xs lg:text-sm text-slate-500 max-w-sm mb-8 leading-relaxed">View and respond to direct messages from your customers here. Your replies appear instantly to them.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

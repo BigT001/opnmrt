@@ -72,15 +72,7 @@ export default function CustomersPage() {
             <div className="flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Customers</h1>
-                    <p className="text-slate-500 mt-1">Manage and segment your storefront audience</p>
-                </div>
-                <div className="flex space-x-3">
-                    <button className="px-6 py-2.5 bg-primary/10 text-primary rounded-xl text-xs font-bold hover:bg-primary/20 transition-all">
-                        Segment with AI
-                    </button>
-                    <button className="px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold hover:brightness-110 transition-all shadow-lg shadow-emerald-900/10">
-                        Add Customer
-                    </button>
+                    <p className="text-slate-500 mt-1 uppercase text-[10px] font-bold tracking-widest">Manage and segment your storefront audience</p>
                 </div>
             </div>
 
@@ -95,9 +87,9 @@ export default function CustomersPage() {
             {/* Customers Table */}
             <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
+                    <table className="w-full border-separate border-spacing-y-0 text-left">
                         <thead>
-                            <tr className="text-left text-[10px] text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                            <tr className="text-[10px] text-slate-400 uppercase tracking-widest border-b border-slate-50">
                                 <th className="pb-6 font-bold pl-4">Customer Name</th>
                                 <th className="pb-6 font-bold">Orders</th>
                                 <th className="pb-6 font-bold">Total Spent</th>
@@ -121,11 +113,15 @@ export default function CustomersPage() {
                                         >
                                             <td className="py-5 pl-4">
                                                 <div className="flex items-center space-x-4">
-                                                    <div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-sm shadow-sm text-slate-900 font-black">
-                                                        {customer.name.split(' ').map((n: string) => n[0]).join('')}
+                                                    <div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-sm shadow-sm text-slate-900 font-black overflow-hidden shrink-0">
+                                                        {customer.image ? (
+                                                            <img src={customer.image} alt={customer.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            customer.name.split(' ').map((n: string) => n[0]).join('')
+                                                        )}
                                                     </div>
                                                     <div>
-                                                        <p>{customer.name}</p>
+                                                        <p className="font-black text-slate-900">{customer.name}</p>
                                                         <p className="text-[10px] text-slate-400 font-medium">{customer.email}</p>
                                                     </div>
                                                 </div>

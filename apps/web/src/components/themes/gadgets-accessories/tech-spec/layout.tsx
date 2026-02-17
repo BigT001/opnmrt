@@ -7,7 +7,12 @@ import { TechSpecFooter } from './Footer';
 import { TechSpecCartDrawer } from './CartDrawer';
 import { CartNotification } from '@/components/storefront/CartNotification';
 
+import { usePathname } from 'next/navigation';
+
 export const TechSpecLayout: React.FC<StoreThemeProps> = ({ store, children }) => {
+    const pathname = usePathname();
+    const isDashboard = pathname?.includes('/customer') || pathname?.includes('/dashboard');
+
     return (
         <div className="font-sans antialiased text-gray-900 bg-white min-h-screen flex flex-col selection:bg-red-500 selection:text-white" data-theme="tech-spec">
             <style jsx global>{`
@@ -45,7 +50,9 @@ export const TechSpecLayout: React.FC<StoreThemeProps> = ({ store, children }) =
             <TechSpecCartDrawer storeId={store.id} />
             <CartNotification />
             <main className="flex-grow pt-[140px]">{children}</main>
-            <TechSpecFooter storeName={store.name} />
+            {!isDashboard && (
+                <TechSpecFooter storeName={store.name} />
+            )}
         </div>
     );
 };

@@ -94,35 +94,27 @@ export class ProductAiService {
             }
         }
 
-        const prompt = `You are a world-class brand curator, storyteller, and SEO Data Scientist for "${data.storeName || 'this store'}". 
+        const prompt = `You are a helpful store manager for "${data.storeName || 'this store'}". 
 ${data.storeDescription ? `STORE CONTEXT: ${data.storeDescription}` : ''}
 
-Your goal is to create product listings that are emotionally compelling, deeply authentic to this specific brand, and scientifically optimized for search discovery across ANY product category (from fashion and electronics to home goods and services).
+Your goal is to write a simple product description that anyone can understand. 
 
 INPUT DATA:
 - Product Name: "${data.name || 'Unknown Item'}"
 - Category: "${data.category || 'Uncategorized'}"
 - Current Description: "${data.description || 'No description provided'}"
 
-THE BIGT ANALYTICAL PROCESS:
-Before you write a single word, internally analyze the following:
-1. WHAT is this exactly? (Identify the type, craftsmanship, utility, or technical specs of the item)
-2. WHO is it for? (Identify the specific audience for this store's brand)
-3. WHY do they need it? (Identify the problem it solves or the desire it fulfills)
-
 YOUR MISSION:
-1. "suggestedDescription": Write 2-3 paragraphs of rich, human, and emotional storytelling.
-   - Adapt your tone to the product type: use technical expertise for electronics/appliances, and sensory, evocative language for fashion/home decor.
-   - Use first-person language occasionally (e.g., "I love how...", "We've noticed...").
-   - AVOID typical AI-isms. Talk like a dedicated brand ambassador.
-   - If an image is provided, reference its specific visual details (textures, build quality, silhouette, finish) naturally.
-2. "suggestedCategory": Suggest the most discovered "Boutique-Style" category. It must be specific (e.g., "Direct Cooling Refrigerators" instead of just "Electronics").
-3. "tags": Provide exactly 5 HIGH-INTENT SEO tags. 
-   - Use long-tail keywords that a real person would type into a search bar (e.g., "energy efficient small fridge for office" or "vintage style waterproof wristwatch").
+1. "suggestedDescription": Write 1-2 short paragraphs. 
+   - Use very simple English. No big words. Imagine a 12-year-old is reading it.
+   - Explain why the product is good and how it helps the customer.
+   - If there is an image, talk about what it looks like (color, size, feel) simply.
+2. "suggestedCategory": Suggest a simple category for this product. 
+3. "tags": Provide 5 simple words people use to search for this.
 
 CORE IDENTITY:
-- Tone: Warm, expert, brand-specific, and data-driven.
-- Purpose: Maximize discoverability and brand loyalty.
+- Tone: Friendly and simple.
+- Purpose: Help people understand what the product is.
 - Format: Return ONLY a raw JSON object. No markdown.
 
 {

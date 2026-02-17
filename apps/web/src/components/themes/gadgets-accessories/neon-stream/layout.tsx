@@ -7,7 +7,10 @@ import { NeonStreamFooter } from './Footer';
 import { NeonStreamCartDrawer } from './CartDrawer';
 import { CartNotification } from '@/components/storefront/CartNotification';
 
+import { usePathname } from 'next/navigation';
+
 export const NeonStreamLayout: React.FC<StoreThemeProps> = ({ store, children }) => {
+    const pathname = usePathname();
     return (
         <div className="font-sans antialiased text-white bg-[#050505] min-h-screen flex flex-col selection:bg-[#00F5FF] selection:text-black" data-theme="neon-stream">
             <style jsx global>{`
@@ -56,7 +59,9 @@ export const NeonStreamLayout: React.FC<StoreThemeProps> = ({ store, children })
             <NeonStreamCartDrawer storeId={store.id} />
             <CartNotification />
             <main className="flex-grow neon-flow">{children}</main>
-            <NeonStreamFooter storeName={store.name} />
+            {!pathname?.includes('/customer') && !pathname?.includes('/dashboard') && (
+                <NeonStreamFooter storeName={store.name} />
+            )}
         </div>
     );
 };
