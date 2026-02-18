@@ -6,7 +6,10 @@ async function getStore(subdomain: string) {
     try {
         const res = await fetch(
             url,
-            { next: { revalidate: 3600 } } // Cache for 1 hour
+            {
+                cache: 'no-store',
+                next: { revalidate: 0 }
+            }
         );
 
         console.log(`Store resolve status: ${res.status}`);

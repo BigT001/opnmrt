@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { User, Mail, Save, Loader2, ShieldCheck, Camera, Phone, MapPin, CreditCard, Plus } from 'lucide-react';
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function CustomerProfilePage() {
     const { subdomain } = useParams<{ subdomain: string }>();
@@ -70,6 +71,8 @@ export default function CustomerProfilePage() {
         }
     };
 
+    const { setUser } = useAuthStore();
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
@@ -95,12 +98,19 @@ export default function CustomerProfilePage() {
 
             // Update local state with returned data (especially image URL)
             // Ideally backend returns full updated object
+            const updatedUser = {
+                ...res.data,
+                image: res.data.image || profile.image,
+                name: res.data.name || profile.name
+            };
+
             setProfile((prev: any) => ({
                 ...prev,
-                image: res.data.image || prev.image,
-                name: res.data.name || prev.name,
-                shippingAddress: res.data.shippingAddress || prev.shippingAddress
+                ...updatedUser
             }));
+
+            // Sync with Global Auth Store for Navbar/Header
+            setUser(updatedUser);
 
             if (res.data.name) setInitialName(res.data.name);
             setPreviewUrl(null);
@@ -167,7 +177,11 @@ export default function CustomerProfilePage() {
                     <div className="relative group shrink-0">
                         <div className="w-24 h-24 bg-slate-900 dark:bg-white rounded-[2rem] flex items-center justify-center text-white dark:text-black font-black text-3xl shadow-xl shadow-slate-200 dark:shadow-none overflow-hidden relative">
                             {previewUrl || profile.image ? (
-                                <img src={previewUrl || profile.image} alt="Profile" className="w-full h-full object-cover" />
+                                <img
+                                    src={previewUrl || (profile.image?.startsWith('http') ? profile.image : `${process.env.NEXT_PUBLIC_API_URL}${profile.image}`.replace('/api/', '/'))}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover"
+                                />
                             ) : (
                                 profile.name ? profile.name.trim().split(/\s+/).map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) : '??'
                             )}

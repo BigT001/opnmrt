@@ -8,9 +8,28 @@ export type ThemeName =
     | 'MINIMAL_LUXE' | 'GLAMOUR_EVE' | 'CHIC_URBAN' // Fashion
     | 'VINTAGE_CHARM' | 'PURE_BOTANICAL' | 'RADIANT_GLOW' // Beauty
     | 'STARK_EDGE' | 'TECH_SPEC' | 'NEON_STREAM' // Gadgets
-    | 'DEFAULT' | 'MODERN' | 'CLASSIC' | 'BOLD'; // Aliases and Defaults
+    | 'DEFAULT' | 'MODERN' | 'CLASSIC' | 'BOLD' | 'APPIFY'; // Aliases and Defaults
 
 // Store data structure
+export interface ThemeConfig {
+    headerVariant?: string;
+    heroVariant?: string;
+    productCardVariant?: string;
+    primaryFont?: string;
+    secondaryFont?: string;
+    primaryColor?: string;
+    heroTitle?: string;
+    heroSubtitle?: string;
+    heroImage?: string;
+    footerVariant?: string;
+    borderRadius?: string;
+    name?: string;
+    logo?: string;
+    navHome?: string;
+    navShop?: string;
+    navAbout?: string;
+}
+
 export interface StoreData {
     id: string;
     name: string;
@@ -21,7 +40,7 @@ export interface StoreData {
     heroSubtitle?: string | null;
     primaryColor?: string | null;
     theme?: string;
-    themeConfig?: any;
+    themeConfig?: ThemeConfig | null;
     biography?: string | null;
     officialEmail?: string | null;
     whatsappNumber?: string | null;
@@ -40,6 +59,7 @@ export interface ProductData {
     images?: string[];
     stock: number;
     storeId: string;
+    category?: string | null;
 }
 
 // Component Props
@@ -48,6 +68,12 @@ export interface NavbarProps {
     logo?: string | null;
     subdomain?: string;
     storeId?: string;
+    isPreview?: boolean;
+    onConfigChange?: (config: any) => void;
+    navHome?: string;
+    navShop?: string;
+    navAbout?: string;
+    onNavigate?: (path: string) => void;
 }
 
 export interface FooterProps {
@@ -62,6 +88,7 @@ export interface ProductGridProps {
     products: ProductData[];
     subdomain: string;
     storeId: string;
+    store: StoreData;
     hideHeader?: boolean;
 }
 
@@ -83,6 +110,9 @@ export interface CheckoutProps {
 export interface StoreThemeProps {
     store: StoreData;
     children: ReactNode;
+    isPreview?: boolean;
+    onConfigChange?: (config: any) => void;
+    onNavigate?: (path: string) => void;
 }
 
 export interface PageProps {
@@ -111,4 +141,5 @@ export interface ThemeComponents {
     ProductPage: React.FC<ProductPageProps>;
     AboutPage: React.FC<PageProps>;
     ShopPage: React.FC<PageProps>;
+    FavoritesPage: React.FC<PageProps>;
 }

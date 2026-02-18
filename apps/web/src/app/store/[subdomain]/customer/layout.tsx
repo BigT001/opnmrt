@@ -117,28 +117,15 @@ export default function CustomerDashboardLayout({
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-black/95 flex flex-col pt-16 lg:pt-20 transition-colors duration-300">
-            {/* Mobile Header */}
+        <div className="min-h-screen bg-slate-50 dark:bg-black/95 flex flex-col lg:pt-20 transition-colors duration-300">
+            {/* Mobile Header - Hidden for Premium Themes to prevent double headers */}
+            {/* 
             <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-black border-b border-slate-100 dark:border-slate-800 z-50 flex items-center justify-between px-6 transition-colors duration-300">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-slate-900 dark:bg-white rounded-lg flex items-center justify-center text-white dark:text-black font-bold text-xs uppercase overflow-hidden">
-                        {user?.image ? (
-                            <img src={user.image} alt="Profile" className="w-full h-full object-cover" />
-                        ) : (
-                            user?.name?.[0] || 'U'
-                        )}
-                    </div>
-                    <span className="font-black text-slate-900 dark:text-white text-sm uppercase tracking-tight">Dashboard</span>
-                </div>
-                <button
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="w-10 h-10 flex items-center justify-center text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 rounded-xl"
-                >
-                    {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                </button>
-            </div>
+                ... 
+            </div> 
+            */}
 
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-10 py-6 lg:py-10 flex-grow relative">
+            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-10 py-6 lg:py-10 flex-grow relative pt-6 sm:pt-0">
                 {/* Sidebar - Desktop */}
                 <aside className="hidden lg:block lg:col-span-1 space-y-6 xl:pl-8">
                     {/* Sidebar Header - Moved Outside the box to align with content headers */}

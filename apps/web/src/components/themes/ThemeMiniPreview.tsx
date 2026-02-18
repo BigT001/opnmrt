@@ -20,16 +20,16 @@ export function ThemeMiniPreview({ themeId, store }: ThemeMiniPreviewProps) {
     return (
         <div className="absolute inset-0 w-full h-full overflow-hidden bg-white">
             <div
-                className="origin-top-left"
+                className="origin-top-left absolute inset-0"
                 style={{
-                    width: '1440px',
-                    height: '900px',
-                    transform: 'scale(0.25)', // 1440 * 0.25 = 360px (approx card width)
+                    width: '400%',
+                    height: '400%',
+                    transform: 'scale(0.25)',
                     pointerEvents: 'none',
                     userSelect: 'none'
                 }}
             >
-                <div className="w-full h-full border-[10px] border-slate-900/5 rounded-[40px] overflow-hidden shadow-2xl bg-white">
+                <div className="w-full h-full overflow-hidden bg-white">
                     <Navbar
                         storeName={store.name}
                         logo={store.logo}

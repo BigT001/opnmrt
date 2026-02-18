@@ -11,17 +11,19 @@
 .header-content {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 2rem;
-    height: 80px;
+    padding: 0 1.5rem;
+    height: 72px;
     display: flex;
     align-items: center;
+    position: relative;
+    width: 100%;
 }
 
 .header-logo {
     font-size: 1.875rem;
     font-weight: 800;
     letter-spacing: -0.05em;
-    color: #2563eb;
+    color: var(--primary-color, #2563eb);
     text-decoration: none;
     transition: opacity 0.2s;
 }
@@ -50,7 +52,7 @@
 
 .header-menu-link:hover,
 .header-menu-link.active {
-    color: #2563eb;
+    color: var(--primary-color, #2563eb);
 }
 
 .header-icons {
@@ -152,4 +154,444 @@
 
 .header-layout-4 .header-icons {
     margin-left: 2rem;
+}
+
+/* Header 5: Floating Glass (Re-engineered) */
+.header-layout-5-wrapper {
+    position: fixed;
+    top: 1.5rem;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    padding: 0 1.5rem;
+}
+
+.header-layout-5 {
+    pointer-events: auto;
+    width: 100%;
+    max-width: 1400px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 999px;
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 20px 40px -10px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark .header-layout-5 {
+    background: rgba(17, 17, 18, 0.8);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+.header-layout-5 .side-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.header-layout-5 .menu-section {
+    flex: 0 0 auto;
+}
+
+.header-layout-5 .header-menu {
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.03);
+    padding: 0.25rem;
+    border-radius: 999px;
+}
+
+.dark .header-layout-5 .header-menu {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.header-layout-5 .header-menu-link {
+    font-size: 0.75rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+    font-weight: 500;
+    text-transform: none;
+}
+
+.header-layout-5 .header-menu-link:hover {
+    background: #fff;
+    color: #000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dark .header-layout-5 .header-menu-link:hover {
+    background: rgba(255, 255, 255, 1);
+    color: #000;
+}
+
+/* Header 6: Neo-Brutalist (Refined) */
+.header-layout-6-container {
+    background: #fff;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+@media (min-width: 1024px) {
+    .header-layout-6-container {
+        margin: 0;
+    }
+}
+
+.header-layout-6 {
+    min-height: 72px;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+}
+
+.header-layout-6 .header-menu-link-clean {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #94a3b8;
+    transition: all 0.2s;
+}
+
+.header-layout-6 .header-menu-link-clean:hover {
+    color: #000;
+}
+
+/* Header 7: Luxury Studio (Refined) */
+.header-layout-7 {
+    height: 96px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    background: #fff;
+    width: 100%;
+}
+
+.header-layout-7 .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.header-layout-7 .header-logo span {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 400;
+    font-style: italic;
+    letter-spacing: -0.02em;
+    color: #1a1a1a;
+}
+
+.header-layout-7 .header-menu-link {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.3em;
+    color: #666;
+}
+
+.header-layout-7 .header-menu-link::after {
+    content: '';
+    display: block;
+    width: 0%;
+    height: 1px;
+    background: #000;
+    transition: width 0.3s ease;
+    margin-top: 4px;
+}
+
+.header-layout-7 .header-menu-link:hover::after {
+    width: 100%;
+}
+
+/* Header 8: Cybernetic Modern */
+.header-layout-8 {
+    background: #000;
+    height: 72px;
+    border-bottom: 1px solid rgba(0, 245, 255, 0.15);
+}
+
+.header-layout-8 .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.header-layout-8 .header-logo span {
+    font-family: 'JetBrains Mono', monospace;
+    color: #00f5ff;
+    font-size: 1.25rem;
+    text-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
+}
+
+.header-layout-8 .header-menu-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: rgba(0, 245, 255, 0.5);
+    padding: 0.5rem 1rem;
+    border: 1px solid transparent;
+}
+
+.header-layout-8 .header-menu-link:hover {
+    color: #00f5ff;
+    border-color: rgba(0, 245, 255, 0.2);
+    background: rgba(0, 245, 255, 0.05);
+}
+
+/* Header 9: Minimal Editorial */
+.header-layout-9 {
+    height: 100px;
+    background: #000;
+    border-bottom: 1px solid #111;
+}
+
+.header-layout-9 .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 4rem;
+}
+
+.header-layout-9 .header-logo span {
+    font-size: 3rem;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.1em;
+}
+
+/* Common Section Helpers for Alignment */
+.header-left {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.header-center {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* Specific Header Layouts using the new system */
+.header-layout-1,
+.header-layout-2,
+.header-layout-3,
+.header-layout-4,
+.header-layout-8,
+.header-layout-9 {
+    display: flex;
+    width: 100%;
+}
+
+.header-layout-1 .header-center,
+.header-layout-2 .header-center,
+.header-layout-3 .header-center,
+.header-layout-5 .header-center,
+.header-layout-7 .header-center,
+.header-layout-8 .header-center,
+.header-layout-9 .header-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Header 8: Cybernetic Modern (Refined Styles) */
+.header-layout-8 {
+    background: #060608;
+    height: 72px;
+    border-bottom: 2px solid rgba(34, 211, 238, 0.1);
+}
+
+.header-layout-8 .header-logo span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 0.5em;
+    font-weight: 800;
+    color: #22d3ee;
+    text-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
+}
+
+.header-layout-8 .header-menu-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: rgba(34, 211, 238, 0.4);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.header-layout-8 .header-menu-link:hover {
+    color: #22d3ee;
+    background: rgba(34, 211, 238, 0.05);
+}
+
+/* Header 9: Vogue Editorial (Refined Styles) */
+.header-layout-9 {
+    background: #000;
+    height: 88px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-layout-9 .header-logo {
+    text-align: center;
+}
+
+.header-layout-9 .header-logo span {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 3.5rem;
+    color: #fff;
+    letter-spacing: -0.06em;
+    line-height: 0.8;
+}
+
+/* Header 10: Orbital Minimalism */
+.header-layout-10-wrapper {
+    position: fixed;
+    top: 2rem;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* Mobile Responsive Overrides */
+@media (max-width: 1024px) {
+    .header-center {
+        position: static !important;
+        transform: none !important;
+        flex: 1;
+    }
+
+    .header-left,
+    .header-right {
+        flex: 0 0 auto;
+    }
+
+    .header-layout-9 .header-logo span {
+        font-size: 2rem;
+    }
+}
+
+/* Inline Editing Styles */
+[contenteditable="true"] {
+    outline: none;
+    cursor: text;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 4px;
+    position: relative;
+    padding: 0 2px;
+}
+
+[contenteditable="true"]:hover {
+    background-color: rgba(37, 99, 235, 0.05);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+[contenteditable="true"]:focus {
+    background-color: #ffffff;
+    box-shadow: 0 0 0 2px #2563eb;
+    color: #000000 !important;
+    z-index: 10;
+}
+
+/* Mobile Responsive Utilities */
+@media (max-width: 1024px) {
+    .header-menu {
+        display: none !important;
+    }
+
+    .header-content {
+        padding: 0 1rem !important;
+    }
+}
+
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    color: #4b5563;
+    cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+    .mobile-menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .header-icons {
+        gap: 0.75rem !important;
+    }
+}
+
+.mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    z-index: 2000;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.dark .mobile-menu-overlay {
+    background-color: black;
+}
+
+.mobile-menu-links {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0;
+}
+
+.mobile-menu-link {
+    display: block;
+    padding: 1.5rem 0;
+    font-size: 1.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.04em;
+    color: #111827;
+    text-decoration: none;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.dark .mobile-menu-link {
+    color: white;
+    border-color: #1f2937;
+}
+
+.mobile-menu-close {
+    align-self: flex-end;
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    color: #4b5563;
 }

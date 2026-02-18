@@ -48,7 +48,7 @@ export function DefaultProductGrid({ products, subdomain, storeId, hideHeader }:
                                 <Link href={`/store/${subdomain}/products/${product.slug || product.id}`} className="flex-1 flex flex-col gap-6">
                                     <div className="aspect-[4/5] w-full overflow-hidden bg-gray-50 rounded-[1.5rem] relative group-hover:shadow-2xl group-hover:shadow-gray-200 transition-all duration-500">
                                         <img
-                                            src={product.image || 'https://via.placeholder.com/400'}
+                                            src={product.image || (product.images && product.images[0]) || 'https://via.placeholder.com/400'}
                                             alt={product.name}
                                             className="h-full w-full object-cover origin-bottom group-hover:scale-110 transition-transform duration-700"
                                         />

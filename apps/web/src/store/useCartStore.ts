@@ -54,6 +54,9 @@ export const useCartStore = create<CartState>()(
 
             addItem: (item, quantity = 1) => {
                 const currentItems = get().items;
+                const numQuantity = Number(quantity) || 1;
+                const numPrice = Number(item.price) || 0;
+
                 const existingItem = currentItems.find(
                     (i) => i.id === item.id && i.storeId === item.storeId
                 );
@@ -65,15 +68,15 @@ export const useCartStore = create<CartState>()(
                     trackEvent(item.storeId, ANALYTICS_EVENTS.ADD_TO_CART, {
                         productId: item.id,
                         productName: item.name,
-                        quantity,
+                        quantity: numQuantity,
                         userName: user?.name,
                         customerName: user?.name // For backend consistency
                     });
                 });
 
                 if (existingItem) {
-                    const newQuantity = existingItem.quantity + quantity;
-                    const availableStock = item.stock ?? 9999;
+                    const newQuantity = (Number(existingItem.quantity) || 0) + numQuantity;
+                    const availableStock = Number(item.stock) ?? 9999;
                     if (newQuantity > availableStock) {
                         set({
                             error: `Cannot add more. Only ${availableStock} in stock.`,
@@ -85,7 +88,7 @@ export const useCartStore = create<CartState>()(
                     set({
                         items: currentItems.map((i) =>
                             (i.id === item.id && i.storeId === item.storeId)
-                                ? { ...i, quantity: newQuantity }
+                                ? { ...i, quantity: newQuantity, price: numPrice }
                                 : i
                         ),
                         notification: 'Successfully added to cart',
@@ -93,8 +96,8 @@ export const useCartStore = create<CartState>()(
                     });
                     syncToBackend(get().items);
                 } else {
-                    const availableStock = item.stock ?? 9999;
-                    if (quantity > availableStock) {
+                    const availableStock = Number(item.stock) ?? 9999;
+                    if (numQuantity > availableStock) {
                         set({
                             error: `Only ${availableStock} available.`,
                             notification: null
@@ -103,7 +106,7 @@ export const useCartStore = create<CartState>()(
                         return;
                     }
                     set({
-                        items: [...currentItems, { ...item, quantity }],
+                        items: [...currentItems, { ...item, quantity: numQuantity, price: numPrice }],
                         notification: 'Successfully added to cart',
                         error: null
                     });

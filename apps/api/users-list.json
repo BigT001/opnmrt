@@ -1,0 +1,27 @@
+[
+  {
+    "email": "sta99175@gmail.com",
+    "role": "SELLER",
+    "name": "Samuel Stanley"
+  },
+  {
+    "email": "info.samuelstanley@gmail.com",
+    "role": "SELLER",
+    "name": "Henry Stanley"
+  },
+  {
+    "email": "lovethhome@gmail.com",
+    "role": "BUYER",
+    "name": "loveth Home"
+  },
+  {
+    "email": "binta@gmail.com",
+    "role": "BUYER",
+    "name": "Binta Star"
+  },
+  {
+    "email": "bintastanley@gmail.com",
+    "role": "BUYER",
+    "name": "Binta Stanley"
+  }
+]

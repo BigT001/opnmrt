@@ -19,59 +19,73 @@ export default function ThemesPage() {
         { id: 'GADGETS_ACCESSORIES', name: 'Gadgets & Accessories' }
     ];
 
+    const defaultTheme = themeMetadata.find(t => t.id === 'DEFAULT');
+    const otherThemes = themeMetadata.filter(t => t.id !== 'DEFAULT');
+
     const handleActivate = async (themeId: string) => {
         if (!store?.id) return;
         setUpdating(themeId);
         setMessage(null);
 
         try {
-            console.log(`[THEMES_PAGE] Activating theme: ${themeId} for store: ${store.id}`);
             const response = await api.patch(`/stores/${store.id}`, { theme: themeId });
-            console.log('[THEMES_PAGE] Activation response:', response.data);
             setStore(response.data);
-            setMessage({ type: 'success', text: `Theme ${themeId.replace(/_/g, ' ')} activated successfully!` });
-
-            // Force a reload after a short delay to ensure everything is in sync
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+            setMessage({ type: 'success', text: `Theme ${themeId.replace(/_/g, ' ')} activated!` });
+            setTimeout(() => window.location.reload(), 800);
         } catch (error: any) {
-            console.error('[THEMES_PAGE] Theme activation failed:', error);
-            if (error.response) {
-                console.error('[THEMES_PAGE] Error response data:', error.response.data);
-            }
             setMessage({ type: 'error', text: 'Failed to activate theme.' });
         } finally {
             setUpdating(null);
-            setTimeout(() => setMessage(null), 5000);
+            setTimeout(() => setMessage(null), 3000);
         }
     };
 
     return (
-        <div className="space-y-10">
-            <div className="flex justify-between items-end">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Themes</h1>
-                    <p className="text-slate-500 mt-1">Choose a design that matches your brand's personality</p>
+        <div className="max-w-6xl mx-auto space-y-12 pb-20">
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="space-y-1">
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                        OPN MART <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] uppercase tracking-widest rounded-full">STUDIO</span>
+                    </h1>
                 </div>
                 {message && (
-                    <div className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest animate-in fade-in slide-in-from-top-2 duration-300 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
-                        }`}>
+                    <div className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-900/5 animate-in fade-in slide-in-from-top-4 duration-500 ${message.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
                         {message.text}
                     </div>
                 )}
             </div>
 
-            <div className="space-y-16">
+            {/* Featured / Default Theme Section */}
+            {defaultTheme && (
+                <section className="space-y-6">
+                    <div className="flex items-center gap-4">
+                        <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap">Baseline Foundation</h2>
+                        <div className="h-px bg-slate-100 flex-1"></div>
+                    </div>
+                    <div className="max-w-sm">
+                        <ThemeCard
+                            theme={defaultTheme}
+                            isActive={store?.theme === defaultTheme.id}
+                            isUpdating={updating === defaultTheme.id}
+                            onActivate={() => handleActivate(defaultTheme.id)}
+                            store={store}
+                        />
+                    </div>
+                </section>
+            )}
+
+            {/* Categorized Themes */}
+            <div className="space-y-12">
                 {categories.map((category) => (
                     <section key={category.id} className="space-y-6">
                         <div className="flex items-center gap-4">
-                            <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{category.name}</h2>
-                            <div className="h-px bg-slate-200 w-full"></div>
+                            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap">{category.name}</h2>
+                            <div className="h-px bg-slate-100 flex-1"></div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {themeMetadata.filter(t => t.category === category.id).map((theme) => (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {otherThemes.filter(t => t.category === category.id).map((theme) => (
                                 <ThemeCard
                                     key={theme.id}
                                     theme={theme}
@@ -89,25 +103,20 @@ export default function ThemesPage() {
     );
 }
 
-function ThemeCard({ theme, isActive, isUpdating, onActivate, store }: {
+function ThemeCard({ theme, isActive, isUpdating, onActivate, store, featured }: {
     theme: ThemeMetadata;
     isActive: boolean;
     isUpdating: boolean;
     onActivate: () => void;
     store: any;
+    featured?: boolean;
 }) {
-    // Generate a simple preview based on theme ID
     const getPreviewStyles = (id: string) => {
         switch (id) {
-            case 'MINIMAL_LUXE': return 'bg-white border-slate-100 flex flex-col items-center justify-center';
-            case 'GLAMOUR_EVE': return 'bg-indigo-50 border-indigo-100';
-            case 'CHIC_URBAN': return 'bg-zinc-900 border-zinc-800';
-            case 'VINTAGE_CHARM': return 'bg-[#fdfbf7] border-stone-200';
-            case 'PURE_BOTANICAL': return 'bg-emerald-50 border-emerald-100';
-            case 'RADIANT_GLOW': return 'bg-rose-50 border-rose-100';
-            case 'STARK_EDGE': return 'bg-white border-black border-2';
-            case 'TECH_SPEC': return 'bg-slate-900 border-slate-700';
-            case 'NEON_STREAM': return 'bg-black border-cyan-500/30';
+            case 'MINIMAL_LUXE': return 'bg-white border-slate-100';
+            case 'GLAMOUR_EVE': return 'bg-slate-900 text-white';
+            case 'CHIC_URBAN': return 'bg-zinc-900';
+            case 'DEFAULT': return 'bg-indigo-600';
             default: return 'bg-slate-50';
         }
     };
@@ -119,61 +128,76 @@ function ThemeCard({ theme, isActive, isUpdating, onActivate, store }: {
     return (
         <div
             onClick={handleCardClick}
-            className={`bg-white rounded-[2.5rem] border ${isActive ? 'border-primary ring-4 ring-primary/5' : 'border-slate-100'} overflow-hidden flex flex-col transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/50 group cursor-pointer`}
+            className={`group bg-white rounded-[2rem] border-2 ${isActive ? 'border-primary shadow-2xl shadow-primary/10' : 'border-slate-50 hover:border-slate-200'} overflow-hidden flex flex-col transition-all duration-500 cursor-pointer relative ${featured ? 'scale-[1.02] origin-left' : ''}`}
         >
+            {/* Recommendation Badge */}
+            {!isActive && store?.category === theme.category && (
+                <div className="absolute top-4 right-4 z-20 px-3 py-1 bg-white/90 backdrop-blur-md text-primary text-[8px] font-black uppercase tracking-widest rounded-full border border-primary/20 shadow-sm">
+                    Recommended
+                </div>
+            )}
+
             {/* Preview Section */}
-            <div className={`h-48 w-full relative overflow-hidden flex ${getPreviewStyles(theme.id)}`}>
-                <div className="absolute inset-0 bg-gradient-to-b from-black/0 to-black/5 opacity-0 group-hover:opacity-100 transition-opacity z-10"></div>
+            <div className={`h-44 w-full relative overflow-hidden flex items-center justify-center ${getPreviewStyles(theme.id)}`}>
+                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity z-10"></div>
 
-                {/* Live component preview */}
                 {store && (
-                    <ThemeMiniPreview themeId={theme.id} store={store} />
-                )}
-
-                {/* Status Badge */}
-                {isActive && (
-                    <div className="absolute top-4 left-4 px-3 py-1 bg-primary text-white text-[8px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-primary/20">
-                        Current Theme
+                    <div className="transform group-hover:scale-105 transition-transform duration-700 w-full h-full">
+                        <ThemeMiniPreview themeId={theme.id} store={store} />
                     </div>
                 )}
 
                 {/* Live Preview Button (Overlay) */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100">
-                    <div className="px-6 py-2.5 bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-2xl group-hover:bg-slate-50 transition-colors">
-                        Live Preview
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0 z-20">
+                    <div className="px-5 py-2 bg-white text-slate-900 text-[9px] font-black uppercase tracking-widest rounded-full shadow-2xl">
+                        Preview Store
                     </div>
                 </div>
             </div>
 
             {/* Content Section */}
-            <div className="p-8 flex flex-col flex-1">
-                <div className="mb-6">
-                    <h3 className="text-lg font-black text-slate-900">{theme.name}</h3>
-                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{theme.description}</p>
+            <div className="p-5 flex flex-col flex-1">
+                <div className="flex justify-between items-start mb-1">
+                    <h3 className="text-sm font-black text-slate-900 truncate">{theme.name}</h3>
+                    {isActive && (
+                        <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    )}
                 </div>
+                <p className="text-[10px] font-medium text-slate-400 leading-relaxed line-clamp-2 mb-4">{theme.description}</p>
 
-                <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between gap-4">
-                    {!isActive ? (
+                <div className="mt-auto flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                        {!isActive ? (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onActivate();
+                                }}
+                                disabled={isUpdating}
+                                className="flex-1 py-2 bg-slate-900 hover:bg-black text-white text-[9px] font-black uppercase tracking-widest rounded-full transition-all disabled:opacity-50"
+                            >
+                                {isUpdating ? 'Applying...' : 'Activate'}
+                            </button>
+                        ) : (
+                            <div className="flex-1 py-2 bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-widest rounded-full text-center border border-emerald-100">
+                                Active
+                            </div>
+                        )}
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                onActivate();
+                                handleCardClick();
                             }}
-                            disabled={isUpdating}
-                            className="flex-1 py-3 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-black transition-all shadow-lg shadow-slate-200 disabled:opacity-50"
+                            className="flex-1 py-2 bg-white border border-slate-200 text-slate-900 text-[9px] font-black uppercase tracking-widest rounded-full hover:bg-slate-50 transition-all"
                         >
-                            {isUpdating ? 'Activating...' : 'Activate Theme'}
+                            Customize
                         </button>
-                    ) : (
-                        <div className="flex-1 py-3 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-xl text-center border border-emerald-100">
-                            Active
-                        </div>
-                    )}
+                    </div>
                     <button
                         onClick={(e) => e.stopPropagation()}
-                        className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:text-slate-600 transition-colors"
+                        className="w-full py-1.5 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-100 hover:text-slate-600 transition-colors flex items-center justify-center"
                     >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                         </svg>
                     </button>
