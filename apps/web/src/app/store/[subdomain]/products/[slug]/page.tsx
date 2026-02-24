@@ -104,7 +104,7 @@ export default async function ProductPage({
         notFound();
     }
 
-    const { ProductPage: ThemeProductPage } = getThemeComponents(store.theme);
+    const { ProductPage: ThemeProductPage } = await getThemeComponents(store.theme);
 
     const jsonLd: any = {
         '@context': 'https://schema.org',

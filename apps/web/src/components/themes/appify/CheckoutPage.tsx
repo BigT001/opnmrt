@@ -143,7 +143,7 @@ export function AppifyCheckout({ store, subdomain }: CheckoutProps) {
                         {items.map((item: any) => (
                             <div key={item.id} className="flex items-center gap-5">
                                 <div className="w-20 h-20 bg-gray-50 rounded-full overflow-hidden shrink-0 border border-gray-100">
-                                    <img src={item.image} alt="" className="w-full h-full object-cover" />
+                                    <img src={item.image || (item as any).images?.[0] || 'https://via.placeholder.com/100'} alt="" className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex-grow min-w-0">
                                     <h4 className="text-[15px] font-black text-[#1a1a2e] tracking-tight truncate">{item.name}</h4>
@@ -176,7 +176,7 @@ export function AppifyCheckout({ store, subdomain }: CheckoutProps) {
                                 <input
                                     type="text"
                                     required
-                                    placeholder="John"
+                                    placeholder="Samuel"
                                     value={formData.firstName}
                                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                     className="w-full h-15 px-7 bg-gray-50 border border-gray-100 rounded-[22px] text-[14px] font-bold outline-none focus:bg-white focus:border-orange-500 transition-all text-slate-900"
@@ -187,7 +187,7 @@ export function AppifyCheckout({ store, subdomain }: CheckoutProps) {
                                 <input
                                     type="text"
                                     required
-                                    placeholder="Doe"
+                                    placeholder="Stanley"
                                     value={formData.lastName}
                                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                     className="w-full h-15 px-7 bg-gray-50 border border-gray-100 rounded-[22px] text-[14px] font-bold outline-none focus:bg-white focus:border-orange-500 transition-all text-slate-900"

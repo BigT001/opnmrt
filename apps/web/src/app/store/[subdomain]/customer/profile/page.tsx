@@ -152,11 +152,11 @@ export default function CustomerProfilePage() {
     }
 
     return (
-        <div className="space-y-8">
-            <div className="shrink-0">
-                <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Profile Settings</h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-1 uppercase text-[10px] font-bold tracking-widest">
-                    Manage your account information and preferences
+        <div className="space-y-8 pb-32">
+            <div className="shrink-0 space-y-1">
+                <h1 className="text-3xl md:text-5xl font-black text-black dark:text-white tracking-tighter uppercase">Profile Settings</h1>
+                <p className="text-slate-400 dark:text-slate-500 uppercase text-[9px] md:text-[11px] font-black tracking-[0.4em] pl-1">
+                    Account Control Center
                 </p>
             </div>
 
@@ -173,7 +173,7 @@ export default function CustomerProfilePage() {
                 )}
 
                 {/* Avatar & ID Section */}
-                <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-8 transition-colors duration-300">
+                <div className="bg-white dark:bg-slate-950 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-6 md:gap-8 transition-colors duration-300">
                     <div className="relative group shrink-0">
                         <div className="w-24 h-24 bg-slate-900 dark:bg-white rounded-[2rem] flex items-center justify-center text-white dark:text-black font-black text-3xl shadow-xl shadow-slate-200 dark:shadow-none overflow-hidden relative">
                             {previewUrl || profile.image ? (
@@ -203,32 +203,45 @@ export default function CustomerProfilePage() {
                             onChange={handleFileChange}
                         />
                     </div>
-                    <div>
-                        <h3 className="text-2xl font-black text-slate-900 dark:text-white">{profile.name || 'Set your name'}</h3>
-                        <div className="flex items-center gap-2 mt-2">
-                            <div className="px-3 py-1 bg-slate-100 dark:bg-slate-900 rounded-lg text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                                ID:
+                    <div className="flex-1 min-w-0">
+                        <h3 className="text-2xl md:text-4xl font-black text-black dark:text-white tracking-tighter truncate leading-tight">
+                            {profile.name || 'Anonymous User'}
+                        </h3>
+
+                        <div className="mt-5 space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="px-3 py-1.5 bg-primary rounded-lg text-[8px] md:text-[9px] font-black text-white uppercase tracking-widest shrink-0 shadow-lg shadow-primary/20">
+                                    OFFICIAL ID
+                                </div>
+                                <p className="text-[10px] md:text-sm font-black text-black dark:text-white tracking-widest uppercase opacity-70">
+                                    {profile.id ? `CUST-${profile.id.slice(-6).toUpperCase()}` : '000000'}
+                                </p>
                             </div>
-                            <p className="text-xs font-bold text-slate-900 dark:text-white tracking-widest uppercase">
-                                {profile.id ? `CUST-${profile.id.slice(-6)}` : 'UNKNOWN'}
-                            </p>
+
+                            <div className="flex items-center gap-3 pt-3 border-t border-slate-50 dark:border-slate-800/50">
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
+                                <p className="text-[8px] md:text-[10px] text-primary font-black uppercase tracking-[0.3em] leading-none">
+                                    Verified Customer Account
+                                </p>
+                            </div>
                         </div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">Customer Account</p>
                     </div>
                 </div>
 
                 {/* Main Profile Form (Personal + Shipping) */}
                 <form id="profile-form" onSubmit={handleSubmit} className="space-y-8">
                     {/* Personal Information */}
-                    <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-10 border border-slate-100 dark:border-slate-800 shadow-sm space-y-8 transition-colors duration-300">
-                        <div className="flex items-center gap-3 mb-2">
-                            <User className="w-5 h-5 text-slate-900 dark:text-white" />
-                            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Personal Information</h3>
+                    <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 md:p-12 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/20 dark:shadow-none space-y-10 transition-colors duration-300">
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                                <User className="w-5 h-5 text-primary" />
+                            </div>
+                            <h3 className="text-sm md:text-base font-black text-black dark:text-white uppercase tracking-widest">Personal Information</h3>
                         </div>
 
-                        <div className="grid gap-6">
-                            <div className="space-y-2">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Full Name</label>
+                        <div className="grid gap-8">
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] ml-2">Full Name</label>
                                 <div className="relative group">
                                     <div className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-slate-900 transition-colors">
                                         <User strokeWidth={2.5} />
@@ -246,8 +259,8 @@ export default function CustomerProfilePage() {
                                 {initialName && <p className="text-[10px] text-slate-400 ml-4">Name cannot be changed once set.</p>}
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Email Address</label>
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] ml-2">Email Address</label>
                                 <div className="relative group">
                                     <div className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-slate-900 transition-colors">
                                         <Mail strokeWidth={2.5} />
@@ -262,8 +275,8 @@ export default function CustomerProfilePage() {
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Phone Number</label>
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] ml-2">Phone Number</label>
                                 <div className="relative group">
                                     <div className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-slate-900 transition-colors">
                                         <Phone strokeWidth={2.5} />
@@ -281,15 +294,17 @@ export default function CustomerProfilePage() {
                     </div>
 
                     {/* Shipping Address Section */}
-                    <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-10 border border-slate-100 dark:border-slate-800 shadow-sm space-y-8 transition-colors duration-300">
-                        <div className="flex items-center gap-3 mb-2">
-                            <MapPin className="w-5 h-5 text-slate-900 dark:text-white" />
-                            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Shipping Details</h3>
+                    <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 md:p-12 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/20 dark:shadow-none space-y-10 transition-colors duration-300">
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                                <MapPin className="w-5 h-5 text-primary" />
+                            </div>
+                            <h3 className="text-sm md:text-base font-black text-black dark:text-white uppercase tracking-widest">Shipping Details</h3>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Street Address</label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-3 md:col-span-2">
+                                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] ml-2">Street Address</label>
                                 <input
                                     type="text"
                                     value={profile.shippingAddress.address}
@@ -298,8 +313,8 @@ export default function CustomerProfilePage() {
                                     placeholder="123 Aba Road"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">City</label>
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] ml-2">City</label>
                                 <input
                                     type="text"
                                     value={profile.shippingAddress.city}
@@ -308,8 +323,8 @@ export default function CustomerProfilePage() {
                                     placeholder="Port Harcourt"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Postal Code</label>
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] ml-2">Postal Code</label>
                                 <input
                                     type="text"
                                     value={profile.shippingAddress.postalCode}
@@ -318,8 +333,8 @@ export default function CustomerProfilePage() {
                                     placeholder="500272"
                                 />
                             </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">State/Country</label>
+                            <div className="space-y-3 md:col-span-2">
+                                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] ml-2">State/Country</label>
                                 <input
                                     type="text"
                                     value={profile.shippingAddress.country}
@@ -333,11 +348,11 @@ export default function CustomerProfilePage() {
                 </form>
 
                 {/* Saved Cards Section */}
-                <div className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-10 border border-slate-100 dark:border-slate-800 shadow-sm space-y-8 transition-colors duration-300">
+                <div className="bg-white dark:bg-slate-950 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 border border-slate-100 dark:border-slate-800 shadow-sm space-y-6 md:space-y-8 transition-colors duration-300">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
-                            <CreditCard className="w-5 h-5 text-slate-900 dark:text-white" />
-                            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Saved Cards</h3>
+                            <CreditCard className="w-5 h-5 text-primary" />
+                            <h3 className="text-sm font-black text-primary uppercase tracking-widest">Saved Cards</h3>
                         </div>
                     </div>
 
@@ -387,10 +402,10 @@ export default function CustomerProfilePage() {
                 </div>
 
                 {/* Password Section */}
-                <form onSubmit={handlePasswordSubmit} className="bg-white dark:bg-slate-950 rounded-[2.5rem] p-10 border border-slate-100 dark:border-slate-800 shadow-sm space-y-8 flex flex-col transition-colors duration-300">
+                <form onSubmit={handlePasswordSubmit} className="bg-white dark:bg-slate-950 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 border border-slate-100 dark:border-slate-800 shadow-sm space-y-6 md:space-y-8 flex flex-col transition-colors duration-300">
                     <div className="flex items-center gap-3 mb-2">
-                        <ShieldCheck className="w-5 h-5 text-slate-900 dark:text-white" />
-                        <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Security & Password</h3>
+                        <ShieldCheck className="w-5 h-5 text-primary" />
+                        <h3 className="text-sm font-black text-primary uppercase tracking-widest">Security & Password</h3>
                     </div>
 
                     <div className="grid gap-6 flex-grow">
@@ -437,7 +452,7 @@ export default function CustomerProfilePage() {
                         type="submit"
                         form="profile-form"
                         disabled={saving}
-                        className="w-full md:w-auto md:min-w-[200px] h-14 bg-slate-900 dark:bg-white text-white dark:text-black rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center justify-center gap-3 disabled:opacity-50 px-8"
+                        className="w-full md:w-auto md:min-w-[200px] h-14 bg-primary text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center justify-center gap-3 disabled:opacity-50 px-8 shadow-lg shadow-primary/20"
                     >
                         {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /> Save Profile Info</>}
                     </button>

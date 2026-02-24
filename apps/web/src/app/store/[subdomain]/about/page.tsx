@@ -50,7 +50,7 @@ export default async function AboutPage({
         notFound();
     }
 
-    const { AboutPage } = getThemeComponents(store.theme);
+    const { AboutPage } = await getThemeComponents(store.theme);
 
     return (
         <AboutPage

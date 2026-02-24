@@ -102,16 +102,16 @@ export default function CustomerMessagesPage() {
     return (
         <div className="flex flex-col h-[700px] space-y-8">
             <div className="shrink-0">
-                <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Messages</h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-1 uppercase text-[10px] font-bold tracking-widest">
-                    Direct support from {storeInfo?.name || 'the seller'}
+                <h1 className="text-4xl font-black text-primary tracking-tighter">Messages</h1>
+                <p className="text-gray-400 dark:text-gray-500 mt-1 uppercase text-[11px] font-black tracking-[0.3em]">
+                    SECURE COMMUNICATION CHANNEL
                 </p>
             </div>
 
             <div className="flex-1 bg-white dark:bg-slate-950 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col overflow-hidden relative transition-colors duration-300">
                 {/* Chat Header - Significantly Reduced Height */}
                 <div className="h-14 px-6 border-b border-slate-100/50 dark:border-slate-800 flex items-center gap-3 bg-white dark:bg-slate-950 transition-colors duration-300">
-                    <div className="w-8 h-8 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-slate-900 dark:text-white overflow-hidden border border-slate-100 dark:border-slate-800 shrink-0">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border shrink-0 ${storeInfo?.logo ? 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800' : 'bg-primary text-white border-primary'}`}>
                         {storeInfo?.logo ? (
                             <img src={storeInfo.logo} alt={storeInfo.name} className="w-full h-full object-cover" />
                         ) : (
@@ -119,7 +119,7 @@ export default function CustomerMessagesPage() {
                         )}
                     </div>
                     <div className="min-w-0">
-                        <h3 className="font-black text-slate-900 dark:text-white text-[11px] uppercase tracking-widest truncate">{storeInfo?.name}</h3>
+                        <h3 className="font-black text-black dark:text-white text-[12px] uppercase tracking-[0.2em] truncate">{storeInfo?.name}</h3>
                     </div>
                 </div>
 
@@ -145,12 +145,12 @@ export default function CustomerMessagesPage() {
                                     className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
                                 >
                                     <div className={`flex items-end gap-3 max-w-[80%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm ${isMe ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' : 'bg-slate-900 dark:bg-white text-white dark:text-black'
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm ${isMe ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' : 'bg-primary text-white'
                                             }`}>
                                             {isMe ? <User className="w-4 h-4" /> : <Store className="w-4 h-4" />}
                                         </div>
                                         <div className={`p-4 rounded-2xl text-[13px] leading-relaxed shadow-sm prose prose-sm max-w-none ${isMe
-                                            ? 'bg-slate-900 dark:bg-blue-600 text-white rounded-br-none prose-invert'
+                                            ? 'bg-slate-900 dark:bg-slate-800 text-white rounded-br-none prose-invert'
                                             : 'bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-100 dark:border-slate-800 rounded-bl-none'
                                             }`}>
                                             <ReactMarkdown
@@ -197,7 +197,7 @@ export default function CustomerMessagesPage() {
                         <button
                             type="submit"
                             disabled={sending || !newMessage.trim()}
-                            className="absolute right-2 top-2 w-10 h-10 bg-slate-900 dark:bg-white text-white dark:text-black rounded-xl flex items-center justify-center hover:bg-black dark:hover:bg-slate-200 transition-all disabled:opacity-50 shadow-lg shadow-slate-900/20"
+                            className="absolute right-2 top-2 w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-50 shadow-lg shadow-primary/20"
                         >
                             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         </button>

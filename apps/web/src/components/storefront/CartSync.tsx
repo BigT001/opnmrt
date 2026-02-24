@@ -10,6 +10,7 @@ export const CartSync = () => {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
+        // Only attempt sync if a token exists — silently skip for guests
         if (!token) return;
 
         // On initial mount, we sync the cart
@@ -20,9 +21,12 @@ export const CartSync = () => {
                     items: localItems,
                     merge: true
                 });
-
                 setItems(syncRes.data);
-            } catch (err) {
+            } catch (err: any) {
+                // Silently ignore auth errors (401/403) — guest user or expired token
+                const status = err?.response?.status;
+                if (status === 401 || status === 403) return;
+                // Log other unexpected errors
                 console.error("Cart hydration failed:", err);
             }
         };

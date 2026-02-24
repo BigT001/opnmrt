@@ -24,18 +24,18 @@ const ExtendedRegisterSchema = RegisterSchema.extend({
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Post('send-otp')
-  async sendOtp(@Body() body: { email: string; phone?: string }) {
-    return this.authService.sendOtp(body.email, body.phone);
+  async sendOtp(@Body() body: { email: string; phone?: string; subdomain?: string }) {
+    return this.authService.sendOtp(body.email, body.phone, body.subdomain);
   }
 
   @Post('verify-otp')
   async verifyOtp(
-    @Body() body: { email: string; otp: string; phone?: string },
+    @Body() body: { email: string; otp: string; phone?: string; subdomain?: string },
   ) {
-    return this.authService.verifyOtp(body.email, body.otp, body.phone);
+    return this.authService.verifyOtp(body.email, body.otp, body.subdomain, body.phone);
   }
 
   @Post('register')

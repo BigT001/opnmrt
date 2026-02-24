@@ -158,14 +158,14 @@ export default function RegisterPage() {
                                         label="Full Name"
                                         register={register('name')}
                                         error={errors.name?.message}
-                                        placeholder="John Surname"
+                                        placeholder="Samuel Stanley"
                                     />
                                     <Input
                                         label="Email Address"
                                         register={register('email')}
                                         error={errors.email?.message}
                                         type="email"
-                                        placeholder="john@example.com"
+                                        placeholder="samuel@example.com"
                                     />
                                     <Input
                                         label="Phone Number"

@@ -11,6 +11,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 export function AppifyCartDrawer({ storeId }: { storeId?: string }) {
     const { isOpen, toggleCart, updateQuantity, removeItem, storeItems: items, subtotal: total } = useStoreCart(storeId);
     const { subdomain } = useParams<{ subdomain: string }>();
+    const [isMobile, setIsMobile] = React.useState(false);
+
+    React.useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     return (
         <AnimatePresence>
@@ -20,19 +28,19 @@ export function AppifyCartDrawer({ storeId }: { storeId?: string }) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/40 backdrop-blur-md"
                         onClick={toggleCart}
                     />
 
                     <motion.div
-                        initial={{ y: '100%' }}
-                        animate={{ y: 0 }}
-                        exit={{ y: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="absolute inset-x-0 bottom-0 max-h-[85vh] bg-white rounded-t-[40px] shadow-2xl flex flex-col overflow-hidden"
+                        initial={isMobile ? { y: '100%' } : { x: '100%' }}
+                        animate={isMobile ? { y: 0 } : { x: 0 }}
+                        exit={isMobile ? { y: '100%' } : { x: '100%' }}
+                        transition={{ type: 'spring', damping: 30, stiffness: 250 }}
+                        className="absolute bottom-0 inset-x-0 md:inset-y-0 md:right-0 md:left-auto w-full md:w-[450px] max-h-[85vh] md:max-h-full bg-white rounded-t-[40px] md:rounded-t-none md:rounded-l-[48px] shadow-2xl md:shadow-[-20px_0_50px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden"
                     >
                         {/* Pull Indicator */}
-                        <div className="w-full flex justify-center pt-3 pb-1 shrink-0">
+                        <div className="w-full flex justify-center pt-3 pb-1 shrink-0 md:hidden">
                             <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
                         </div>
 
@@ -56,7 +64,7 @@ export function AppifyCartDrawer({ storeId }: { storeId?: string }) {
                                 items.map((item) => (
                                     <div key={item.id} className="flex gap-4 items-center">
                                         <div className="w-20 h-20 bg-[#f4f6f8] rounded-[20px] overflow-hidden shrink-0 border border-gray-50">
-                                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                            <img src={item.image || (item as any).images?.[0] || 'https://via.placeholder.com/100'} alt={item.name} className="w-full h-full object-cover" />
                                         </div>
                                         <div className="flex-grow space-y-1.5">
                                             <div className="flex justify-between items-start">

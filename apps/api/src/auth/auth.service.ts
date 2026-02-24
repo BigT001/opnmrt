@@ -25,15 +25,14 @@ export class AuthService {
     this.resend = new Resend(process.env.RESEND_API_KEY);
   }
 
-  async sendOtp(email: string, phone?: string) {
-    // Generate 6-digit OTP locally
+  async sendOtp(email: string, phone?: string, subdomain?: string) {
+    const scope = subdomain ? `${subdomain.toLowerCase()}_` : 'global_';
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // TTL: 5 minutes (300000 ms)
-    await this.cacheManager.set(`otp_${email}`, otp, 300000);
+    // TTL: 5 minutes
+    await this.cacheManager.set(`otp_${scope}${email}`, otp, 300000);
 
-    // ALWAYS LOG OTP FOR DEV (Bypass Resend restrictions)
-    console.log(`\n🔑 [DEV MODE] OTP for ${email}: ${otp}\n`);
+    console.log(`\n🔑 [AUTH] OTP for ${email} (Scope: ${scope}): ${otp}\n`);
 
     try {
       // Send Email via Resend
@@ -71,19 +70,19 @@ export class AuthService {
     return { success: true, message: 'Verification code sent (check console)' };
   }
 
-  async verifyOtp(email: string, otp: string, phone?: string) {
-    // Verify against local cache
-    const cachedOtp = await this.cacheManager.get(`otp_${email}`);
+  async verifyOtp(email: string, otp: string, subdomain?: string, phone?: string) {
+    const scope = subdomain ? `${subdomain.toLowerCase()}_` : 'global_';
+    const cachedOtp = await this.cacheManager.get(`otp_${scope}${email}`);
 
     if (cachedOtp !== otp) {
       throw new UnauthorizedException('Invalid or expired verification code');
     }
 
-    // Clear OTP to prevent replay
-    await this.cacheManager.del(`otp_${email}`);
+    // Clear OTP
+    await this.cacheManager.del(`otp_${scope}${email}`);
 
-    // Mark as verified
-    await this.cacheManager.set(`verified_${email}`, true, 600000); // 10 mins validity for registration
+    // Mark as verified for 10 mins
+    await this.cacheManager.set(`verified_${scope}${email}`, true, 600000);
     return { success: true };
   }
 
@@ -94,21 +93,32 @@ export class AuthService {
       console.log('[REGISTER] Starting registration for:', input.email);
 
       // Check if verified
-      const isVerified = await this.cacheManager.get(`verified_${input.email}`);
-      console.log('[REGISTER] Verification status:', isVerified);
+      const scope = input.subdomain ? `${input.subdomain.toLowerCase()}_` : 'global_';
+      const isVerified = await this.cacheManager.get(`verified_${scope}${input.email}`);
+      console.log(`[REGISTER] Verification status (Scope: ${scope}):`, isVerified);
 
       if (!isVerified) {
         throw new UnauthorizedException(
-          'Email/Phone not verified. Please verify OTP first.',
+          'Security Check: Email/Phone not verified for this session.',
         );
       }
 
-      const existingUser = await this.prisma.user.findUnique({
-        where: { email: input.email },
+      const targetSubdomain = input.subdomain?.toLowerCase();
+      let targetStoreId: string | null = null;
+      if (targetSubdomain) {
+        const store = await this.prisma.store.findUnique({ where: { subdomain: targetSubdomain } });
+        targetStoreId = store?.id || null;
+      }
+
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          email: input.email,
+          storeId: targetStoreId,
+        },
       });
 
       if (existingUser) {
-        throw new ConflictException('User with this email already exists');
+        throw new ConflictException('An account with this email is already registered at this store.');
       }
 
       console.log('[REGISTER] Hashing password...');
@@ -218,15 +228,27 @@ export class AuthService {
 
   async login(input: LoginInput) {
     try {
-      console.log(`Login attempt for email: ${input.email}`);
-      const user = await this.prisma.user.findUnique({
-        where: { email: input.email },
+      const subdomain = input.subdomain?.toLowerCase();
+      let targetStoreId: string | null = null;
+      if (subdomain) {
+        const store = await this.prisma.store.findUnique({ where: { subdomain } });
+        targetStoreId = store?.id || null;
+      }
+
+      console.log(`Login attempt for email: ${input.email} (Subdomain: ${subdomain || 'Global'})`);
+
+      // Find user specific to this store scope
+      const user = await this.prisma.user.findFirst({
+        where: {
+          email: input.email,
+          storeId: targetStoreId,
+        },
         include: { managedStore: true },
       });
 
       if (!user) {
-        console.error(`[AUTH_LOGIN_FAILED] User not found: ${input.email}`);
-        throw new UnauthorizedException('Invalid email or password. Please try again.');
+        console.error(`[AUTH_LOGIN_FAILED] User not found in scope ${subdomain}: ${input.email}`);
+        throw new UnauthorizedException('Invalid email or password for this store.');
       }
 
       const isPasswordValid = await bcrypt.compare(
@@ -238,19 +260,39 @@ export class AuthService {
         throw new UnauthorizedException('Invalid email or password. Please try again.');
       }
 
-      // Restrict Buyers to their specific store
-      if (user.role === 'BUYER' && input.subdomain) {
-        console.log(`[AUTH_LOGIN] Checking BUYER store restriction: ${user.email} in ${input.subdomain}`);
+      // --- STRICT TENANT PROTECTION ---
+      if (input.subdomain) {
+        const subdomain = input.subdomain.toLowerCase();
         const targetStore = await this.prisma.store.findUnique({
-          where: { subdomain: input.subdomain.toLowerCase() },
+          where: { subdomain },
         });
 
-        if (!targetStore || user.storeId !== targetStore.id) {
-          console.error(
-            `[AUTH_LOGIN_FAILED] Store mismatch for BUYER: ${input.email} trying to access ${input.subdomain}. Registered storeId: ${user.storeId}, Target storeId: ${targetStore?.id}`,
-          );
+        if (!targetStore) {
+          throw new UnauthorizedException('Security Error: Store not found.');
+        }
+
+        // Enforcement by Role
+        if (user.role === 'BUYER') {
+          if (user.storeId !== targetStore.id) {
+            console.error(`[AUTH_BLOCKED] Buyer ${user.email} (belongs to ${user.storeId}) tried ${targetStore.id}`);
+            throw new UnauthorizedException(
+              `This account belongs to another store on our network. Please use a different email for ${targetStore.name}.`,
+            );
+          }
+        } else if (user.role === 'SELLER') {
+          // Sellers cannot log into other merchants' portals
+          if (user.managedStore?.id !== targetStore.id) {
+            console.error(`[AUTH_BLOCKED] Merchant ${user.email} tried to log into storefront ${targetStore.subdomain}`);
+            throw new UnauthorizedException(
+              'Merchant access denied. You can only log into your own storefront.',
+            );
+          }
+        }
+      } else {
+        // Global Login (opnmart.com/login)
+        if (user.role === 'BUYER') {
           throw new UnauthorizedException(
-            'This account is not registered with this store',
+            'Customer accounts must log in through their specific store portal.',
           );
         }
       }

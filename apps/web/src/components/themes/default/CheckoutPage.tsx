@@ -331,7 +331,7 @@ export function DefaultCheckout({ store, subdomain }: CheckoutProps) {
                                 {items.map((item) => (
                                     <div key={item.id} className="flex gap-4 group">
                                         <div className="w-20 h-20 bg-white border border-gray-100 rounded-xl overflow-hidden shrink-0">
-                                            <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                                            <img src={item.image || (item as any).images?.[0] || 'https://via.placeholder.com/100'} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
                                         </div>
                                         <div className="flex-grow">
                                             <div className="flex justify-between items-start">

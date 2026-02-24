@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Package, ChevronRight, Clock, CreditCard, AlertCircle, CheckCircle2, ShoppingBag, ArrowLeft, MessagesSquare } from 'lucide-react';
 import api from '@/lib/api';
@@ -44,9 +45,9 @@ export default function CustomerOrdersPage() {
             case 'PENDING':
                 return {
                     label: 'Awaiting Payment',
-                    className: 'bg-orange-50 text-orange-600 border-orange-100',
-                    icon: AlertCircle,
-                    color: '#f97316'
+                    className: 'bg-primary/5 text-primary border-primary/10',
+                    icon: CreditCard,
+                    color: 'var(--primary-color)'
                 };
             case 'PAID':
             case 'COMPLETED':
@@ -85,22 +86,22 @@ export default function CustomerOrdersPage() {
 
     return (
         <div className="min-h-screen bg-[#f8f9fb]">
-            {/* Autonomous Immersive Header */}
-            <div className="sticky top-0 z-[150] bg-white/80 backdrop-blur-xl border-b border-gray-100 px-6 pt-2 pb-6">
+            {/* Autonomous Immersive Header - Hidden on Mobile for total immersion */}
+            <div className="hidden md:block sticky top-0 z-[150] bg-white/80 backdrop-blur-xl border-b border-gray-100 px-6 pt-2 pb-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-[34px] font-black text-[#1a1a2e] tracking-tighter leading-none mb-1">My Orders</h1>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-0.5 leading-none">Management Dashboard</p>
+                        <h1 className="text-[28px] md:text-[34px] font-black text-[#1a1a2e] tracking-tighter leading-none mb-1">My Orders</h1>
+                        <p className="hidden md:block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-0.5 leading-none">Management Dashboard</p>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={toggleChat}
-                            className="w-15 h-15 rounded-[24px] bg-white border border-gray-100 flex items-center justify-center text-orange-500 relative shadow-2xl shadow-orange-500/15 active:scale-95 transition-all"
+                        <Link
+                            href={`/store/${subdomain}/shop`}
+                            className="hidden md:flex items-center gap-2.5 px-6 py-3 bg-gray-50 hover:bg-gray-100 rounded-[20px] border border-gray-100 transition-all group"
                         >
-                            <MessagesSquare className="w-7.5 h-7.5" />
-                            {unreadCount > 0 && <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-black rounded-full h-6 w-6 flex items-center justify-center border-2 border-white shadow-lg">{unreadCount}</span>}
-                        </button>
+                            <ArrowLeft className="w-4 h-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 group-hover:text-gray-900 transition-colors">Return to Shop</span>
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -143,7 +144,7 @@ export default function CustomerOrdersPage() {
                                     <div className="flex flex-col gap-4">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-4 min-w-0">
-                                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border shadow-sm shrink-0 ${isPending ? 'bg-orange-50 border-orange-100 text-orange-500' : 'bg-gray-50 border-gray-100 text-gray-400'
+                                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border shadow-sm shrink-0 ${isPending ? 'bg-primary/5 border-primary/10 text-primary' : 'bg-gray-50 border-gray-100 text-gray-400'
                                                     }`}>
                                                     <config.icon className="w-7 h-7" />
                                                 </div>
@@ -172,9 +173,9 @@ export default function CustomerOrdersPage() {
                                                     e.stopPropagation();
                                                     handleCompletePayment(order.id);
                                                 }}
-                                                className="w-full max-w-[280px] py-4.5 bg-orange-500 text-white rounded-[1.25rem] text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3 mt-1"
+                                                className="w-full max-w-[280px] py-4 bg-primary text-white rounded-[1.25rem] text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3 mt-1"
                                             >
-                                                <CreditCard className="w-5 h-5" />
+                                                <CreditCard className="w-5 h-5 text-white" />
                                                 Complete Payment
                                             </button>
                                         )}
@@ -245,8 +246,8 @@ export default function CustomerOrdersPage() {
                                         {selectedOrder.items?.map((item: any) => (
                                             <div key={item.id} className="flex items-center gap-4 p-3.5 rounded-[2rem] bg-white border border-gray-100 shadow-sm transition-all">
                                                 <div className="w-16 h-16 bg-gray-50 rounded-[1.25rem] overflow-hidden border border-gray-50 shrink-0">
-                                                    {item.product?.images?.[0] ? (
-                                                        <img src={item.product.images[0]} alt="" className="w-full h-full object-cover" />
+                                                    {item.product?.image || item.product?.images?.[0] ? (
+                                                        <img src={item.product.image || item.product.images[0]} alt="" className="w-full h-full object-cover" />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center text-gray-200"><Package className="w-6 h-6" /></div>
                                                     )}
@@ -272,7 +273,7 @@ export default function CustomerOrdersPage() {
                                 {selectedOrder.status === 'PENDING' && (
                                     <button
                                         onClick={() => handleCompletePayment(selectedOrder.id)}
-                                        className="w-full py-4.5 bg-orange-500 hover:bg-orange-600 text-white rounded-[1.75rem] text-[12px] font-black uppercase tracking-[0.2em] shadow-xl shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                                        className="w-full py-4.5 bg-primary hover:brightness-110 text-white rounded-[1.75rem] text-[12px] font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
                                     >
                                         <CreditCard className="w-5 h-5" />
                                         Complete Payment

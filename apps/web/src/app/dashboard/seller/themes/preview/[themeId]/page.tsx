@@ -7,7 +7,8 @@ import { getThemeComponents, themeMetadata } from '@/components/themes/registry'
 import { ThemeEditor } from '@/components/themes/ThemeEditor';
 import { ThemeConfig } from '@/components/themes/types';
 import api from '@/lib/api';
-import { Loader2, ArrowLeft, Eye, Layout as LayoutIcon, PanelRight } from 'lucide-react';
+import { Loader2, ArrowLeft, Eye, Layout as LayoutIcon, Zap, PanelRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ThemePreviewPage() {
     const params = useParams<{ themeId: string }>();
@@ -29,10 +30,23 @@ export default function ThemePreviewPage() {
         logo: store?.logo || ''
     });
 
+    const [themeComponents, setThemeComponents] = useState<any>(null);
     const theme = themeMetadata.find(t => t.id === params.themeId);
-    const themeName = params.themeId || 'MINIMAL_LUXE';
-    const components = getThemeComponents(themeName);
-    const { Layout, StorefrontHero, ProductGrid } = components;
+    const themeName = params.themeId || 'DEFAULT';
+
+    useEffect(() => {
+        const loadComponents = async () => {
+            try {
+                const comps = await getThemeComponents(themeName);
+                setThemeComponents(comps);
+            } catch (err) {
+                console.error('Failed to load theme components:', err);
+            }
+        };
+        loadComponents();
+    }, [themeName]);
+
+    const { Layout, StorefrontHero, ProductGrid, StorefrontPage } = themeComponents || {};
 
     useEffect(() => {
         if (store?.themeConfig) {
@@ -77,12 +91,12 @@ export default function ThemePreviewPage() {
         }
     };
 
-    if (isLoading) {
+    if (isLoading || !themeComponents) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center bg-slate-50">
+            <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 min-h-screen">
                 <div className="text-center space-y-4">
                     <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Igniting Design Studio</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Igniting Design Studio</p>
                 </div>
             </div>
         );
@@ -115,81 +129,98 @@ export default function ThemePreviewPage() {
 
     return (
         <div className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50">
-            {/* Control Bar */}
-            <div className="h-14 bg-white border-b border-slate-100 flex items-center justify-between px-6 shrink-0 z-[110] shadow-sm">
-                <div className="flex items-center gap-4">
+            {/* Premium Studio Control Bar */}
+            <div className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-8 shrink-0 z-[110] shadow-sm">
+                <div className="flex items-center gap-6">
                     <button
                         onClick={() => router.back()}
-                        className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-400 hover:text-slate-900"
+                        className="p-2.5 hover:bg-slate-50 rounded-2xl transition-all text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-100 active:scale-95"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <div className="h-6 w-px bg-slate-100 mx-2"></div>
-                    <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Design Studio</span>
-                        <div className="h-1 w-1 rounded-full bg-slate-300"></div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">{theme?.name || themeName}</span>
+                    <div className="h-8 w-px bg-slate-100"></div>
+                    <div>
+                        <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">Design Studio</span>
+                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse shadow-[0_0_8px_rgba(79,70,229,0.5)]"></div>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Live Preview</span>
+                        </div>
+                        <h1 className="text-xs font-black uppercase tracking-widest text-slate-900">{theme?.name || themeName} <span className="text-slate-400 ml-1">v2.0</span></h1>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setShowEditor(!showEditor)}
-                        className={`p-2.5 rounded-xl transition-all flex items-center gap-2 ${showEditor ? 'bg-primary/10 text-primary' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}
-                    >
-                        <PanelRight className="w-4 h-4" />
-                        <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline">Editor</span>
-                    </button>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100 hidden lg:flex">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Auto-Saving Enabled</span>
+                    </div>
 
                     <button
                         onClick={() => window.open(`http://${store?.subdomain}.localhost:3000`, '_blank')}
-                        className="p-2.5 bg-slate-50 border border-slate-100 text-slate-400 hover:text-slate-900 rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-2"
+                        className="h-11 px-6 bg-white border border-slate-100 text-slate-600 hover:text-slate-900 rounded-2xl transition-all shadow-sm active:scale-95 flex items-center gap-2.5 group"
                     >
-                        <Eye className="w-4 h-4" />
-                        <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline">View Live</span>
+                        <Eye className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">View Live</span>
+                    </button>
+
+                    <button
+                        onClick={handlePublish}
+                        disabled={isSaving}
+                        className="h-11 px-8 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:bg-black transition-all flex items-center gap-3 active:scale-95 disabled:opacity-50"
+                    >
+                        {isSaving ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Publishing...
+                            </>
+                        ) : (
+                            <>
+                                <Zap className="w-4 h-4 text-orange-400 fill-orange-400" />
+                                Publish Design
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
 
-            <div className="flex-1 flex overflow-hidden">
-                {/* Main Preview Container */}
-                <div className="flex-1 overflow-hidden flex flex-col items-center justify-center p-8 bg-slate-50 relative">
-                    <div className="w-full h-full bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-slate-200 relative group">
-                        {/* Device Frame Top */}
-                        <div className="h-10 bg-slate-100 border-b border-slate-200 flex items-center px-4 gap-2">
-                            <div className="flex gap-1.5">
-                                <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
-                                <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
-                                <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
+            <div className="flex-1 overflow-hidden relative flex bg-slate-50/50">
+                {/* 1. Main Preview Container */}
+                <div className="flex-1 overflow-y-auto no-scrollbar relative">
+                    <div className="max-w-[1400px] mx-auto p-6 md:p-12 pb-32">
+                        <div className="bg-white rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.08)] border border-slate-100 overflow-hidden relative">
+                            {/* Browser Decoration */}
+                            <div className="h-12 bg-slate-50/50 border-b border-slate-50 flex items-center px-6 gap-3">
+                                <div className="flex gap-1.5">
+                                    <div className="w-3 h-3 rounded-full bg-[#ff5f57]"></div>
+                                    <div className="w-3 h-3 rounded-full bg-[#febc2e]"></div>
+                                    <div className="w-3 h-3 rounded-full bg-[#28c840]"></div>
+                                </div>
+                                <div className="mx-auto flex items-center gap-2 bg-white px-10 py-1.5 rounded-xl border border-slate-100 shadow-sm">
+                                    <div className="w-3 h-3 rounded-md bg-slate-100 flex items-center justify-center">
+                                        <div className="w-1.5 h-1.5 border-b border-r border-slate-400 rotate-45 mb-1.5 ml-1.5 transform scale-50"></div>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-400 tracking-wide">
+                                        {store?.subdomain}.opnmart.com
+                                    </span>
+                                </div>
                             </div>
-                            <div className="mx-auto bg-white/50 px-8 py-1 rounded-lg text-[9px] font-bold text-slate-400 tracking-wider">
-                                {store?.subdomain}.opnmart.com
-                            </div>
-                        </div>
 
-                        <div className="absolute inset-0 top-10 overflow-y-auto no-scrollbar">
                             <Layout
                                 store={previewStore}
                                 isPreview={true}
                                 onConfigChange={handleConfigChange}
                                 onNavigate={setPreviewPath}
+                                virtualPath={previewPath}
                             >
-                                <div className="pb-32">
-                                    {previewPath === 'index' && (
-                                        <>
-                                            <StorefrontHero store={previewStore} />
-                                            {ProductGrid && (
-                                                <ProductGrid
-                                                    products={products.map((p: any) => ({
-                                                        ...p,
-                                                        image: p.image || p.images?.[0] || 'https://via.placeholder.com/400'
-                                                    }))}
-                                                    subdomain={store?.subdomain || ''}
-                                                    storeId={store?.id || ''}
-                                                    store={previewStore}
-                                                />
-                                            )}
-                                        </>
+                                <div className="min-h-[800px]">
+                                    {previewPath === 'index' && StorefrontPage && (
+                                        <StorefrontPage
+                                            store={previewStore}
+                                            products={products}
+                                            subdomain={previewStore.subdomain}
+                                            isPreview={true}
+                                            onConfigChange={handleConfigChange}
+                                        />
                                     )}
                                     {previewPath === 'shop' && (
                                         <div className="p-8">
@@ -203,6 +234,8 @@ export default function ThemePreviewPage() {
                                                     subdomain={store?.subdomain || ''}
                                                     storeId={store?.id || ''}
                                                     store={previewStore}
+                                                    isPreview={true}
+                                                    onConfigChange={handleConfigChange}
                                                 />
                                             )}
                                         </div>
@@ -225,15 +258,35 @@ export default function ThemePreviewPage() {
                     </div>
                 </div>
 
-                {/* Right Customization Sidebar */}
-                {showEditor && (
-                    <ThemeEditor
-                        config={tempConfig}
-                        onChange={setTempConfig}
-                        onSave={handlePublish}
-                        isSaving={isSaving}
-                    />
-                )}
+                {/* 2. Theme Settings Sidebar */}
+                <AnimatePresence>
+                    {showEditor && (
+                        <motion.div
+                            initial={{ x: 350 }}
+                            animate={{ x: 0 }}
+                            exit={{ x: 350 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="h-full"
+                        >
+                            <ThemeEditor
+                                config={tempConfig}
+                                onChange={handleConfigChange}
+                                onSave={handlePublish}
+                                onClose={() => setShowEditor(false)}
+                                isSaving={isSaving}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Sidebar Toggle Button */}
+                <button
+                    onClick={() => setShowEditor(!showEditor)}
+                    className={`absolute bottom-8 right-8 z-[110] p-4 rounded-full shadow-2xl transition-all active:scale-90 ${showEditor ? 'bg-slate-900 translate-x-12 opacity-0' : 'bg-indigo-600'
+                        }`}
+                >
+                    <PanelRight className="w-6 h-6 text-white" />
+                </button>
             </div>
         </div>
     );

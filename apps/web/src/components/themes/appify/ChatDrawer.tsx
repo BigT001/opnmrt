@@ -28,6 +28,15 @@ export function AppifyChatDrawer() {
     const [storeInfo, setStoreInfo] = useState<any>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
 
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     // Initial load
     useEffect(() => {
         if (!isOpen) return;
@@ -129,19 +138,19 @@ export function AppifyChatDrawer() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                        className="absolute inset-0 bg-black/40 backdrop-blur-md"
                         onClick={toggleDrawer}
                     />
 
                     <motion.div
-                        initial={{ y: '100%' }}
-                        animate={{ y: 0 }}
-                        exit={{ y: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="absolute inset-x-0 bottom-0 h-[85vh] bg-white rounded-t-[40px] flex flex-col overflow-hidden shadow-2xl"
+                        initial={isMobile ? { y: '100%' } : { x: '100%' }}
+                        animate={isMobile ? { y: 0 } : { x: 0 }}
+                        exit={isMobile ? { y: '100%' } : { x: '100%' }}
+                        transition={{ type: 'spring', damping: 30, stiffness: 250 }}
+                        className="absolute bottom-0 inset-x-0 md:inset-y-0 md:right-0 md:left-auto w-full md:w-[450px] h-[85vh] md:h-full bg-white rounded-t-[40px] md:rounded-t-none md:rounded-l-[48px] flex flex-col overflow-hidden shadow-2xl md:shadow-[-20px_0_50px_rgba(0,0,0,0.1)]"
                     >
                         {/* Pull Indicator */}
-                        <div className="w-full flex justify-center pt-3 pb-1 shrink-0">
+                        <div className="w-full flex justify-center pt-3 pb-1 shrink-0 md:hidden">
                             <div className="w-12 h-1.5 bg-gray-100 rounded-full" />
                         </div>
 

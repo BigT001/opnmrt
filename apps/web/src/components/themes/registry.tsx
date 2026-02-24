@@ -1,78 +1,73 @@
-import { ThemeComponents, ThemeName, ThemeCategory } from './types';
-import * as Default from './default';
-import * as Appify from './appify';
+import { ThemeComponents, ThemeName, ThemeCategory, NavbarProps, FooterProps, HeroProps, ProductGridProps, ProductDetailProps, CartDrawerProps, CheckoutProps, StoreThemeProps, PageProps, ProductPageProps } from './types';
+import dynamic from 'next/dynamic';
+import React from 'react';
 
+// Using a function with switch-case and static imports to avoid Turbopack hangs
+// compared to a static registry object with many dynamic imports.
 
-// Theme registry — simplified to DEFAULT only
-export const themeRegistry: Record<string, ThemeComponents> = {
-    DEFAULT: {
-        Navbar: Default.DefaultNavbar,
-        Footer: Default.DefaultFooter,
-        StorefrontHero: Default.DefaultHero,
-        ProductGrid: Default.DefaultProductGrid,
-        ProductDetail: Default.DefaultProductDetail,
-        CartDrawer: Default.DefaultCartDrawer,
-        CheckoutPage: Default.DefaultCheckout,
-        Layout: Default.DefaultLayout,
-        StorefrontPage: Default.DefaultStorefrontPage,
-        ProductPage: Default.DefaultProductPage,
-        AboutPage: Default.DefaultStorefrontPage,
-        ShopPage: Default.DefaultStorefrontPage,
-        FavoritesPage: Default.DefaultStorefrontPage,
-    },
-    APPIFY: {
-        Navbar: Appify.AppifyNavbar,
-        Footer: Appify.AppifyFooter,
-        StorefrontHero: Appify.AppifyHero,
-        ProductGrid: Appify.AppifyProductGrid,
-        ProductDetail: Appify.AppifyProductDetail,
-        CartDrawer: Appify.AppifyCartDrawer,
-        CheckoutPage: Appify.AppifyCheckout,
-        Layout: Appify.AppifyLayout,
-        StorefrontPage: Appify.AppifyHomePage,
-        ProductPage: Appify.AppifyProductPage,
-        AboutPage: Appify.AppifyHomePage,
-        ShopPage: Appify.AppifyShopPage,
-        FavoritesPage: Appify.AppifyFavoritesPage,
-    },
-};
-
-// All old theme names point to DEFAULT
-themeRegistry.MINIMAL_LUXE = themeRegistry.DEFAULT;
-themeRegistry.GLAMOUR_EVE = themeRegistry.DEFAULT;
-themeRegistry.CHIC_URBAN = themeRegistry.DEFAULT;
-themeRegistry.VINTAGE_CHARM = themeRegistry.DEFAULT;
-themeRegistry.PURE_BOTANICAL = themeRegistry.DEFAULT;
-themeRegistry.RADIANT_GLOW = themeRegistry.DEFAULT;
-themeRegistry.STARK_EDGE = themeRegistry.DEFAULT;
-themeRegistry.TECH_SPEC = themeRegistry.DEFAULT;
-themeRegistry.NEON_STREAM = themeRegistry.DEFAULT;
-themeRegistry.MODERN = themeRegistry.DEFAULT;
-themeRegistry.CLASSIC = themeRegistry.DEFAULT;
-themeRegistry.BOLD = themeRegistry.DEFAULT;
-
-// Theme metadata for selection UI
-export interface ThemeMetadata {
-    id: ThemeName;
-    name: string;
-    category: ThemeCategory;
-    description: string;
-}
-
-export const themeMetadata: ThemeMetadata[] = [
-    { id: 'DEFAULT', name: 'System Default', category: 'FASHION_ACCESSORIES', description: 'Clean, versatile baseline storefront' },
-    { id: 'APPIFY', name: 'Appify Mobile', category: 'FASHION_ACCESSORIES', description: 'Mobile-app style experience with bottom navigation' },
-];
-
-export const getThemesByCategory = (category: ThemeCategory) => {
-    return themeMetadata.filter(t => t.category === category);
-};
-
-export const getThemeComponents = (themeName: string = 'DEFAULT'): ThemeComponents => {
+export const getThemeComponents = async (themeName: string = 'DEFAULT'): Promise<ThemeComponents> => {
     const normalizedName = themeName.toUpperCase().replace(/-/g, '_');
-    return themeRegistry[normalizedName] || themeRegistry.DEFAULT;
+
+    switch (normalizedName) {
+        case 'APPIFY':
+            return {
+                Navbar: (await import('./appify/Navbar')).AppifyNavbar,
+                Footer: (await import('./appify/Footer')).AppifyFooter,
+                StorefrontHero: (await import('./appify/StorefrontHero')).AppifyHero,
+                ProductGrid: (await import('./appify/ProductGrid')).AppifyProductGrid,
+                ProductDetail: (await import('./appify/ProductDetail')).AppifyProductDetail,
+                CartDrawer: (await import('./appify/CartDrawer')).AppifyCartDrawer,
+                CheckoutPage: (await import('./appify/CheckoutPage')).AppifyCheckout,
+                Layout: (await import('./appify/layout')).AppifyLayout,
+                StorefrontPage: (await import('./appify/HomePage')).AppifyHomePage,
+                ProductPage: (await import('./appify/ProductPage')).AppifyProductPage,
+                AboutPage: (await import('./appify/HomePage')).AppifyHomePage,
+                ShopPage: (await import('./appify/ShopPage')).AppifyShopPage,
+                FavoritesPage: (await import('./appify/FavoritesPage')).AppifyFavoritesPage,
+            } as ThemeComponents;
+        case 'VANTAGE':
+            return {
+                Navbar: (await import('./vantage/Navbar')).VantageNavbar,
+                Footer: (await import('./vantage/Footer')).VantageFooter,
+                StorefrontHero: (await import('./vantage/StorefrontHero')).VantageHero,
+                ProductGrid: (await import('./vantage/ProductGrid')).VantageProductGrid,
+                ProductDetail: (await import('./vantage/ProductDetail')).VantageProductDetail,
+                CartDrawer: (await import('./vantage/CartDrawer')).VantageCartDrawer,
+                CheckoutPage: (await import('./vantage/CheckoutPage')).VantageCheckout,
+                Layout: (await import('./vantage/layout')).VantageLayout,
+                StorefrontPage: (await import('./vantage/HomePage')).VantageHomePage,
+                ProductPage: (await import('./vantage/ProductPage')).VantageProductPage,
+                AboutPage: (await import('./vantage/AboutPage')).VantageAboutPage,
+                ShopPage: (await import('./vantage/ShopPage')).VantageShopPage,
+                FavoritesPage: (await import('./vantage/FavoritesPage')).VantageFavoritesPage,
+            } as ThemeComponents;
+        case 'MINIMAL_LUXE':
+        case 'GLAMOUR_EVE':
+        case 'NEON_STREAM':
+        case 'DEFAULT':
+        default:
+            return {
+                Navbar: (await import('./default/Navbar')).DefaultNavbar,
+                Footer: (await import('./default/Footer')).DefaultFooter,
+                StorefrontHero: (await import('./default/StorefrontHero')).DefaultHero,
+                ProductGrid: (await import('./default/ProductGrid')).DefaultProductGrid,
+                ProductDetail: (await import('./default/ProductDetail')).DefaultProductDetail,
+                CartDrawer: (await import('./default/CartDrawer')).DefaultCartDrawer,
+                CheckoutPage: (await import('./default/CheckoutPage')).DefaultCheckout,
+                Layout: (await import('./default/layout')).DefaultLayout,
+                StorefrontPage: (await import('./default/StorefrontPage')).DefaultStorefrontPage,
+                ProductPage: (await import('./default/ProductPage')).DefaultProductPage,
+                AboutPage: (await import('./default/AboutPage')).DefaultAboutPage,
+                ShopPage: (await import('./default/ShopPage')).DefaultShopPage,
+                FavoritesPage: (await import('./default/FavoritesPage')).DefaultFavoritesPage,
+            } as ThemeComponents;
+    }
 };
 
-export const getThemeLayout = (themeName: string = 'DEFAULT') => {
-    return getThemeComponents(themeName).Layout;
+export const getThemeLayout = async (themeName: string = 'DEFAULT') => {
+    const components = await getThemeComponents(themeName);
+    return components.Layout;
 };
+
+import { themeMetadata, ThemeMetadata, getThemesByCategory } from './metadata';
+export { themeMetadata, type ThemeMetadata, getThemesByCategory };

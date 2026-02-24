@@ -50,7 +50,7 @@ export default async function ShopPage({
         notFound();
     }
 
-    const { ShopPage } = getThemeComponents(store.theme);
+    const { ShopPage } = await getThemeComponents(store.theme);
 
     return (
         <ShopPage

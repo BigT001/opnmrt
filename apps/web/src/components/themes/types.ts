@@ -8,7 +8,7 @@ export type ThemeName =
     | 'MINIMAL_LUXE' | 'GLAMOUR_EVE' | 'CHIC_URBAN' // Fashion
     | 'VINTAGE_CHARM' | 'PURE_BOTANICAL' | 'RADIANT_GLOW' // Beauty
     | 'STARK_EDGE' | 'TECH_SPEC' | 'NEON_STREAM' // Gadgets
-    | 'DEFAULT' | 'MODERN' | 'CLASSIC' | 'BOLD' | 'APPIFY'; // Aliases and Defaults
+    | 'DEFAULT' | 'MODERN' | 'CLASSIC' | 'BOLD' | 'APPIFY' | 'VANTAGE'; // Aliases and Defaults
 
 // Store data structure
 export interface ThemeConfig {
@@ -21,6 +21,7 @@ export interface ThemeConfig {
     heroTitle?: string;
     heroSubtitle?: string;
     heroImage?: string;
+    hiddenSections?: string[];
     footerVariant?: string;
     borderRadius?: string;
     name?: string;
@@ -28,6 +29,7 @@ export interface ThemeConfig {
     navHome?: string;
     navShop?: string;
     navAbout?: string;
+    [key: string]: any;
 }
 
 export interface StoreData {
@@ -46,6 +48,7 @@ export interface StoreData {
     whatsappNumber?: string | null;
     useWhatsAppCheckout?: boolean;
     paystackPublicKey?: string | null;
+    hiddenSections?: string[];
 }
 
 // Product data structure
@@ -60,6 +63,18 @@ export interface ProductData {
     stock: number;
     storeId: string;
     category?: string | null;
+    colors?: string[];
+    sizes?: string[];
+    reviews?: {
+        id: string;
+        rating: number;
+        comment?: string | null;
+        createdAt: string;
+        user?: {
+            name?: string;
+            image?: string;
+        };
+    }[];
 }
 
 // Component Props
@@ -74,14 +89,24 @@ export interface NavbarProps {
     navShop?: string;
     navAbout?: string;
     onNavigate?: (path: string) => void;
+    greeting?: string;
+    primaryColor?: string;
+    themeConfig?: ThemeConfig | null;
 }
 
 export interface FooterProps {
     storeName: string;
+    subdomain?: string;
+    isPreview?: boolean;
+    onConfigChange?: (config: any) => void;
+    primaryColor?: string;
+    themeConfig?: ThemeConfig | null;
 }
 
 export interface HeroProps {
     store: StoreData;
+    isPreview?: boolean;
+    onConfigChange?: (config: any) => void;
 }
 
 export interface ProductGridProps {
@@ -90,6 +115,8 @@ export interface ProductGridProps {
     storeId: string;
     store: StoreData;
     hideHeader?: boolean;
+    isPreview?: boolean;
+    onConfigChange?: (config: any) => void;
 }
 
 export interface ProductDetailProps {
@@ -113,12 +140,15 @@ export interface StoreThemeProps {
     isPreview?: boolean;
     onConfigChange?: (config: any) => void;
     onNavigate?: (path: string) => void;
+    virtualPath?: string;
 }
 
 export interface PageProps {
     store: StoreData;
     products: ProductData[];
     subdomain: string;
+    isPreview?: boolean;
+    onConfigChange?: (config: any) => void;
 }
 
 export interface ProductPageProps {
@@ -129,17 +159,17 @@ export interface ProductPageProps {
 
 // Theme component bundle
 export interface ThemeComponents {
-    Navbar: React.FC<NavbarProps>;
-    Footer: React.FC<FooterProps>;
-    StorefrontHero: React.FC<HeroProps>;
-    ProductGrid: React.FC<ProductGridProps>;
-    ProductDetail: React.FC<ProductDetailProps>;
-    CartDrawer: React.FC<CartDrawerProps>;
-    CheckoutPage: React.FC<CheckoutProps>;
-    Layout: React.FC<StoreThemeProps>;
-    StorefrontPage: React.FC<PageProps>;
-    ProductPage: React.FC<ProductPageProps>;
-    AboutPage: React.FC<PageProps>;
-    ShopPage: React.FC<PageProps>;
-    FavoritesPage: React.FC<PageProps>;
+    Navbar: React.ComponentType<NavbarProps>;
+    Footer: React.ComponentType<FooterProps>;
+    StorefrontHero: React.ComponentType<HeroProps>;
+    ProductGrid: React.ComponentType<ProductGridProps>;
+    ProductDetail: React.ComponentType<ProductDetailProps>;
+    CartDrawer: React.ComponentType<CartDrawerProps>;
+    CheckoutPage: React.ComponentType<CheckoutProps>;
+    Layout: React.ComponentType<StoreThemeProps>;
+    StorefrontPage: React.ComponentType<PageProps>;
+    ProductPage: React.ComponentType<ProductPageProps>;
+    AboutPage: React.ComponentType<PageProps>;
+    ShopPage: React.ComponentType<PageProps>;
+    FavoritesPage: React.ComponentType<PageProps>;
 }

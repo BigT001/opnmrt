@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ThemeConfig } from './types';
+import api from '@/lib/api';
 import {
     Layout,
     Type,
@@ -29,261 +30,267 @@ interface ThemeEditorProps {
     config: ThemeConfig;
     onChange: (newConfig: ThemeConfig) => void;
     onSave: () => void;
+    onClose?: () => void;
     isSaving: boolean;
 }
 
-export function ThemeEditor({ config, onChange, onSave, isSaving }: ThemeEditorProps) {
-    const [isHeadersExpanded, setIsHeadersExpanded] = React.useState(false);
+export function ThemeEditor({ config, onChange, onSave, onClose, isSaving }: ThemeEditorProps) {
+    const [isUploading, setIsUploading] = React.useState(false);
+    const [openSection, setOpenSection] = React.useState<string | null>('colors');
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleChange = (key: keyof ThemeConfig, value: string) => {
         onChange({ ...config, [key]: value });
     };
 
+    const toggleSection = (section: string) => {
+        setOpenSection(openSection === section ? null : section);
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await api.post('/stores/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            handleChange('logo', res.data.url);
+        } catch (err) {
+            console.error('Upload failed:', err);
+            alert('Failed to upload logo.');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const colorPalettes = [
+        { name: 'Midnight', primary: '#0f172a' },
+        { name: 'Emerald', primary: '#10b981' },
+        { name: 'Sunshine', primary: '#f59e0b' },
+        { name: 'Rose', primary: '#f43f5e' },
+        { name: 'Indigo', primary: '#6366f1' },
+        { name: 'Sunset', primary: '#f97316' },
+        { name: 'Luxury', primary: '#b45309' },
+        { name: 'Clean', primary: '#000000' },
+    ];
+
+    const SectionHeader = ({ id, icon: Icon, title }: { id: string, icon: any, title: string }) => (
+        <button
+            onClick={() => toggleSection(id)}
+            className="w-full flex items-center justify-between p-1 group"
+        >
+            <div className="flex items-center gap-2">
+                <Icon className={`w-4 h-4 ${openSection === id ? 'text-primary' : 'text-slate-400'}`} />
+                <h3 className={`text-[11px] font-black uppercase tracking-wider transition-colors ${openSection === id ? 'text-slate-800' : 'text-slate-500 group-hover:text-slate-700'}`}>{title}</h3>
+            </div>
+            <ChevronRight className={`w-3 h-3 text-slate-300 transition-transform duration-300 ${openSection === id ? 'rotate-90' : ''}`} />
+        </button>
+    );
+
     return (
         <div className="w-[350px] bg-white border-l border-slate-100 flex flex-col h-full shadow-2xl relative z-[100]">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-200">
                         <Zap className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">Open Mart Studio</h2>
-                        <p className="text-[10px] font-bold text-slate-400">DESIGN ENGINE V1</p>
+                        <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-widest leading-none mb-1">Brand Studio</h2>
+                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest italic">OpenMart Engine</p>
                     </div>
                 </div>
+
+                {onClose && (
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-100"
+                        title="Collapse Sidebar"
+                    >
+                        <PanelRight className="w-5 h-5" />
+                    </button>
+                )}
             </div>
 
             <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
+                {/* Visual Identity Section */}
                 <section className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Layout className="w-4 h-4 text-primary" />
-                            <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-800">Header Selection</h3>
-                        </div>
-                        <button
-                            onClick={() => setIsHeadersExpanded(!isHeadersExpanded)}
-                            className="text-[9px] font-black uppercase tracking-widest text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
-                        >
-                            {isHeadersExpanded ? 'Show Less' : 'Show All'}
-                            <div className={`transition-transform duration-300 ${isHeadersExpanded ? 'rotate-180' : ''}`}>
-                                <ChevronRight className="w-3 h-3 rotate-90" />
-                            </div>
-                        </button>
-                    </div>
+                    <SectionHeader id="identity" icon={Crown} title="Visual Identity" />
 
-                    <motion.div
-                        initial={false}
-                        animate={{ height: isHeadersExpanded ? 'auto' : '82px' }}
-                        className="grid grid-cols-2 gap-2 overflow-hidden relative pb-2"
-                    >
-                        {[
-                            { id: 1, name: 'Classical', desc: 'Menu Center', icon: <Columns className="w-3 h-3" /> },
-                            { id: 2, name: 'Modern', desc: 'Logo Center', icon: <Type className="w-3 h-3" /> },
-                            { id: 3, name: 'Minimalist', desc: 'Space Out', icon: <Layout className="w-3 h-3" /> },
-                            { id: 4, name: 'Focus', desc: 'Search Bar', icon: <RefreshCcw className="w-3 h-3" /> },
-                            { id: 5, name: 'Glass', desc: 'Floating', icon: <GlassWater className="w-3 h-3" /> },
-                            { id: 6, name: 'Brutal', desc: 'Hard Edge', icon: <Pocket className="w-3 h-3" /> },
-                            { id: 7, name: 'Elegant', desc: 'Serif Mix', icon: <Framer className="w-3 h-3" /> },
-                            { id: 8, name: 'Cyber', desc: 'Neon Tech', icon: <Cpu className="w-3 h-3" /> },
-                            { id: 9, name: 'Luxury', desc: 'Grand Centric', icon: <Crown className="w-3 h-3" /> },
-                            { id: 10, name: 'Pure', desc: 'Bubble Pop', icon: <CircleDashed className="w-3 h-3" /> }
-                        ].map((variant) => (
-                            <button
-                                key={variant.id}
-                                onClick={() => handleChange('headerVariant', `Header${variant.id}`)}
-                                className={`p-3 rounded-xl border text-left transition-all h-[70px] relative ${config.headerVariant === `Header${variant.id}`
-                                    ? 'border-primary bg-primary/5 text-primary shadow-sm'
-                                    : 'border-slate-100 text-slate-500 hover:border-slate-200 hover:bg-slate-50'}`}
+                    <AnimatePresence>
+                        {openSection === 'identity' && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden space-y-4"
                             >
-                                <div className="flex items-center gap-2 mb-1">
-                                    {variant.icon}
-                                    <span className="text-[10px] font-black uppercase tracking-widest">{variant.name}</span>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Store Logo</label>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileUpload}
+                                        className="hidden"
+                                        accept="image/*"
+                                    />
+                                    <div
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="w-full aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center gap-2 group cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all overflow-hidden relative"
+                                    >
+                                        {isUploading ? (
+                                            <RefreshCcw className="w-6 h-6 text-primary animate-spin" />
+                                        ) : config.logo ? (
+                                            <>
+                                                <img src={config.logo} className="w-full h-full object-contain p-4" alt="Store Logo" />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                    <RefreshCcw className="w-5 h-5 text-white" />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ImageIcon className="w-6 h-6 text-slate-300 group-hover:scale-110 transition-transform" />
+                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Click to upload logo</span>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter leading-tight">{variant.desc}</div>
-                            </button>
-                        ))}
 
-                        {!isHeadersExpanded && (
-                            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Logo URL (Optional)</label>
+                                    <input
+                                        type="text"
+                                        value={config.logo || ''}
+                                        onChange={(e) => handleChange('logo', e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-[11px] font-bold text-slate-900 focus:ring-2 focus:ring-primary/10 transition-all outline-none"
+                                        placeholder="Paste direct URL..."
+                                    />
+                                </div>
+                            </motion.div>
                         )}
-                    </motion.div>
+                    </AnimatePresence>
                 </section>
 
-                {/* Hero Layout Section */}
+                {/* Brand Colors Section */}
                 <section className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <Columns className="w-4 h-4 text-primary" />
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-800">Hero Layout</h3>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                        {[1, 2].map((i) => (
-                            <button
-                                key={i}
-                                onClick={() => handleChange('heroVariant', `Hero${i}`)}
-                                className={`p-3 rounded-xl border text-[10px] font-bold transition-all ${config.heroVariant === `Hero${i}`
-                                    ? 'border-primary bg-primary/5 text-primary shadow-sm'
-                                    : 'border-slate-100 text-slate-500 hover:border-slate-200 hover:bg-slate-50'}`}
+                    <SectionHeader id="colors" icon={Palette} title="Brand Colors" />
+
+                    <AnimatePresence>
+                        {openSection === 'colors' && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden space-y-6"
                             >
-                                Variant {i}
-                            </button>
-                        ))}
-                    </div>
-                </section>
+                                <div className="space-y-3">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Quick Palettes</label>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {colorPalettes.map((palette) => (
+                                            <button
+                                                key={palette.name}
+                                                onClick={() => handleChange('primaryColor', palette.primary)}
+                                                className={`aspect-square rounded-xl border-2 transition-all flex items-center justify-center group ${config.primaryColor === palette.primary ? 'border-primary ring-2 ring-primary/20 scale-105' : 'border-slate-100 hover:border-slate-300'}`}
+                                                style={{ backgroundColor: palette.primary }}
+                                                title={palette.name}
+                                            >
+                                                {config.primaryColor === palette.primary && (
+                                                    <Zap className="w-3 h-3 text-white mix-blend-difference" />
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
 
-                {/* Product Card Section */}
-                <section className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <MousePointer2 className="w-4 h-4 text-primary" />
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-800">Product Card</h3>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                        {[1, 2].map((i) => (
-                            <button
-                                key={i}
-                                onClick={() => handleChange('productCardVariant', `Card${i}`)}
-                                className={`p-3 rounded-xl border text-[10px] font-bold transition-all ${config.productCardVariant === `Card${i}`
-                                    ? 'border-primary bg-primary/5 text-primary shadow-sm'
-                                    : 'border-slate-100 text-slate-500 hover:border-slate-200 hover:bg-slate-50'}`}
-                            >
-                                Variant {i}
-                            </button>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Store Identity Section */}
-                <section className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <Palette className="w-4 h-4 text-primary" />
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-800">Store Identity</h3>
-                    </div>
-                    <div className="space-y-3">
-                        <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Store Name</label>
-                            <input
-                                type="text"
-                                value={config.name || ''}
-                                onChange={(e) => handleChange('name', e.target.value)}
-                                className="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl text-[11px] font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 transition-all"
-                                placeholder="Edit store name..."
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Logo URL</label>
-                            <input
-                                type="text"
-                                value={config.logo || ''}
-                                onChange={(e) => handleChange('logo', e.target.value)}
-                                className="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl text-[11px] font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 transition-all"
-                                placeholder="Paste logo URL..."
-                            />
-                        </div>
-                    </div>
-                </section>
-
-                {/* Hero Content Section */}
-                <section className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <TypeIcon className="w-4 h-4 text-primary" />
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-800">Hero Content</h3>
-                    </div>
-                    <div className="space-y-3">
-                        <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Title</label>
-                            <input
-                                type="text"
-                                value={config.heroTitle || ''}
-                                onChange={(e) => handleChange('heroTitle', e.target.value)}
-                                className="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl text-[11px] font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 transition-all"
-                                placeholder="Enter hero title..."
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Subtitle</label>
-                            <textarea
-                                value={config.heroSubtitle || ''}
-                                onChange={(e) => handleChange('heroSubtitle', e.target.value)}
-                                className="w-full px-4 py-2 bg-slate-50 border-none rounded-xl text-[11px] font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 transition-all h-20 resize-none"
-                                placeholder="Enter hero subtitle..."
-                            />
-                        </div>
-                    </div>
-                </section>
-
-                {/* Visual Style Section */}
-                <section className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <Palette className="w-4 h-4 text-primary" />
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-800">Visual Style</h3>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Brand Color</label>
-                            <input
-                                type="color"
-                                value={config.primaryColor || '#000000'}
-                                onChange={(e) => handleChange('primaryColor', e.target.value)}
-                                className="w-full h-10 p-1 bg-white border border-slate-100 rounded-xl cursor-pointer"
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Border Radius</label>
-                            <select
-                                value={config.borderRadius || 'rounded-xl'}
-                                onChange={(e) => handleChange('borderRadius', e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border-none rounded-xl text-[11px] font-bold text-slate-900 focus:ring-0"
-                            >
-                                <option value="rounded-none">Sharp</option>
-                                <option value="rounded-lg">Mild</option>
-                                <option value="rounded-xl">Standard</option>
-                                <option value="rounded-[2.5rem]">Curvy</option>
-                            </select>
-                        </div>
-                    </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-2">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Custom Hex</label>
+                                        <div className="relative h-12 w-full">
+                                            <input
+                                                type="color"
+                                                value={config.primaryColor || '#000000'}
+                                                onChange={(e) => handleChange('primaryColor', e.target.value)}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            />
+                                            <div
+                                                className="w-full h-full rounded-2xl border border-slate-100 flex items-center justify-center transition-transform active:scale-95"
+                                                style={{ backgroundColor: config.primaryColor }}
+                                            >
+                                                <span className="text-[10px] font-black uppercase text-white drop-shadow-sm mix-blend-difference">Pick</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 flex flex-col justify-end">
+                                        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                            <p className="text-[11px] font-black text-slate-800 tracking-tighter italic leading-none truncate">{config.primaryColor}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </section>
 
                 {/* Typography Section */}
                 <section className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <Type className="w-4 h-4 text-primary" />
-                        <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-800">Typography</h3>
-                    </div>
-                    <div className="space-y-3">
-                        <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Primary Font</label>
-                            <select
-                                value={config.primaryFont || 'font-sans'}
-                                onChange={(e) => handleChange('primaryFont', e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border-none rounded-xl text-[11px] font-bold text-slate-900"
+                    <SectionHeader id="typography" icon={TypeIcon} title="Typography" />
+
+                    <AnimatePresence>
+                        {openSection === 'typography' && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden space-y-3"
                             >
-                                <option value="font-sans">Modern Sans</option>
-                                <option value="font-serif">Classic Serif</option>
-                                <option value="font-mono">Technical Mono</option>
-                            </select>
-                        </div>
-                    </div>
+                                {[
+                                    { id: 'font-sans', name: 'Premium Sans', desc: 'Modern & High-Energy' },
+                                    { id: 'font-serif', name: 'Classic Serif', desc: 'Elegant & Established' },
+                                    { id: 'font-mono', name: 'Technical Mono', desc: 'Tech & Futurity' }
+                                ].map((font) => (
+                                    <button
+                                        key={font.id}
+                                        onClick={() => handleChange('primaryFont', font.id)}
+                                        className={`w-full p-4 rounded-2xl border text-left transition-all relative ${config.primaryFont === font.id
+                                            ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm'
+                                            : 'border-slate-100 text-slate-500 hover:border-slate-200 hover:bg-slate-50'}`}
+                                    >
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className={`text-[12px] font-black uppercase tracking-widest ${font.id}`}>{font.name}</span>
+                                            {config.primaryFont === font.id && <Zap className="w-3 h-3 text-primary animate-pulse" />}
+                                        </div>
+                                        <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{font.desc}</div>
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </section>
             </div>
 
-            <div className="p-6 border-t border-slate-100 bg-slate-50/50">
+            <div className="p-6 border-t border-slate-100 bg-white">
                 <button
                     onClick={onSave}
                     disabled={isSaving}
-                    className="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-black transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                    className="group w-full py-5 bg-slate-900 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.25em] shadow-2xl hover:bg-black transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
                 >
                     {isSaving ? (
                         <>
-                            <RefreshCcw className="w-4 h-4 animate-spin" />
-                            Publishing Changes...
+                            <RefreshCcw className="w-4 h-4 animate-spin text-primary" />
+                            Synchronizing...
                         </>
                     ) : (
                         <>
-                            <Save className="w-4 h-4" />
-                            Publish Design
+                            <Save className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                            Finalize & Publish
                         </>
                     )}
                 </button>
             </div>
-        </div >
+        </div>
     );
 }

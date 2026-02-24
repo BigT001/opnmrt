@@ -3,44 +3,28 @@ import { getThemeComponents } from '@/components/themes/registry';
 
 async function getStore(subdomain: string) {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    const url = `${apiUrl}/stores/resolve?subdomain=${subdomain}`;
+    console.log(`[STORE_PAGE] Resolving store: ${subdomain}`);
     try {
-        const res = await fetch(
-            `${apiUrl}/stores/resolve?subdomain=${subdomain}`,
-            {
-                cache: 'no-store',
-                next: { revalidate: 0 }
-            }
-        );
-        if (!res.ok) {
-            console.error(`Store resolve failed for ${subdomain}: ${res.status}`);
-            return null;
-        }
-        const data = await res.json();
-        return data;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        return res.json();
     } catch (error) {
-        console.error(`Failed to resolve store ${subdomain} at ${apiUrl}:`, error);
+        console.error(`[STORE_PAGE] Resolve error:`, error);
         return null;
     }
 }
 
 async function getProducts(subdomain: string) {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    const url = `${apiUrl}/products?subdomain=${subdomain}`;
+    console.log(`[STORE_PAGE] Fetching products for: ${subdomain}`);
     try {
-        const res = await fetch(
-            `${apiUrl}/products?subdomain=${subdomain}`,
-            {
-                cache: 'no-store',
-                next: { revalidate: 0 }
-            }
-        );
-        if (!res.ok) {
-            console.error(`Products fetch failed for ${subdomain}: ${res.status}`);
-            return [];
-        }
-        const data = await res.json();
-        return data;
+        const res = await fetch(url);
+        if (!res.ok) return [];
+        return res.json();
     } catch (error) {
-        console.error(`Failed to fetch products for ${subdomain} at ${apiUrl}:`, error);
+        console.error(`[STORE_PAGE] Products error:`, error);
         return [];
     }
 }
@@ -79,34 +63,29 @@ export default async function StorefrontPage({
     const products = await getProducts(subdomain);
 
     if (!store) {
-        notFound();
+        return <div>Page Content: Store not found</div>;
     }
 
-    const { StorefrontPage } = getThemeComponents(store.theme);
-
-    const jsonLd = {
-        '@context': 'https://schema.org',
-        '@type': 'Store',
-        name: store.name,
-        description: store.description,
-        url: `https://${store.subdomain}.opnmart.com`, // Assuming domain structure
-        image: store.heroImage || store.logo,
-        telephone: store.phone,
-        email: store.email,
-    };
+    const { StorefrontPage } = await getThemeComponents(store.theme);
 
     return (
         <>
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'Store',
+                        name: store.name,
+                        description: store.description,
+                        url: `https://${subdomain}.opnmart.com`,
+                        image: store.logo,
+                    }),
+                }}
             />
             <StorefrontPage
                 store={store}
-                products={products.map((p: any) => ({
-                    ...p,
-                    image: p.image || p.images?.[0] || 'https://via.placeholder.com/400'
-                }))}
+                products={products}
                 subdomain={subdomain}
             />
         </>

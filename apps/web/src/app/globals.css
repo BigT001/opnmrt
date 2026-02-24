@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "../components/themes/headers/HeaderStyles.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -159,6 +160,20 @@
 
   .animate-pulse-emerald {
     animation: pulse_emerald 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 12s linear infinite;
   }
 
   .custom-scrollbar::-webkit-scrollbar {

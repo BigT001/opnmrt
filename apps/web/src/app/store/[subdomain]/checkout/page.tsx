@@ -10,19 +10,25 @@ export default function CheckoutPage() {
     const params = useParams<{ subdomain: string }>();
     const [store, setStore] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [ThemeCheckout, setThemeCheckout] = useState<any>(null);
     const [isRedirecting, setIsRedirecting] = useState(false);
     const router = useRouter();
 
     const trackedCheckoutRef = useRef(false);
 
     useEffect(() => {
-        async function fetchStore() {
+        async function fetchStoreAndTheme() {
             try {
                 const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stores/resolve?subdomain=${params.subdomain}`);
                 if (res.ok) {
                     const text = await res.text();
                     const data = text ? JSON.parse(text) : null;
                     setStore(data);
+
+                    if (data) {
+                        const components = await getThemeComponents(data.theme);
+                        setThemeCheckout(() => components.CheckoutPage);
+                    }
 
                     // Track Checkout Start
                     if (data?.id && !trackedCheckoutRef.current) {
@@ -44,24 +50,22 @@ export default function CheckoutPage() {
             }
         }
         if (params?.subdomain) {
-            fetchStore();
+            fetchStoreAndTheme();
         }
     }, [params?.subdomain]);
 
-    // If WhatsApp checkout is enabled, we could potentially show a different view or just handle it in the component
-    // but for now let's ensure the user is logged in if using platform checkout
     useEffect(() => {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         if (store && !token && !store.useWhatsAppCheckout) {
             setIsRedirecting(true);
             const timer = setTimeout(() => {
                 router.push(`/store/${params.subdomain}/customer/login?redirect=checkout`);
-            }, 1500); // 1.5s delay for a smoother transition
+            }, 1500);
             return () => clearTimeout(timer);
         }
     }, [store, params.subdomain, router]);
 
-    if (loading || isRedirecting) {
+    if (loading || isRedirecting || !ThemeCheckout) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-white">
                 <AnimatePresence mode="wait">
@@ -104,8 +108,6 @@ export default function CheckoutPage() {
     if (!store) {
         return <div className="min-h-screen flex items-center justify-center text-gray-500 font-medium font-inter">Store not found</div>;
     }
-
-    const { CheckoutPage: ThemeCheckout } = getThemeComponents(store.theme);
 
     return <ThemeCheckout store={store} subdomain={params.subdomain} />;
 }

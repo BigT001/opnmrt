@@ -12,6 +12,16 @@ export class StoresService {
   async findBySubdomain(subdomain: string) {
     return this.prisma.store.findUnique({
       where: { subdomain },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            email: true,
+          }
+        }
+      }
     });
   }
 
@@ -69,103 +79,110 @@ export class StoresService {
   }
 
   async getStoreStats(storeId: string) {
+    const startTime = Date.now();
     try {
-      console.log('[GET_STATS] Starting for storeId:', storeId);
+      console.log(`[GET_STATS][${storeId}] Execution started at ${new Date().toISOString()}`);
 
-      // Perform queries one by one or with better error catching to identify the culprit
-      const totalOrders = await this.prisma.order.count({ where: { storeId } }).catch(e => { console.error('Error totalOrders:', e); throw e; });
-      const totalRevenue = await this.prisma.order.aggregate({
-        where: { storeId, status: 'PAID' },
-        _sum: { totalAmount: true },
-      }).catch(e => { console.error('Error totalRevenue:', e); throw e; });
-
-      const totalProducts = await this.prisma.product.count({ where: { storeId } }).catch(e => { console.error('Error totalProducts:', e); throw e; });
-
-      const topProducts: any[] = await this.prisma.orderItem.groupBy({
-        by: ['productId'],
-        where: {
-          order: {
-            storeId,
-            status: 'PAID',
+      // Parallelize all primary queries to maximize throughput and give the event loop breathing room
+      const [
+        totalOrders,
+        totalRevenueResult,
+        totalProducts,
+        funnelData,
+        totalProductsSoldResult,
+        totalCustomers,
+        activeOrders,
+        weeklySalesData,
+        topProductsResult
+      ] = await Promise.all([
+        this.prisma.order.count({ where: { storeId } }).catch(e => { console.error(`[STATS_ERROR][${storeId}] totalOrders:`, e.message); return 0; }),
+        this.prisma.order.aggregate({
+          where: { storeId, status: 'PAID' },
+          _sum: { totalAmount: true },
+        }).catch(e => { console.error(`[STATS_ERROR][${storeId}] totalRevenue:`, e.message); return { _sum: { totalAmount: 0 } }; }),
+        this.prisma.product.count({ where: { storeId } }).catch(e => { console.error(`[STATS_ERROR][${storeId}] totalProducts:`, e.message); return 0; }),
+        this.prisma.eventLog.groupBy({
+          by: ['eventType'],
+          where: { storeId },
+          _count: { id: true },
+        }).catch(e => { console.error(`[STATS_ERROR][${storeId}] funnelData:`, e.message); return []; }),
+        this.prisma.orderItem.aggregate({
+          where: {
+            order: {
+              storeId,
+              status: 'PAID',
+            },
           },
-        },
-        _sum: {
-          quantity: true,
-        },
-        orderBy: {
           _sum: {
-            quantity: 'desc',
+            quantity: true,
           },
-        },
-        take: 5,
-      }).catch(e => { console.error('Error topProducts:', e); return []; });
-
-      const funnelData: any[] = await this.prisma.eventLog.groupBy({
-        by: ['eventType'],
-        where: { storeId },
-        _count: { id: true },
-      }).catch(e => { console.error('Error funnelData:', e); return []; });
-
-      const totalProductsSoldData: any = await this.prisma.orderItem.aggregate({
-        where: {
-          order: {
+        }).catch(e => { console.error(`[STATS_ERROR][${storeId}] totalProductsSold:`, e.message); return { _sum: { quantity: 0 } }; }),
+        this.prisma.user.count({
+          where: {
+            role: 'BUYER',
+            storeId: storeId,
+          },
+        }).catch(e => { console.error(`[STATS_ERROR][${storeId}] totalCustomers:`, e.message); return 0; }),
+        this.prisma.order.count({
+          where: {
+            storeId,
+            status: { in: ['PAID', 'SHIPPED', 'DELIVERED'] },
+          },
+        }).catch(e => { console.error(`[STATS_ERROR][${storeId}] activeOrders:`, e.message); return 0; }),
+        this.prisma.order.findMany({
+          where: {
             storeId,
             status: 'PAID',
+            createdAt: {
+              gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+            },
           },
-        },
-        _sum: {
-          quantity: true,
-        },
-      }).catch(e => { console.error('Error totalProductsSoldData:', e); return { _sum: { quantity: 0 } }; });
-
-      const totalCustomers = await this.prisma.user.count({
-        where: {
-          role: 'BUYER',
-          storeId: storeId,
-        },
-      }).catch(e => { console.error('Error totalCustomers:', e); throw e; });
-
-      const activeOrders = await this.prisma.order.count({
-        where: {
-          storeId,
-          status: { in: ['PAID', 'SHIPPED', 'DELIVERED'] },
-        },
-      }).catch(e => { console.error('Error activeOrders:', e); throw e; });
-
-      const weeklySalesData: any[] = await this.prisma.order.findMany({
-        where: {
-          storeId,
-          status: 'PAID',
-          createdAt: {
-            gte: new Date(new Date().setDate(new Date().getDate() - 7)),
+          select: {
+            totalAmount: true,
+            createdAt: true,
           },
-        },
-        select: {
-          totalAmount: true,
-          createdAt: true,
-        },
-      }).catch(e => { console.error('Error weeklySalesData:', e); return []; });
+        }).catch(e => { console.error(`[STATS_ERROR][${storeId}] weeklySales:`, e.message); return []; }),
+        this.prisma.orderItem.groupBy({
+          by: ['productId'],
+          where: {
+            order: {
+              storeId,
+              status: 'PAID',
+            },
+          },
+          _sum: {
+            quantity: true,
+          },
+          orderBy: {
+            _sum: {
+              quantity: 'desc',
+            },
+          },
+          take: 5,
+        }).catch(e => { console.error(`[STATS_ERROR][${storeId}] topProducts:`, e.message); return []; })
+      ]);
 
-      console.log('[GET_STATS] All individual queries completed');
+      console.log(`[GET_STATS][${storeId}] DB Core Queries completed in ${Date.now() - startTime}ms`);
 
-      // Fetch product details for top products with safety
+      // Fetch product details for top products with concurrency
       const topProductsWithDetails = await Promise.all(
-        topProducts.map(async (item) => {
+        topProductsResult.map(async (item) => {
           try {
             const product = await this.prisma.product.findUnique({
               where: { id: item.productId },
             });
+            if (!product) return null;
             return {
-              id: product?.id,
-              name: product?.name || 'Deleted Product',
-              price: Number(product?.price || 0),
-              stocks: product?.stock || 0,
+              id: product.id,
+              name: product.name,
+              price: Number(product.price || 0),
+              stocks: product.stock || 0,
               sales: item._sum.quantity || 0,
-              earnings: Number(product?.price || 0) * (item._sum.quantity || 0),
-              image: product?.images?.[0] || '',
+              earnings: Number(product.price || 0) * (item._sum.quantity || 0),
+              image: product.images?.[0] || '',
             };
           } catch (e) {
-            console.error('[TOP_PRODUCT_FETCH_ERROR]', item.productId, e);
+            console.error(`[STATS_ERROR][${storeId}] product_fetch ${item.productId}:`, e.message);
             return null;
           }
         }),
@@ -178,13 +195,11 @@ export class StoresService {
         checkout: totalOrders,
       };
 
-      funnelData.forEach((item) => {
+      funnelData.forEach((item: any) => {
         if (item.eventType === 'SESSION_START') funnel.sessions = item._count.id;
-        if (item.eventType === 'PRODUCT_VIEW')
-          funnel.productViews = item._count.id;
+        if (item.eventType === 'PRODUCT_VIEW') funnel.productViews = item._count.id;
         if (item.eventType === 'ADD_TO_CART') funnel.addToCart = item._count.id;
-        if (item.eventType === 'CHECKOUT_START')
-          funnel.checkout = item._count.id;
+        if (item.eventType === 'CHECKOUT_START') funnel.checkout = item._count.id;
       });
 
       // Process Weekly Sales Data
@@ -199,7 +214,7 @@ export class StoresService {
       });
 
       const weeklySales = last7Days.map((day) => {
-        const salesForDay = weeklySalesData.filter((item) => {
+        const salesForDay = (weeklySalesData as any[]).filter((item) => {
           const itemDate = new Date(item.createdAt).toISOString().split('T')[0];
           return itemDate === day.date;
         });
@@ -207,24 +222,37 @@ export class StoresService {
         return { name: day.dayName, value: total };
       });
 
-      return {
+      const result = {
         totalOrders,
-        totalRevenue: Number(totalRevenue?._sum?.totalAmount || 0),
+        totalRevenue: Number(totalRevenueResult?._sum?.totalAmount || 0),
         totalProducts,
-        totalProductsSold: totalProductsSoldData?._sum?.quantity || 0,
+        totalProductsSold: totalProductsSoldResult?._sum?.quantity || 0,
         totalCustomers,
         activeOrders,
         topProducts: topProductsWithDetails.filter(Boolean),
         funnel,
         weeklySales,
       };
+
+      console.log(`[GET_STATS][${storeId}] Total execution time: ${Date.now() - startTime}ms`);
+      return result;
     } catch (error) {
-      console.error('[GET_STORE_STATS_SERVICE_ERROR]', {
-        storeId,
+      console.error(`[GET_STORE_STATS_FATAL][${storeId}]`, {
         message: error.message,
-        stack: error.stack,
+        duration: Date.now() - startTime
       });
-      throw error;
+      // Fallback object to prevent dashboard crash
+      return {
+        totalOrders: 0,
+        totalRevenue: 0,
+        totalProducts: 0,
+        totalProductsSold: 0,
+        totalCustomers: 0,
+        activeOrders: 0,
+        topProducts: [],
+        funnel: { sessions: 0, productViews: 0, addToCart: 0, checkout: 0 },
+        weeklySales: [],
+      };
     }
   }
 

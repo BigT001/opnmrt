@@ -38,7 +38,7 @@ export function DefaultCartDrawer({ storeId }: { storeId?: string }) {
                             items.map((item) => (
                                 <div key={item.id} className="flex gap-4 border-b border-gray-50 pb-6">
                                     <div className="w-20 h-20 bg-gray-50 rounded-lg overflow-hidden shrink-0">
-                                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                        <img src={item.image || (item as any).images?.[0] || 'https://via.placeholder.com/100'} alt={item.name} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flex-grow space-y-2">
                                         <div className="flex justify-between items-start">

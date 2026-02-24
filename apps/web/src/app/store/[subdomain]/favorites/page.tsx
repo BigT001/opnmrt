@@ -24,7 +24,7 @@ export default async function FavoritesPage({
     if (!store) return <div>Store not found</div>;
 
     const products = await getProducts(store.id);
-    const { FavoritesPage: ThemeFavoritesPage } = getThemeComponents(store.theme);
+    const { FavoritesPage: ThemeFavoritesPage } = await getThemeComponents(store.theme);
 
     return <ThemeFavoritesPage store={store} products={products} subdomain={subdomain} />;
 }

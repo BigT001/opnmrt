@@ -18,6 +18,7 @@ interface Product {
     sizes?: string[];
     tags?: string[];
     status?: string; // Derived or stored
+    storeId: string;
 }
 
 export default function ProductsPage() {

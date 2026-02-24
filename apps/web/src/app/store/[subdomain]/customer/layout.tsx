@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { ShoppingBag, User, MessageCircle, LogOut, ChevronRight, Loader2, Menu, X } from 'lucide-react';
+import { ShoppingBag, User, MessageCircle, LogOut, ChevronRight, Loader2, Menu, X, ArrowLeft } from 'lucide-react';
 import api from '@/lib/api';
 import { useSocket } from '@/hooks/useSocket';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -108,7 +108,7 @@ export default function CustomerDashboardLayout({
 
     if (isAuthPage) {
         return (
-            <div className="min-h-screen bg-slate-50 flex flex-col pt-20">
+            <div className="min-h-screen bg-white flex flex-col pt-20">
                 <main className="flex-grow flex items-center justify-center p-6">
                     {children}
                 </main>
@@ -154,7 +154,7 @@ export default function CustomerDashboardLayout({
                                         key={item.href}
                                         href={item.href}
                                         className={`flex items-center justify-between p-4 rounded-2xl transition-all group ${isActive
-                                            ? 'bg-slate-900 dark:bg-white text-white dark:text-black shadow-lg shadow-slate-200 dark:shadow-none'
+                                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
                                             : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white'
                                             }`}
                                     >
@@ -173,7 +173,14 @@ export default function CustomerDashboardLayout({
                             })}
                         </nav>
 
-                        <div className="mt-8 pt-8 border-t border-slate-50 dark:border-slate-800">
+                        <div className="mt-8 pt-8 border-t border-slate-50 dark:border-slate-800 space-y-1">
+                            <Link
+                                href={`/store/${subdomain}/shop`}
+                                className="flex items-center gap-3 p-4 w-full text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-2xl transition-all group"
+                            >
+                                <ArrowLeft className="w-5 h-5 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
+                                <span className="text-[11px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Return to Shop</span>
+                            </Link>
                             <button
                                 onClick={handleLogout}
                                 className="flex items-center gap-3 p-4 w-full text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-2xl transition-all text-left"
@@ -219,7 +226,7 @@ export default function CustomerDashboardLayout({
                                                 href={item.href}
                                                 onClick={() => setIsMenuOpen(false)}
                                                 className={`flex items-center justify-between p-5 rounded-3xl transition-all ${isActive
-                                                    ? 'bg-slate-900 dark:bg-white text-white dark:text-black shadow-xl'
+                                                    ? 'bg-primary text-white shadow-xl shadow-primary/20'
                                                     : 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900'
                                                     }`}
                                             >
@@ -252,9 +259,39 @@ export default function CustomerDashboardLayout({
                 </AnimatePresence>
 
                 {/* Main Content */}
-                <main className="lg:col-span-3">
+                <main className="lg:col-span-3 mb-24 lg:mb-0">
                     {children}
                 </main>
+            </div>
+
+            {/* Fixed Mobile Bottom Nav */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 z-50 px-4 flex items-center justify-around pb-safe">
+                {navItems.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`flex flex-col items-center gap-1.5 transition-all relative ${isActive ? 'text-slate-900 dark:text-white scale-110' : 'text-slate-400'}`}
+                        >
+                            <div className={`p-2 rounded-xl transition-all ${isActive ? 'bg-slate-100 dark:bg-white/10' : ''}`}>
+                                <item.icon className="w-6 h-6" />
+                            </div>
+                            <span className="text-[9px] font-black uppercase tracking-widest">{item.label.split(' ')[0]}</span>
+                            {item.badge ? (
+                                <span className="absolute top-0 right-0 w-4 h-4 bg-emerald-500 text-white text-[8px] font-black rounded-full flex items-center justify-center ring-2 ring-white dark:ring-black">
+                                    {item.badge}
+                                </span>
+                            ) : null}
+                            {isActive && (
+                                <motion.div
+                                    layoutId="mobile-nav-indicator"
+                                    className="absolute -bottom-1 w-1 h-1 bg-primary rounded-full"
+                                />
+                            )}
+                        </Link>
+                    );
+                })}
             </div>
         </div>
     );
