@@ -2,70 +2,70 @@ import { Injectable } from '@nestjs/common';
 import { Resend } from 'resend';
 
 interface OrderEmailData {
-  // Customer info
-  customerEmail: string;
-  customerName: string;
+    // Customer info
+    customerEmail: string;
+    customerName: string;
 
-  // Seller info
-  sellerEmail: string;
-  sellerName: string;
+    // Seller info
+    sellerEmail: string;
+    sellerName: string;
 
-  // Order info
-  orderId: string;
-  orderDate: string;
-  items: Array<{
-    name: string;
-    quantity: number;
-    price: number;
-  }>;
-  totalAmount: number;
+    // Order info
+    orderId: string;
+    orderDate: string;
+    items: Array<{
+        name: string;
+        quantity: number;
+        price: number;
+    }>;
+    totalAmount: number;
 
-  // Store info
-  storeName: string;
-  storeSubdomain: string;
+    // Store info
+    storeName: string;
+    storeSubdomain: string;
 
-  // Payment info
-  paymentReference: string;
+    // Payment info
+    paymentReference: string;
 }
 
 @Injectable()
 export class EmailService {
-  private resend: Resend;
+    private resend: Resend;
 
-  constructor() {
-    this.resend = new Resend(process.env.RESEND_API_KEY);
-  }
+    constructor() {
+        this.resend = new Resend(process.env.RESEND_API_KEY);
+    }
 
-  /**
-   * Send order confirmation emails to both buyer and seller
-   */
-  async sendOrderEmails(data: OrderEmailData) {
-    const results = await Promise.allSettled([
-      this.sendBuyerReceipt(data),
-      this.sendSellerNotification(data),
-    ]);
+    /**
+     * Send order confirmation emails to both buyer and seller
+     */
+    async sendOrderEmails(data: OrderEmailData) {
+        const results = await Promise.allSettled([
+            this.sendBuyerReceipt(data),
+            this.sendSellerNotification(data),
+        ]);
 
-    const [buyerResult, sellerResult] = results;
+        const [buyerResult, sellerResult] = results;
 
-    return {
-      buyer:
-        buyerResult.status === 'fulfilled'
-          ? buyerResult.value
-          : { success: false, error: buyerResult.reason },
-      seller:
-        sellerResult.status === 'fulfilled'
-          ? sellerResult.value
-          : { success: false, error: sellerResult.reason },
-    };
-  }
+        return {
+            buyer:
+                buyerResult.status === 'fulfilled'
+                    ? buyerResult.value
+                    : { success: false, error: buyerResult.reason },
+            seller:
+                sellerResult.status === 'fulfilled'
+                    ? sellerResult.value
+                    : { success: false, error: sellerResult.reason },
+        };
+    }
 
-  /**
-   * Send beautiful branded receipt to the buyer
-   */
-  private async sendBuyerReceipt(data: OrderEmailData) {
-    const itemsHtml = data.items
-      .map(
-        (item) => `
+    /**
+     * Send beautiful branded receipt to the buyer
+     */
+    private async sendBuyerReceipt(data: OrderEmailData) {
+        const itemsHtml = data.items
+            .map(
+                (item) => `
             <tr>
                 <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
                     <strong style="color: #111827;">${item.name}</strong>
@@ -78,10 +78,10 @@ export class EmailService {
                 </td>
             </tr>
         `,
-      )
-      .join('');
+            )
+            .join('');
 
-    const emailHtml = `
+        const emailHtml = `
             <!DOCTYPE html>
             <html>
             <head>
@@ -194,34 +194,34 @@ export class EmailService {
             </html>
         `;
 
-    try {
-      const { data: emailData, error } = await this.resend.emails.send({
-        from: `${data.storeName} <orders@resend.dev>`,
-        to: [data.customerEmail],
-        subject: `🎉 Order Confirmed - ${data.storeName} (#${data.orderId.substring(0, 8).toUpperCase()})`,
-        html: emailHtml,
-      });
+        try {
+            const { data: emailData, error } = await this.resend.emails.send({
+                from: `${data.storeName} <orders@opnmrt.com>`,
+                to: [data.customerEmail],
+                subject: `🎉 Order Confirmed - ${data.storeName} (#${data.orderId.substring(0, 8).toUpperCase()})`,
+                html: emailHtml,
+            });
 
-      if (error) {
-        console.error('❌ Failed to send buyer receipt:', error);
-        return { success: false, error };
-      }
+            if (error) {
+                console.error('❌ Failed to send buyer receipt:', error);
+                return { success: false, error };
+            }
 
-      console.log('✅ Buyer receipt sent successfully to:', data.customerEmail);
-      return { success: true, data: emailData };
-    } catch (error) {
-      console.error('❌ Error sending buyer receipt:', error);
-      return { success: false, error };
+            console.log('✅ Buyer receipt sent successfully to:', data.customerEmail);
+            return { success: true, data: emailData };
+        } catch (error) {
+            console.error('❌ Error sending buyer receipt:', error);
+            return { success: false, error };
+        }
     }
-  }
 
-  /**
-   * Send payment notification to the seller
-   */
-  private async sendSellerNotification(data: OrderEmailData) {
-    const itemsHtml = data.items
-      .map(
-        (item) => `
+    /**
+     * Send payment notification to the seller
+     */
+    private async sendSellerNotification(data: OrderEmailData) {
+        const itemsHtml = data.items
+            .map(
+                (item) => `
             <tr>
                 <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #111827;">
                     <strong>${item.name}</strong>
@@ -234,10 +234,10 @@ export class EmailService {
                 </td>
             </tr>
         `,
-      )
-      .join('');
+            )
+            .join('');
 
-    const emailHtml = `
+        const emailHtml = `
             <!DOCTYPE html>
             <html>
             <head>
@@ -335,7 +335,7 @@ export class EmailService {
 
                         <!-- Dashboard Link -->
                         <div style="margin-top: 32px; text-align: center;">
-                            <a href="http://localhost:3000/dashboard/seller/orders" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                            <a href="https://opnmrt.com/dashboard/seller/orders" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
                                 View Order in Dashboard →
                             </a>
                         </div>
@@ -347,7 +347,7 @@ export class EmailService {
                             This is an automated notification from <strong>OPNMRT</strong>
                         </p>
                         <p style="margin: 0; color: #9ca3af; font-size: 11px;">
-                            Manage your orders at ${data.storeSubdomain}.localhost:3000/dashboard
+                            Manage your orders at ${data.storeSubdomain}.opnmrt.com/dashboard
                         </p>
                     </div>
                 </div>
@@ -355,27 +355,27 @@ export class EmailService {
             </html>
         `;
 
-    try {
-      const { data: emailData, error } = await this.resend.emails.send({
-        from: 'OPNMRT Orders <notifications@resend.dev>',
-        to: [data.sellerEmail],
-        subject: `💰 New Order & Payment - ${data.storeName} (#${data.orderId.substring(0, 8).toUpperCase()})`,
-        html: emailHtml,
-      });
+        try {
+            const { data: emailData, error } = await this.resend.emails.send({
+                from: 'OPNMRT Orders <notifications@opnmrt.com>',
+                to: [data.sellerEmail],
+                subject: `💰 New Order & Payment - ${data.storeName} (#${data.orderId.substring(0, 8).toUpperCase()})`,
+                html: emailHtml,
+            });
 
-      if (error) {
-        console.error('❌ Failed to send seller notification:', error);
-        return { success: false, error };
-      }
+            if (error) {
+                console.error('❌ Failed to send seller notification:', error);
+                return { success: false, error };
+            }
 
-      console.log(
-        '✅ Seller notification sent successfully to:',
-        data.sellerEmail,
-      );
-      return { success: true, data: emailData };
-    } catch (error) {
-      console.error('❌ Error sending seller notification:', error);
-      return { success: false, error };
+            console.log(
+                '✅ Seller notification sent successfully to:',
+                data.sellerEmail,
+            );
+            return { success: true, data: emailData };
+        } catch (error) {
+            console.error('❌ Error sending seller notification:', error);
+            return { success: false, error };
+        }
     }
-  }
 }

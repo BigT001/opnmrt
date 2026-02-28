@@ -718,7 +718,7 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
 
             <div className="p-6 border-t border-slate-100 bg-white flex gap-3">
                 <button
-                    onClick={() => window.open(`http://${subdomain}.localhost:3000`, '_blank')}
+                    onClick={() => window.open(`https://${subdomain}.opnmrt.com`, '_blank')}
                     className="flex-1 h-14 bg-white border border-slate-100 text-slate-600 hover:text-slate-900 rounded-2xl transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2 group"
                 >
                     <Eye className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 transition-colors" />

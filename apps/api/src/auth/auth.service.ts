@@ -38,7 +38,7 @@ export class AuthService {
     try {
       // Send Email via Resend
       const { data, error } = await this.resend.emails.send({
-        from: 'OPNMRT <onboarding@resend.dev>', // Use verified domain in prod
+        from: 'OPNMRT <onboarding@opnmrt.com>', // User confirmed domain verified
         to: [normalizedEmail],
         subject: 'Your OPNMRT Verification Code',
         html: `

@@ -71,7 +71,7 @@ export default function SellerDetailPage() {
                 </div>
                 <div className="flex space-x-3">
                     <Link
-                        href={`http://${store.subdomain}.localhost:3000`}
+                        href={`https://${store.subdomain}.opnmrt.com`}
                         target="_blank"
                         className="px-6 py-2.5 bg-slate-900 text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-700 hover:bg-slate-800 transition-all"
                     >
@@ -145,7 +145,7 @@ export default function SellerDetailPage() {
                                     <div className="grid grid-cols-2 gap-8">
                                         <div>
                                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Subdomain</p>
-                                            <p className="text-sm font-bold text-indigo-400">{store.subdomain}.opnmart.com</p>
+                                            <p className="text-sm font-bold text-indigo-400">{store.subdomain}.opnmrt.com</p>
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Active Theme</p>

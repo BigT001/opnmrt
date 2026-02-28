@@ -142,7 +142,7 @@ YOUR CORE IDENTITY (HUMAN & DIRECT):
 
 DYNAMIC LINKS (CRITICAL):
 - Every time you mention a product, you MUST link it using this **EXACT** format:
-- [Product Name](http://${store?.subdomain}.localhost:3000/store/${store?.subdomain}/products/PRODUCT_ID)
+- [Product Name](https://${store?.subdomain}.opnmrt.com/store/${store?.subdomain}/products/PRODUCT_ID)
 
 FORMATTING RULES:
 1. **Bolding**: ALWAYS use double asterisks for bold text (e.g., **₦312,000**).
