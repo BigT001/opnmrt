@@ -6,20 +6,39 @@ interface User {
     email: string;
     name: string;
     role: string;
+    phone?: string | null;
     image?: string | null;
 }
 
 interface Store {
     id: string;
     name: string;
+    ownerName?: string | null;
     subdomain: string;
     logo?: string | null;
     heroImage?: string | null;
     theme?: string;
     themeConfig?: any;
+    officialEmail?: string | null;
+    whatsappNumber?: string | null;
+    address?: string | null;
+    instagram?: string | null;
+    twitter?: string | null;
+    facebook?: string | null;
+    tiktok?: string | null;
     paystackPublicKey?: string | null;
+    paystackSecretKey?: string | null;
+    paystackWebhookSecret?: string | null;
+    ninBvn?: string | null;
+    cacNumber?: string | null;
+    utilityBill?: string | null;
+    verificationStatus?: string | null;
     chatAiEnabled?: boolean;
-    // NOTE: Secret key is NEVER sent to frontend for security reasons
+    // BigT AI Assistant Capabilities
+    aiMessaging?: boolean;
+    aiInventory?: boolean;
+    aiStrategy?: boolean;
+    aiFinancials?: boolean;
 }
 
 interface AuthState {

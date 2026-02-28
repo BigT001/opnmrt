@@ -5,10 +5,25 @@ import { FooterProps } from '../types';
 import Link from 'next/link';
 import { Instagram, Twitter, Facebook } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { EditableText } from '../EditableContent';
 
-export function VantageFooter({ storeName, themeConfig }: FooterProps) {
+export function VantageFooter({
+    storeName,
+    themeConfig,
+    onConfigChange,
+    isPreview,
+    instagram,
+    twitter,
+    facebook,
+    tiktok
+}: FooterProps) {
     const { subdomain } = useParams<{ subdomain: string }>();
     const effectivePrimaryColor = themeConfig?.primaryColor || '#000000';
+    const config = themeConfig || {};
+
+    const handleConfigSave = (newCfg: any) => {
+        onConfigChange?.(newCfg);
+    };
 
     return (
         <footer className="bg-white border-t border-gray-100 pt-10 pb-10 text-gray-900">
@@ -17,24 +32,39 @@ export function VantageFooter({ storeName, themeConfig }: FooterProps) {
                     {/* Brand */}
                     <div className="space-y-4">
                         <span className="text-2xl font-black tracking-tighter uppercase leading-none block">
-                            {storeName || 'VANTAGE'}
+                            <EditableText
+                                value={storeName || 'VANTAGE'}
+                                onSave={(val: string) => handleConfigSave({ name: val })}
+                                isPreview={isPreview}
+                                label="Footer Brand Name"
+                            />
                         </span>
                         <p className="text-gray-400 font-bold text-[9px] uppercase tracking-widest max-w-[180px] leading-relaxed">
-                            Redefining style through modern architectural aesthetics.
+                            <EditableText
+                                value={config.footerTagline || 'Redefining style through modern architectural aesthetics.'}
+                                onSave={(val: string) => handleConfigSave({ footerTagline: val })}
+                                isPreview={isPreview}
+                                label="Footer Tagline"
+                                multiline={true}
+                            />
                         </p>
                         <div className="flex gap-2">
                             {[
-                                { Icon: Instagram, color: '#E4405F', name: 'Instagram' },
-                                { Icon: Twitter, color: '#1DA1F2', name: 'Twitter' },
-                                { Icon: Facebook, color: '#1877F2', name: 'Facebook' }
-                            ].map((social, i) => (
-                                <button
+                                { Icon: Instagram, color: '#E4405F', name: 'Instagram', handle: instagram },
+                                { Icon: Twitter, color: '#1DA1F2', name: 'Twitter', handle: twitter },
+                                { Icon: Facebook, color: '#1877F2', name: 'Facebook', handle: facebook },
+                                { Icon: Instagram, color: '#000000', name: 'TikTok', handle: tiktok }
+                            ].filter(social => social.handle).map((social, i) => (
+                                <a
                                     key={i}
+                                    href={social.handle ? (social.handle.startsWith('http') ? social.handle : `https://${social.name.toLowerCase()}.com/${social.handle.replace('@', '')}`) : '#'}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="w-8 h-8 border border-gray-50 rounded-full flex items-center justify-center transition-all bg-white shadow-sm group active:scale-90"
                                     style={{ borderColor: social.color + '20' }}
                                 >
                                     <social.Icon className="w-3.5 h-3.5 transition-colors" style={{ color: social.color }} />
-                                </button>
+                                </a>
                             ))}
                         </div>
                     </div>
@@ -55,11 +85,21 @@ export function VantageFooter({ storeName, themeConfig }: FooterProps) {
                 <div className="pt-6 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
                         <p className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-300">
-                            © {new Date().getFullYear()} {storeName}. ALL RIGHTS RESERVED.
+                            <EditableText
+                                value={config.footerCopyright || `© ${new Date().getFullYear()} ${storeName}. ALL RIGHTS RESERVED.`}
+                                onSave={(val: string) => handleConfigSave({ footerCopyright: val })}
+                                isPreview={isPreview}
+                                label="Copyright Text"
+                            />
                         </p>
                         <div className="hidden md:block w-px h-2 bg-gray-200" />
                         <p className="text-[9px] font-black uppercase tracking-[0.3em] text-black">
-                            POWERED BY <span style={{ color: effectivePrimaryColor }}>OPNMRT</span>
+                            <EditableText
+                                value={config.footerCredits || 'POWERED BY OPNMRT'}
+                                onSave={(val: string) => handleConfigSave({ footerCredits: val })}
+                                isPreview={isPreview}
+                                label="Credits"
+                            />
                         </p>
                     </div>
 

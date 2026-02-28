@@ -296,6 +296,7 @@ export class ChatService {
   }
 
   async getUnreadCount(userId: string, storeId?: string) {
+    if (!userId) return 0;
     return this.prisma.message.count({
       where: {
         recipientId: userId,

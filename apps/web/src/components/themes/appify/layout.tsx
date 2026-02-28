@@ -24,6 +24,14 @@ export const AppifyLayout: React.FC<StoreThemeProps> = ({ store, children, isPre
     const isDashboard = !isPreview && (pathname?.includes('/customer') || pathname?.includes('/dashboard') || pathname?.includes('/checkout'));
     const { toggleDrawer } = useWishlistStore();
 
+    const hexToRgb = (hex: string) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 0, 0';
+    };
+
+    const primaryColor = store.primaryColor || store.themeConfig?.primaryColor || '#000000';
+    const primaryColorRgb = hexToRgb(primaryColor);
+
     const [showNav, setShowNav] = React.useState(true);
     const lastScrollY = React.useRef(0);
 
@@ -65,7 +73,8 @@ export const AppifyLayout: React.FC<StoreThemeProps> = ({ store, children, isPre
                 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap');
                 
                 .theme-preview-scope {
-                    --primary-color: ${store.themeConfig?.primaryColor || '#000000'};
+                    --primary-color: ${primaryColor};
+                    --primary-color-rgb: ${primaryColorRgb};
                     --primary: var(--primary-color);
                     --color-primary: var(--primary-color);
 
@@ -86,11 +95,20 @@ export const AppifyLayout: React.FC<StoreThemeProps> = ({ store, children, isPre
                 /* Surgical Brand Overrides - Only affect the main brand shade while preserving variants */
                 .theme-preview-scope .bg-orange-500 { background-color: var(--primary-color) !important; }
                 .theme-preview-scope .bg-orange-600 { background-color: var(--primary-color) !important; }
+                .theme-preview-scope .hover\:bg-orange-600:hover { background-color: var(--primary-color) !important; filter: brightness(0.9); }
+                .theme-preview-scope .hover\:bg-orange-500:hover { background-color: var(--primary-color) !important; filter: brightness(0.9); }
+                .theme-preview-scope .active\:bg-orange-700:active { background-color: var(--primary-color) !important; filter: brightness(0.8); }
+                
                 .theme-preview-scope .text-orange-500 { color: var(--primary-color) !important; }
                 .theme-preview-scope .text-orange-600 { color: var(--primary-color) !important; }
+                .theme-preview-scope .hover\:text-orange-600:hover { color: var(--primary-color) !important; filter: brightness(0.9); }
+                
                 .theme-preview-scope .border-orange-500 { border-color: var(--primary-color) !important; }
+                .theme-preview-scope .border-orange-600 { border-color: var(--primary-color) !important; }
                 .theme-preview-scope .from-orange-500 { --tw-gradient-from: var(--primary-color) !important; }
                 .theme-preview-scope .to-orange-500 { --tw-gradient-to: var(--primary-color) !important; }
+                .theme-preview-scope .shadow-orange-500\/40 { --tw-shadow-color: rgba(var(--primary-color-rgb), 0.4) !important; }
+                .theme-preview-scope .shadow-orange-500 { --tw-shadow-color: rgba(var(--primary-color-rgb), 0.5) !important; }
 
                 .theme-preview-scope .no-scrollbar::-webkit-scrollbar {
                     display: none;
@@ -128,68 +146,78 @@ export const AppifyLayout: React.FC<StoreThemeProps> = ({ store, children, isPre
                     {children}
                 </div>
             </main>
-            <AppifyFooter storeName={store.name} />
+            {!isDashboard && (
+                <AppifyFooter
+                    storeName={store.name}
+                    instagram={store.instagram}
+                    twitter={store.twitter}
+                    facebook={store.facebook}
+                    tiktok={store.tiktok}
+                />
+            )}
 
-            <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 px-6 py-2 pb-4 sm:pb-3 flex items-center justify-between z-[100] safe-area-bottom shadow-[0_-10px_30px_rgba(0,0,0,0.08)] md:hidden">
-                {navItems.map((item) => {
-                    const active = isActive(item.path);
-                    const isFavorites = item.label === 'Favorites';
+            {!isDashboard && (
+                <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 px-6 py-2 pb-4 sm:pb-3 flex items-center justify-between z-[100] safe-area-bottom shadow-[0_-10px_30px_rgba(0,0,0,0.08)] md:hidden">
+                    {navItems.map((item) => {
+                        const active = isActive(item.path);
+                        const isFavorites = item.label === 'Favorites';
 
-                    const content = (
-                        <>
-                            {item.isCentral ? (
-                                <div className="absolute -top-12 flex flex-col items-center">
-                                    <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg shadow-orange-500/40 ring-4 ring-white active:scale-95 transition-all ${active ? 'bg-orange-600' : 'bg-orange-500'
-                                        }`}>
-                                        <item.icon className="w-6 h-6" />
+                        const content = (
+                            <>
+                                {item.isCentral ? (
+                                    <div className="absolute -top-12 flex flex-col items-center">
+                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg shadow-orange-500/40 ring-4 ring-white active:scale-95 transition-all ${active ? 'bg-orange-600' : 'bg-orange-500'
+                                            }`}>
+                                            <item.icon className="w-6 h-6" />
+                                        </div>
+                                        <span className={`mt-1.5 text-[10px] font-black uppercase tracking-tighter ${active ? 'text-orange-600' : 'text-gray-400'
+                                            }`}>
+                                            {item.label}
+                                        </span>
                                     </div>
-                                    <span className={`mt-1.5 text-[10px] font-black uppercase tracking-tighter ${active ? 'text-orange-600' : 'text-gray-400'
-                                        }`}>
-                                        {item.label}
-                                    </span>
-                                </div>
-                            ) : (
-                                <>
-                                    <item.icon className={`w-6 h-6 transition-colors ${active ? 'text-gray-900 fill-gray-900' : 'text-gray-400 group-hover:text-gray-600'
-                                        }`} />
-                                    <span className={`text-[10px] font-bold transition-colors ${active ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-600'
-                                        }`}>
-                                        {item.label}
-                                    </span>
-                                </>
-                            )}
-                        </>
-                    );
+                                ) : (
+                                    <>
+                                        <item.icon className={`w-6 h-6 transition-colors ${active ? 'text-gray-900 fill-gray-900' : 'text-gray-400 group-hover:text-gray-600'
+                                            }`} />
+                                        <span className={`text-[10px] font-bold transition-colors ${active ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-600'
+                                            }`}>
+                                            {item.label}
+                                        </span>
+                                    </>
+                                )}
+                            </>
+                        );
 
-                    if (isFavorites) {
+                        if (isFavorites) {
+                            return (
+                                <button
+                                    key={item.label}
+                                    onClick={toggleDrawer}
+                                    className="relative flex flex-col items-center gap-1 group outline-none"
+                                >
+                                    {content}
+                                </button>
+                            );
+                        }
+
                         return (
-                            <button
+                            <Link
                                 key={item.label}
-                                onClick={toggleDrawer}
-                                className="relative flex flex-col items-center gap-1 group outline-none"
+                                href={isPreview ? '#' : `/store/${subdomain}/${item.path}`}
+                                onClick={(e) => {
+                                    if (isPreview && onNavigate) {
+                                        e.preventDefault();
+                                        onNavigate(item.path || 'index');
+                                    }
+                                }}
+                                className="relative flex flex-col items-center gap-1 group"
                             >
                                 {content}
-                            </button>
+                            </Link>
                         );
-                    }
-
-                    return (
-                        <Link
-                            key={item.label}
-                            href={isPreview ? '#' : `/store/${subdomain}/${item.path}`}
-                            onClick={(e) => {
-                                if (isPreview && onNavigate) {
-                                    e.preventDefault();
-                                    onNavigate(item.path || 'index');
-                                }
-                            }}
-                            className="relative flex flex-col items-center gap-1 group"
-                        >
-                            {content}
-                        </Link>
-                    );
-                })}
-            </div>
+                    })}
+                </div>
+            )}
         </div>
     );
 };

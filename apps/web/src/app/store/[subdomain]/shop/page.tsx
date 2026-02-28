@@ -39,15 +39,36 @@ async function getProducts(subdomain: string) {
 
 export default async function ShopPage({
     params,
+    searchParams,
 }: {
     params: Promise<{ subdomain: string }>;
+    searchParams: Promise<{ q?: string; category?: string; tag?: string }>;
 }) {
     const { subdomain } = await params;
+    const { q, category, tag } = await searchParams;
     const store = await getStore(subdomain);
-    const products = await getProducts(subdomain);
+    let products = await getProducts(subdomain);
 
     if (!store) {
         notFound();
+    }
+
+    // Client-side filtering passed down to props
+    if (q) {
+        const query = q.toLowerCase();
+        products = products.filter((p: any) =>
+            p.name.toLowerCase().includes(query) ||
+            p.description?.toLowerCase().includes(query) ||
+            p.category?.toLowerCase().includes(query)
+        );
+    }
+
+    if (category) {
+        products = products.filter((p: any) => p.category?.toLowerCase() === category.toLowerCase());
+    }
+
+    if (tag) {
+        products = products.filter((p: any) => p.tags?.includes(tag) || p.label?.toLowerCase() === tag.toLowerCase());
     }
 
     const { ShopPage } = await getThemeComponents(store.theme);

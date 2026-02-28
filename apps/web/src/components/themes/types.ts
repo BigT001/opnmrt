@@ -8,7 +8,7 @@ export type ThemeName =
     | 'MINIMAL_LUXE' | 'GLAMOUR_EVE' | 'CHIC_URBAN' // Fashion
     | 'VINTAGE_CHARM' | 'PURE_BOTANICAL' | 'RADIANT_GLOW' // Beauty
     | 'STARK_EDGE' | 'TECH_SPEC' | 'NEON_STREAM' // Gadgets
-    | 'DEFAULT' | 'MODERN' | 'CLASSIC' | 'BOLD' | 'APPIFY' | 'VANTAGE'; // Aliases and Defaults
+    | 'DEFAULT' | 'MODERN' | 'CLASSIC' | 'BOLD' | 'APPIFY' | 'VANTAGE' | 'ELECTSHOP'; // Aliases and Defaults
 
 // Store data structure
 export interface ThemeConfig {
@@ -46,8 +46,21 @@ export interface StoreData {
     biography?: string | null;
     officialEmail?: string | null;
     whatsappNumber?: string | null;
+    address?: string | null;
+    instagram?: string | null;
+    twitter?: string | null;
+    facebook?: string | null;
+    tiktok?: string | null;
     useWhatsAppCheckout?: boolean;
-    paystackPublicKey?: string | null;
+    paystackSubaccountCode?: string | null;
+    subaccountStatus?: string | null;
+    bankName?: string | null;
+    bankCode?: string | null;
+    accountNumber?: string | null;
+    ninBvn?: string | null;
+    cacNumber?: string | null;
+    utilityBill?: string | null;
+    verificationStatus?: string | null;
     hiddenSections?: string[];
 }
 
@@ -101,6 +114,11 @@ export interface FooterProps {
     onConfigChange?: (config: any) => void;
     primaryColor?: string;
     themeConfig?: ThemeConfig | null;
+    // Social media links
+    instagram?: string | null;
+    twitter?: string | null;
+    facebook?: string | null;
+    tiktok?: string | null;
 }
 
 export interface HeroProps {
@@ -115,6 +133,7 @@ export interface ProductGridProps {
     storeId: string;
     store: StoreData;
     hideHeader?: boolean;
+    hideControls?: boolean;
     isPreview?: boolean;
     onConfigChange?: (config: any) => void;
 }
@@ -172,4 +191,6 @@ export interface ThemeComponents {
     AboutPage: React.ComponentType<PageProps>;
     ShopPage: React.ComponentType<PageProps>;
     FavoritesPage: React.ComponentType<PageProps>;
+    ContactPage?: React.ComponentType<PageProps>;
+    BlogPage?: React.ComponentType<PageProps>;
 }

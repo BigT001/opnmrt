@@ -43,7 +43,8 @@ async function getReviewStats(productId: string) {
             { next: { revalidate: 60 } }
         );
         if (!res.ok) return null;
-        return await res.json();
+        const text = await res.text();
+        return text ? JSON.parse(text) : null;
     } catch (error) {
         return null;
     }

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../common/email.service';
 import { RealtimeService } from '../realtime/realtime.service';
+import { StoresService } from '../stores/stores.service';
 
 @Injectable()
 export class OrdersService {
@@ -9,6 +10,7 @@ export class OrdersService {
     private prisma: PrismaService,
     private emailService: EmailService,
     private realtime: RealtimeService,
+    private storesService: StoresService,
   ) { }
 
   async findByBuyerId(buyerId: string) {
@@ -167,6 +169,111 @@ export class OrdersService {
     });
   }
 
+  async createOfflineOrder(
+    userId: string,
+    data: {
+      storeId: string;
+      customerName?: string;
+      customerEmail?: string;
+      customerPhone?: string;
+      paymentMethod?: string;
+      discount?: number;
+      totalAmount: number;
+      items: { productId: string; quantity: number; price: number }[];
+    },
+  ) {
+    const store = await this.prisma.store.findUnique({
+      where: { id: data.storeId },
+    });
+
+    if (!store) throw new Error('Store not found');
+    if (store.ownerId !== userId) throw new Error('Unauthorized');
+
+    // Pre-fetch inventory records OUTSIDE the transaction to minimize connection hold time
+    const productIds = data.items.map((i) => i.productId);
+    const inventoryRecords = await this.prisma.inventory.findMany({
+      where: { productId: { in: productIds } },
+      select: { productId: true },
+    });
+    const inventoryProductIds = new Set(inventoryRecords.map((r) => r.productId));
+
+    try {
+      // Increased timeout to handle remote DB latency; all writes are now parallelized
+      const order = await this.prisma.$transaction(async (tx) => {
+        // 1. Create the order record
+        const createdOrder = await tx.order.create({
+          data: {
+            tenantId: store.tenantId || 'system',
+            storeId: data.storeId,
+            type: 'OFFLINE',
+            customerName: data.customerName,
+            customerEmail: data.customerEmail,
+            customerPhone: data.customerPhone,
+            paymentMethod: data.paymentMethod || 'CASH',
+            discount: data.discount || 0,
+            totalAmount: data.totalAmount,
+            status: 'PAID',
+            items: {
+              create: data.items.map((item) => ({
+                productId: item.productId,
+                quantity: item.quantity,
+                price: item.price,
+              })),
+            },
+          } as any,
+          include: {
+            items: {
+              include: { product: true },
+            },
+          },
+        });
+
+        // 2. Parallelise all inventory & event writes for speed
+        await Promise.all([
+          // 2a. Decrement product stock for all items in one batch
+          ...data.items.map((item) =>
+            tx.product.update({
+              where: { id: item.productId },
+              data: { stock: { decrement: item.quantity } },
+            }),
+          ),
+          // 2b. Decrement inventory table rows only where they exist
+          ...data.items
+            .filter((item) => inventoryProductIds.has(item.productId))
+            .map((item) =>
+              tx.inventory.update({
+                where: { productId: item.productId },
+                data: { quantity: { decrement: item.quantity } },
+              }),
+            ),
+          // 2c. Batch-create event logs for audit trail
+          tx.eventLog.createMany({
+            data: data.items.map((item) => ({
+              tenantId: store.tenantId || 'system',
+              storeId: data.storeId,
+              eventType: 'STOCK_REDUCED_BY_OFFLINE_ORDER',
+              payload: {
+                orderId: createdOrder.id,
+                productId: item.productId,
+                quantityReduced: item.quantity,
+              },
+            })),
+          }),
+        ]);
+
+        return createdOrder;
+      }, { timeout: 15000 }); // 15s timeout for remote DB
+
+      // Side-effects run AFTER transaction commits — don't hold the connection
+      this.storesService.invalidateStats(data.storeId);
+      this.realtime.emitStatsUpdate(data.storeId);
+
+      return order;
+    } catch (error) {
+      console.error('CRITICAL: Failed to create offline order:', error);
+      throw error;
+    }
+  }
 
   async updateOrderStatus(
     orderId: string,
@@ -265,8 +372,8 @@ export class OrdersService {
             payload: {
               orderId: existingOrder.id,
               amount: Number(existingOrder.totalAmount),
-              customerName: result.buyer.name || 'A Customer',
-              customerId: result.buyer.id,
+              customerName: result.buyer?.name || 'A Customer',
+              customerId: result.buyer?.id,
               itemsCount: existingOrder.items.length
             },
           },
@@ -278,11 +385,12 @@ export class OrdersService {
 
     // 4. Real-time updates for dashboard
     if (status === 'PAID') {
+      this.storesService.invalidateStats(updatedOrder.storeId);
       this.realtime.emitStatsUpdate(updatedOrder.storeId);
       this.realtime.emitNotification(updatedOrder.storeId, {
         eventType: 'ORDER_PLACED',
         payload: {
-          customerName: updatedOrder.buyer.name || 'A Customer',
+          customerName: updatedOrder.buyer?.name || 'A Customer',
           amount: Number(updatedOrder.totalAmount),
           orderId: updatedOrder.id
         },
@@ -291,12 +399,13 @@ export class OrdersService {
     }
 
     // 4. Send emails (Deferred until after transaction success)
-    if (status === 'PAID' && updatedOrder.buyer.email) {
+    const buyer = updatedOrder.buyer;
+    if (status === 'PAID' && buyer?.email) {
       try {
         const emailResults = await this.emailService.sendOrderEmails({
           // Customer info
-          customerEmail: updatedOrder.buyer.email,
-          customerName: updatedOrder.buyer.name || 'Valued Customer',
+          customerEmail: buyer.email,
+          customerName: buyer.name || 'Valued Customer',
 
           // Seller info
           sellerEmail: updatedOrder.store.owner.email,

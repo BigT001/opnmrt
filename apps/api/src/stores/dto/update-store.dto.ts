@@ -12,6 +12,7 @@ export const UpdateStoreSchema = z.object({
   accentColor: z.string().optional(),
   theme: z.string().optional(),
   themeConfig: z.any().optional(),
+  categories: z.any().optional(), // JSON array of category strings
 });
 
 export type UpdateStoreDto = z.infer<typeof UpdateStoreSchema>;

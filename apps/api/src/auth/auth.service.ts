@@ -26,19 +26,20 @@ export class AuthService {
   }
 
   async sendOtp(email: string, phone?: string, subdomain?: string) {
+    const normalizedEmail = email.toLowerCase();
     const scope = subdomain ? `${subdomain.toLowerCase()}_` : 'global_';
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // TTL: 5 minutes
-    await this.cacheManager.set(`otp_${scope}${email}`, otp, 300000);
+    await this.cacheManager.set(`otp_${scope}${normalizedEmail}`, otp, 300000);
 
-    console.log(`\n🔑 [AUTH] OTP for ${email} (Scope: ${scope}): ${otp}\n`);
+    console.log(`\n🔑 [AUTH] OTP for ${normalizedEmail} (Scope: ${scope}): ${otp}\n`);
 
     try {
       // Send Email via Resend
       const { data, error } = await this.resend.emails.send({
         from: 'OPNMRT <onboarding@resend.dev>', // Use verified domain in prod
-        to: [email],
+        to: [normalizedEmail],
         subject: 'Your OPNMRT Verification Code',
         html: `
                     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
@@ -71,30 +72,40 @@ export class AuthService {
   }
 
   async verifyOtp(email: string, otp: string, subdomain?: string, phone?: string) {
+    const normalizedEmail = email.toLowerCase();
     const scope = subdomain ? `${subdomain.toLowerCase()}_` : 'global_';
-    const cachedOtp = await this.cacheManager.get(`otp_${scope}${email}`);
+    const cachedOtp = await this.cacheManager.get(`otp_${scope}${normalizedEmail}`);
 
     if (cachedOtp !== otp) {
       throw new UnauthorizedException('Invalid or expired verification code');
     }
 
     // Clear OTP
-    await this.cacheManager.del(`otp_${scope}${email}`);
+    await this.cacheManager.del(`otp_${scope}${normalizedEmail}`);
 
     // Mark as verified for 10 mins
-    await this.cacheManager.set(`verified_${scope}${email}`, true, 600000);
+    await this.cacheManager.set(`verified_${scope}${normalizedEmail}`, true, 600000);
     return { success: true };
   }
 
   async register(
-    input: RegisterInput & { subdomain?: string; storeName?: string },
+    input: RegisterInput & {
+      subdomain?: string;
+      storeName?: string;
+      biography?: string;
+      address?: string;
+      state?: string;
+      lga?: string;
+    },
   ) {
     try {
-      console.log('[REGISTER] Starting registration for:', input.email);
+      const normalizedEmail = input.email.toLowerCase();
+      console.log('[REGISTER] Starting registration for:', normalizedEmail);
 
       // Check if verified
-      const scope = input.subdomain ? `${input.subdomain.toLowerCase()}_` : 'global_';
-      const isVerified = await this.cacheManager.get(`verified_${scope}${input.email}`);
+      // SELLERS always verify on the global scope because their subdomain is new
+      const scope = (input.role === 'SELLER' || !input.subdomain) ? 'global_' : `${input.subdomain.toLowerCase()}_`;
+      const isVerified = await this.cacheManager.get(`verified_${scope}${normalizedEmail}`);
       console.log(`[REGISTER] Verification status (Scope: ${scope}):`, isVerified);
 
       if (!isVerified) {
@@ -110,15 +121,48 @@ export class AuthService {
         targetStoreId = store?.id || null;
       }
 
-      const existingUser = await this.prisma.user.findFirst({
-        where: {
-          email: input.email,
-          storeId: targetStoreId,
-        },
-      });
+      // --- STRICT UNIQUENESS CHECKS ---
+      if (input.role === 'SELLER') {
+        // Sellers check globally
+        const existingEmail = await this.prisma.user.findFirst({
+          where: { email: { equals: normalizedEmail, mode: 'insensitive' } as any },
+        });
+        if (existingEmail) {
+          throw new ConflictException('This email is already registered as a merchant or customer.');
+        }
 
-      if (existingUser) {
-        throw new ConflictException('An account with this email is already registered at this store.');
+        if (input.phone) {
+          const existingPhone = await this.prisma.user.findFirst({
+            where: { phone: input.phone },
+          });
+          if (existingPhone) {
+            throw new ConflictException('This phone number is already registered.');
+          }
+        }
+      } else {
+        // Buyers check within the store scope
+        const existingEmail = await this.prisma.user.findFirst({
+          where: {
+            email: { equals: normalizedEmail, mode: 'insensitive' } as any,
+            storeId: targetStoreId,
+          },
+        });
+
+        if (existingEmail) {
+          throw new ConflictException('An account with this email is already registered at this store.');
+        }
+
+        if (input.phone) {
+          const existingPhone = await this.prisma.user.findFirst({
+            where: {
+              phone: input.phone,
+              storeId: targetStoreId,
+            },
+          });
+          if (existingPhone) {
+            throw new ConflictException('This phone number is already registered at this store.');
+          }
+        }
       }
 
       console.log('[REGISTER] Hashing password...');
@@ -149,7 +193,7 @@ export class AuthService {
 
         const newUser = await tx.user.create({
           data: {
-            email: input.email,
+            email: normalizedEmail,
             phone: input.phone,
             password: hashedPassword,
             name: input.name,
@@ -180,6 +224,10 @@ export class AuthService {
             data: {
               name: input.storeName,
               subdomain: lowSubdomain,
+              biography: input.biography,
+              address: input.address,
+              state: input.state,
+              lga: input.lga,
               tenantId: `t_${Math.random().toString(36).substring(2, 11)}`,
               ownerId: newUser.id,
             },
@@ -213,9 +261,14 @@ export class AuthService {
             primaryColor: store.primaryColor,
             theme: store.theme,
             themeConfig: store.themeConfig,
-            paystackPublicKey: store.paystackPublicKey,
+            utilityBill: store.utilityBill,
+            verificationStatus: store.verificationStatus,
             chatAiEnabled: store.chatAiEnabled,
-            // Secret key is NEVER sent to frontend for security
+            officialEmail: (store as any).officialEmail,
+            whatsappNumber: (store as any).whatsappNumber,
+            biography: (store as any).biography,
+            paystackSecretKey: store.paystackSecretKey ? '********' : null,
+            paystackWebhookSecret: store.paystackWebhookSecret ? '********' : null,
           }
           : null,
         ...tokens,
@@ -235,61 +288,57 @@ export class AuthService {
         targetStoreId = store?.id || null;
       }
 
-      console.log(`Login attempt for email: ${input.email} (Subdomain: ${subdomain || 'Global'})`);
+      const normalizedEmail = input.email.toLowerCase();
+      console.log(`[AUTH_DEBUG] Login attempt: email=${normalizedEmail}, subdomain=${subdomain}`);
 
-      // Find user specific to this store scope
+      // 1. Find user by email globally first to see if they exist at all
       const user = await this.prisma.user.findFirst({
-        where: {
-          email: input.email,
-          storeId: targetStoreId,
-        },
+        where: { email: { equals: normalizedEmail, mode: 'insensitive' } as any },
         include: { managedStore: true },
       });
 
+      console.log(`[AUTH_DEBUG] Global User found: ${!!user}, Role: ${user?.role}, storeId: ${user?.storeId}`);
+
       if (!user) {
-        console.error(`[AUTH_LOGIN_FAILED] User not found in scope ${subdomain}: ${input.email}`);
-        throw new UnauthorizedException('Invalid email or password for this store.');
+        console.error(`[AUTH_LOGIN_FAILED] Email not found: ${normalizedEmail}`);
+        throw new UnauthorizedException('Invalid email or password. Please try again.'); // Uniform message
       }
 
+      // 2. Check Password
       const isPasswordValid = await bcrypt.compare(
         input.password,
         user.password,
       );
+      console.log(`[AUTH_DEBUG] Password valid: ${isPasswordValid}`);
+
       if (!isPasswordValid) {
-        console.error(`[AUTH_LOGIN_FAILED] Invalid password for: ${input.email}`);
+        console.error(`[AUTH_LOGIN_FAILED] Invalid password for: ${normalizedEmail}`);
         throw new UnauthorizedException('Invalid email or password. Please try again.');
       }
 
-      // --- STRICT TENANT PROTECTION ---
+      // 3. Store Permissions / Scoping
       if (input.subdomain) {
-        const subdomain = input.subdomain.toLowerCase();
         const targetStore = await this.prisma.store.findUnique({
-          where: { subdomain },
+          where: { subdomain: input.subdomain.toLowerCase() },
         });
 
         if (!targetStore) {
-          throw new UnauthorizedException('Security Error: Store not found.');
+          throw new UnauthorizedException('Store not found.');
         }
 
-        // Enforcement by Role
-        if (user.role === 'BUYER') {
-          if (user.storeId !== targetStore.id) {
-            console.error(`[AUTH_BLOCKED] Buyer ${user.email} (belongs to ${user.storeId}) tried ${targetStore.id}`);
-            throw new UnauthorizedException(
-              `This account belongs to another store on our network. Please use a different email for ${targetStore.name}.`,
-            );
-          }
-        } else if (user.role === 'SELLER') {
-          // Sellers cannot log into other merchants' portals
-          if (user.managedStore?.id !== targetStore.id) {
-            console.error(`[AUTH_BLOCKED] Merchant ${user.email} tried to log into storefront ${targetStore.subdomain}`);
-            throw new UnauthorizedException(
-              'Merchant access denied. You can only log into your own storefront.',
-            );
-          }
+        const isOwner = user.managedStore?.id === targetStore.id;
+        const isCustomer = user.storeId === targetStore.id;
+
+        if (!isOwner && !isCustomer) {
+          console.error(`[AUTH_BLOCKED] User ${user.email} not authorized for store ${targetStore.subdomain}`);
+          throw new UnauthorizedException(
+            user.role === 'SELLER'
+              ? 'Merchant access denied. You can only log into your own storefront.'
+              : `This account belongs to another store on our network.`
+          );
         }
       } else {
-        // Global Login (opnmart.com/login)
+        // Global Login
         if (user.role === 'BUYER') {
           throw new UnauthorizedException(
             'Customer accounts must log in through their specific store portal.',
@@ -319,8 +368,22 @@ export class AuthService {
             theme: user.managedStore.theme,
             themeConfig: user.managedStore.themeConfig,
             paystackPublicKey: user.managedStore.paystackPublicKey,
+            aiMessaging: user.managedStore.aiMessaging,
+            aiInventory: user.managedStore.aiInventory,
+            aiStrategy: user.managedStore.aiStrategy,
+            aiFinancials: user.managedStore.aiFinancials,
             chatAiEnabled: user.managedStore.chatAiEnabled,
-            // Secret key is NEVER sent to frontend for security
+            officialEmail: (user.managedStore as any).officialEmail,
+            whatsappNumber: (user.managedStore as any).whatsappNumber,
+            address: (user.managedStore as any).address,
+            ownerName: (user.managedStore as any).ownerName,
+            instagram: (user.managedStore as any).instagram,
+            twitter: (user.managedStore as any).twitter,
+            facebook: (user.managedStore as any).facebook,
+            tiktok: (user.managedStore as any).tiktok,
+            biography: (user.managedStore as any).biography,
+            paystackSecretKey: user.managedStore.paystackSecretKey ? '********' : null,
+            paystackWebhookSecret: user.managedStore.paystackWebhookSecret ? '********' : null,
           }
           : null,
         ...tokens,
@@ -361,8 +424,22 @@ export class AuthService {
           theme: user.managedStore.theme,
           themeConfig: user.managedStore.themeConfig,
           paystackPublicKey: user.managedStore.paystackPublicKey,
+          aiMessaging: user.managedStore.aiMessaging,
+          aiInventory: user.managedStore.aiInventory,
+          aiStrategy: user.managedStore.aiStrategy,
+          aiFinancials: user.managedStore.aiFinancials,
           chatAiEnabled: user.managedStore.chatAiEnabled,
-          // Secret key is NEVER sent to frontend for security
+          officialEmail: (user.managedStore as any).officialEmail,
+          whatsappNumber: (user.managedStore as any).whatsappNumber,
+          address: (user.managedStore as any).address,
+          ownerName: (user.managedStore as any).ownerName,
+          instagram: (user.managedStore as any).instagram,
+          twitter: (user.managedStore as any).twitter,
+          facebook: (user.managedStore as any).facebook,
+          tiktok: (user.managedStore as any).tiktok,
+          biography: (user.managedStore as any).biography,
+          paystackSecretKey: user.managedStore.paystackSecretKey ? '********' : null,
+          paystackWebhookSecret: user.managedStore.paystackWebhookSecret ? '********' : null,
         }
         : null,
     };

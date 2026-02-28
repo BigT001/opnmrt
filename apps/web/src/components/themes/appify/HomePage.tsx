@@ -109,19 +109,33 @@ export const AppifyHomePage: React.FC<PageProps> = ({ store, products, subdomain
 
                     {/* Floating Brand Badge */}
                     <div className="relative z-10 px-8 md:px-32 lg:px-48 mb-12 hidden md:flex">
-                        <div className="flex items-center gap-4 px-5 py-2.5 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-full pointer-events-none">
+                        <div className="flex items-center gap-4 px-5 py-2.5 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-full">
                             <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.9)] animate-pulse" />
-                            <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Signature Edition • {store.name}</span>
+                            <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">
+                                <EditableText
+                                    value={store.themeConfig?.heroBadge || `Signature Edition • ${store.name}`}
+                                    onSave={(val) => handleSave('heroBadge', val)}
+                                    isPreview={isPreview}
+                                    label="Hero Badge"
+                                />
+                            </span>
                         </div>
                     </div>
 
                     {/* Hero Content */}
-                    <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-8 text-center pointer-events-none">
-                        <div className="pointer-events-auto max-w-6xl space-y-10">
+                    <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-8 text-center">
+                        <div className="max-w-6xl space-y-10">
                             <div className="space-y-4">
                                 <div className="flex items-center justify-center gap-4 opacity-40">
                                     <div className="h-px w-12 bg-white" />
-                                    <span className="text-[11px] font-black text-white uppercase tracking-[0.5em]">Defining Elegance</span>
+                                    <span className="text-[11px] font-black text-white uppercase tracking-[0.5em]">
+                                        <EditableText
+                                            value={store.themeConfig?.heroSubtitle || 'Defining Elegance'}
+                                            onSave={(val) => handleSave('heroSubtitle', val)}
+                                            isPreview={isPreview}
+                                            label="Hero Subtitle"
+                                        />
+                                    </span>
                                     <div className="h-px w-12 bg-white" />
                                 </div>
                                 <EditableText
@@ -166,20 +180,62 @@ export const AppifyHomePage: React.FC<PageProps> = ({ store, products, subdomain
                             <div className="flex items-center justify-between gap-2 p-6 bg-white rounded-[32px] border border-gray-100 shadow-sm">
                                 <div className="flex-1 flex flex-col items-center gap-2 text-center">
                                     <Zap className="w-5 h-5 text-orange-500" />
-                                    <div className="text-[10px] font-black text-[#0a0a0a] uppercase tracking-[0.2em]">Next Day</div>
-                                    <div className="text-gray-400 text-[8px] font-bold uppercase tracking-widest leading-none">Global Logistix</div>
+                                    <div className="text-[10px] font-black text-[#0a0a0a] uppercase tracking-[0.2em]">
+                                        <EditableText
+                                            value={store.themeConfig?.service1Title || 'Next Day'}
+                                            onSave={(val) => handleSave('service1Title', val)}
+                                            isPreview={isPreview}
+                                            label="Service 1 Title"
+                                        />
+                                    </div>
+                                    <div className="text-gray-400 text-[8px] font-bold uppercase tracking-widest leading-none">
+                                        <EditableText
+                                            value={store.themeConfig?.service1Desc || 'Global Logistix'}
+                                            onSave={(val) => handleSave('service1Desc', val)}
+                                            isPreview={isPreview}
+                                            label="Service 1 Desc"
+                                        />
+                                    </div>
                                 </div>
                                 <div className="h-12 w-px bg-gray-100" />
                                 <div className="flex-1 flex flex-col items-center gap-2 text-center">
                                     <ShieldCheck className="w-5 h-5 text-orange-500" />
-                                    <div className="text-[10px] font-black text-[#0a0a0a] uppercase tracking-[0.2em]">Authentic</div>
-                                    <div className="text-gray-400 text-[8px] font-bold uppercase tracking-widest leading-none">Verifed Style</div>
+                                    <div className="text-[10px] font-black text-[#0a0a0a] uppercase tracking-[0.2em]">
+                                        <EditableText
+                                            value={store.themeConfig?.service2Title || 'Authentic'}
+                                            onSave={(val) => handleSave('service2Title', val)}
+                                            isPreview={isPreview}
+                                            label="Service 2 Title"
+                                        />
+                                    </div>
+                                    <div className="text-gray-400 text-[8px] font-bold uppercase tracking-widest leading-none">
+                                        <EditableText
+                                            value={store.themeConfig?.service2Desc || 'Verifed Style'}
+                                            onSave={(val) => handleSave('service2Desc', val)}
+                                            isPreview={isPreview}
+                                            label="Service 2 Desc"
+                                        />
+                                    </div>
                                 </div>
                                 <div className="h-12 w-px bg-gray-100" />
                                 <div className="flex-1 flex flex-col items-center gap-2 text-center">
                                     <div className="w-5 h-5 rounded-full border-2 border-orange-500 flex items-center justify-center text-orange-500 text-[8px] font-black">24</div>
-                                    <div className="text-[10px] font-black text-[#0a0a0a] uppercase tracking-[0.2em]">Support</div>
-                                    <div className="text-gray-400 text-[8px] font-bold uppercase tracking-widest leading-none">Always On</div>
+                                    <div className="text-[10px] font-black text-[#0a0a0a] uppercase tracking-[0.2em]">
+                                        <EditableText
+                                            value={store.themeConfig?.service3Title || 'Support'}
+                                            onSave={(val) => handleSave('service3Title', val)}
+                                            isPreview={isPreview}
+                                            label="Service 3 Title"
+                                        />
+                                    </div>
+                                    <div className="text-gray-400 text-[8px] font-bold uppercase tracking-widest leading-none">
+                                        <EditableText
+                                            value={store.themeConfig?.service3Desc || 'Always On'}
+                                            onSave={(val) => handleSave('service3Desc', val)}
+                                            isPreview={isPreview}
+                                            label="Service 3 Desc"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </section>
@@ -201,13 +257,35 @@ export const AppifyHomePage: React.FC<PageProps> = ({ store, products, subdomain
                                     <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/90 via-[#0a0a0a]/20 to-transparent pointer-events-none" />
                                     <div className="absolute top-6 right-6 z-20">
                                         <div className="px-4 py-1.5 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full">
-                                            <p className="text-[8px] font-black text-white uppercase tracking-[0.3em]">Selection 01</p>
+                                            <p className="text-[8px] font-black text-white uppercase tracking-[0.3em]">
+                                                <EditableText
+                                                    value={store.themeConfig?.essenceBadge1 || 'Selection 01'}
+                                                    onSave={(val) => handleSave('essenceBadge1', val)}
+                                                    isPreview={isPreview}
+                                                    label="Card Badge 1"
+                                                />
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="absolute bottom-6 left-6 z-20 space-y-3">
                                         <div className="flex flex-col gap-1">
-                                            <p className="text-[9px] font-black text-orange-500 uppercase tracking-[0.5em] italic">The Aesthetic</p>
-                                            <h4 className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none">Superior<br />Textiles</h4>
+                                            <p className="text-[9px] font-black text-orange-500 uppercase tracking-[0.5em] italic">
+                                                <EditableText
+                                                    value={store.themeConfig?.essenceKicker1 || 'The Aesthetic'}
+                                                    onSave={(val) => handleSave('essenceKicker1', val)}
+                                                    isPreview={isPreview}
+                                                    label="Card Kicker 1"
+                                                />
+                                            </p>
+                                            <h4 className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none">
+                                                <EditableText
+                                                    value={store.themeConfig?.essenceTitle1 || 'Superior\nTextiles'}
+                                                    onSave={(val) => handleSave('essenceTitle1', val)}
+                                                    isPreview={isPreview}
+                                                    label="Card Title 1"
+                                                    multiline
+                                                />
+                                            </h4>
                                         </div>
                                         <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
                                             <ArrowRight className="w-5 h-5 text-[#0a0a0a]" />
@@ -227,13 +305,35 @@ export const AppifyHomePage: React.FC<PageProps> = ({ store, products, subdomain
                                     <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/90 via-[#0a0a0a]/20 to-transparent pointer-events-none" />
                                     <div className="absolute top-6 right-6 z-20">
                                         <div className="px-4 py-1.5 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full">
-                                            <p className="text-[8px] font-black text-white uppercase tracking-[0.3em]">Selection 02</p>
+                                            <p className="text-[8px] font-black text-white uppercase tracking-[0.3em]">
+                                                <EditableText
+                                                    value={store.themeConfig?.essenceBadge2 || 'Selection 02'}
+                                                    onSave={(val) => handleSave('essenceBadge2', val)}
+                                                    isPreview={isPreview}
+                                                    label="Card Badge 2"
+                                                />
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="absolute bottom-6 left-6 z-20 space-y-3">
                                         <div className="flex flex-col gap-1">
-                                            <p className="text-[9px] font-black text-orange-500 uppercase tracking-[0.5em] italic">The Science</p>
-                                            <h4 className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none">Precision<br />Design</h4>
+                                            <p className="text-[9px] font-black text-orange-500 uppercase tracking-[0.5em] italic">
+                                                <EditableText
+                                                    value={store.themeConfig?.essenceKicker2 || 'The Science'}
+                                                    onSave={(val) => handleSave('essenceKicker2', val)}
+                                                    isPreview={isPreview}
+                                                    label="Card Kicker 2"
+                                                />
+                                            </p>
+                                            <h4 className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none">
+                                                <EditableText
+                                                    value={store.themeConfig?.essenceTitle2 || 'Precision\nDesign'}
+                                                    onSave={(val) => handleSave('essenceTitle2', val)}
+                                                    isPreview={isPreview}
+                                                    label="Card Title 2"
+                                                    multiline
+                                                />
+                                            </h4>
                                         </div>
                                         <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
                                             <ArrowRight className="w-5 h-5 text-[#0a0a0a]" />
@@ -253,13 +353,35 @@ export const AppifyHomePage: React.FC<PageProps> = ({ store, products, subdomain
                                     <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/90 via-[#0a0a0a]/20 to-transparent pointer-events-none" />
                                     <div className="absolute top-6 right-6 z-20">
                                         <div className="px-4 py-1.5 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full">
-                                            <p className="text-[8px] font-black text-white uppercase tracking-[0.3em]">Selection 03</p>
+                                            <p className="text-[8px] font-black text-white uppercase tracking-[0.3em]">
+                                                <EditableText
+                                                    value={store.themeConfig?.essenceBadge3 || 'Selection 03'}
+                                                    onSave={(val) => handleSave('essenceBadge3', val)}
+                                                    isPreview={isPreview}
+                                                    label="Card Badge 3"
+                                                />
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="absolute bottom-6 left-6 z-20 space-y-3">
                                         <div className="flex flex-col gap-1">
-                                            <p className="text-[9px] font-black text-orange-500 uppercase tracking-[0.5em] italic">The Vision</p>
-                                            <h4 className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none">Archival<br />Concepts</h4>
+                                            <p className="text-[9px] font-black text-orange-500 uppercase tracking-[0.5em] italic">
+                                                <EditableText
+                                                    value={store.themeConfig?.essenceKicker3 || 'The Vision'}
+                                                    onSave={(val) => handleSave('essenceKicker3', val)}
+                                                    isPreview={isPreview}
+                                                    label="Card Kicker 3"
+                                                />
+                                            </p>
+                                            <h4 className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none">
+                                                <EditableText
+                                                    value={store.themeConfig?.essenceTitle3 || 'Archival\nConcepts'}
+                                                    onSave={(val) => handleSave('essenceTitle3', val)}
+                                                    isPreview={isPreview}
+                                                    label="Card Title 3"
+                                                    multiline
+                                                />
+                                            </h4>
                                         </div>
                                         <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
                                             <ArrowRight className="w-5 h-5 text-[#0a0a0a]" />
@@ -278,43 +400,112 @@ export const AppifyHomePage: React.FC<PageProps> = ({ store, products, subdomain
                                 <div className="relative group">
                                     <div className="absolute -inset-4 bg-orange-500/10 rounded-[64px] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                                     <div className="relative aspect-[3/4] rounded-[56px] overflow-hidden shadow-2xl">
-                                        <img
-                                            src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1920&auto=format&fit=crop"
-                                            alt="Spotlight"
+                                        <EditableImage
+                                            src={store.themeConfig?.spotlightImage || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1920&auto=format&fit=crop"}
+                                            onSave={(val) => handleSave('spotlightImage', val)}
+                                            isPreview={isPreview}
                                             className="w-full h-full object-cover transition-transform duration-[3s] group-hover:scale-110"
+                                            label="Spotlight Image"
                                         />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                        <div className="absolute bottom-12 left-12 right-12">
-                                            <p className="text-[10px] font-black text-orange-500 uppercase tracking-[0.4em] mb-4">Vol. 01 Archive</p>
-                                            <h4 className="text-4xl font-black text-white uppercase italic tracking-tighter leading-none">The Visionary<br />Collection</h4>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                                        <div className="absolute bottom-12 left-12 right-12 z-20">
+                                            <p className="text-[10px] font-black text-orange-500 uppercase tracking-[0.4em] mb-4">
+                                                <EditableText
+                                                    value={store.themeConfig?.spotlightBadge || 'Vol. 01 Archive'}
+                                                    onSave={(val) => handleSave('spotlightBadge', val)}
+                                                    isPreview={isPreview}
+                                                    label="Spotlight Badge"
+                                                />
+                                            </p>
+                                            <h4 className="text-4xl font-black text-white uppercase italic tracking-tighter leading-none">
+                                                <EditableText
+                                                    value={store.themeConfig?.spotlightCardTitle || 'The Visionary\nCollection'}
+                                                    onSave={(val) => handleSave('spotlightCardTitle', val)}
+                                                    isPreview={isPreview}
+                                                    label="Spotlight Card Title"
+                                                    multiline
+                                                />
+                                            </h4>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="space-y-12">
                                     <div className="space-y-6">
-                                        <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.6em]">Perspective</h3>
+                                        <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.6em]">
+                                            <EditableText
+                                                value={store.themeConfig?.spotlightKicker || 'Perspective'}
+                                                onSave={(val) => handleSave('spotlightKicker', val)}
+                                                isPreview={isPreview}
+                                                label="Spotlight Kicker"
+                                            />
+                                        </h3>
                                         <h2 className="text-5xl md:text-7xl font-black text-[#0a0a0a] uppercase italic tracking-tighter leading-[0.9]">
-                                            Archival<br />Innovation
+                                            <EditableText
+                                                value={store.themeConfig?.spotlightTitle || 'Archival\nInnovation'}
+                                                onSave={(val) => handleSave('spotlightTitle', val)}
+                                                isPreview={isPreview}
+                                                label="Spotlight Title"
+                                                multiline
+                                            />
                                         </h2>
                                         <p className="text-lg md:text-xl font-medium text-gray-500 leading-relaxed max-w-lg">
-                                            A dialogue between heritage and the future. Our design philosophy centers on the longevity of aesthetic and the integrity of form.
+                                            <EditableText
+                                                value={store.themeConfig?.spotlightDesc || 'A dialogue between heritage and the future. Our design philosophy centers on the longevity of aesthetic and the integrity of form.'}
+                                                onSave={(val) => handleSave('spotlightDesc', val)}
+                                                isPreview={isPreview}
+                                                label="Spotlight Description"
+                                                multiline
+                                            />
                                         </p>
                                     </div>
                                     <div className="hidden md:grid grid-cols-2 gap-8 py-8 border-y border-gray-100">
                                         <div>
-                                            <p className="text-2xl font-black text-[#0a0a0a]">Sustainable</p>
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Source Logic</p>
+                                            <p className="text-2xl font-black text-[#0a0a0a]">
+                                                <EditableText
+                                                    value={store.themeConfig?.spotlightStat1Title || 'Sustainable'}
+                                                    onSave={(val) => handleSave('spotlightStat1Title', val)}
+                                                    isPreview={isPreview}
+                                                    label="Stat 1 Title"
+                                                />
+                                            </p>
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                                                <EditableText
+                                                    value={store.themeConfig?.spotlightStat1Desc || 'Source Logic'}
+                                                    onSave={(val) => handleSave('spotlightStat1Desc', val)}
+                                                    isPreview={isPreview}
+                                                    label="Stat 1 Desc"
+                                                />
+                                            </p>
                                         </div>
                                         <div>
-                                            <p className="text-2xl font-black text-[#0a0a0a]">Timeless</p>
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Design DNA</p>
+                                            <p className="text-2xl font-black text-[#0a0a0a]">
+                                                <EditableText
+                                                    value={store.themeConfig?.spotlightStat2Title || 'Timeless'}
+                                                    onSave={(val) => handleSave('spotlightStat2Title', val)}
+                                                    isPreview={isPreview}
+                                                    label="Stat 2 Title"
+                                                />
+                                            </p>
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                                                <EditableText
+                                                    value={store.themeConfig?.spotlightStat2Desc || 'Design DNA'}
+                                                    onSave={(val) => handleSave('spotlightStat2Desc', val)}
+                                                    isPreview={isPreview}
+                                                    label="Stat 2 Desc"
+                                                />
+                                            </p>
                                         </div>
                                     </div>
                                     <Link
                                         href={`/store/${subdomain}/shop`}
-                                        className="hidden md:inline-flex items-center gap-6 text-[12px] font-black uppercase tracking-[0.4em] text-[#0a0a0a] hover:text-orange-500 transition-colors"
+                                        className="hidden md:inline-flex items-center gap-6 text-[12px] font-black uppercase tracking-[0.4em] text-[#0a0a0a] hover:text-orange-500 transition-colors group"
                                     >
-                                        Explore Theory
+                                        <EditableText
+                                            value={store.themeConfig?.spotlightButtonText || 'Explore Theory'}
+                                            onSave={(val) => handleSave('spotlightButtonText', val)}
+                                            isPreview={isPreview}
+                                            label="Button Text"
+                                        />
                                         <div className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-all">
                                             <ArrowRight className="w-5 h-5" />
                                         </div>
@@ -351,7 +542,13 @@ export const AppifyHomePage: React.FC<PageProps> = ({ store, products, subdomain
                                     </div>
                                     <div className="flex flex-col items-center md:items-end gap-6">
                                         <p className="text-[14px] font-medium text-gray-400 max-w-sm text-center md:text-right uppercase tracking-tight">
-                                            Meticulously crafted essentials designed for the discerning individual.
+                                            <EditableText
+                                                value={store.themeConfig?.featuredDesc || 'Meticulously crafted essentials designed for the discerning individual.'}
+                                                onSave={(val) => handleSave('featuredDesc', val)}
+                                                isPreview={isPreview}
+                                                label="Section Description"
+                                                multiline
+                                            />
                                         </p>
                                         <Link
                                             href={`/store/${subdomain}/shop`}

@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
-import { Loader2, Bell } from 'lucide-react';
+import { Loader2, Bell, ShieldCheck, UserCheck, ArrowRight } from 'lucide-react';
 import { RechartsAreaChart } from '@/components/dashboard/RechartsAreaChart';
-import { BarChart, Bar, ResponsiveContainer, Tooltip } from 'recharts';
+import { BarChart, Bar, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { formatDistanceToNow } from 'date-fns';
 import { useSocket } from '@/hooks/useSocket';
 
@@ -34,6 +34,13 @@ interface Stats {
         checkout: number;
     };
     weeklySales: { name: string; value: number }[];
+    onboarding: {
+        hasProducts: boolean;
+        hasLogo: boolean;
+        hasPayments: boolean;
+        hasBio: boolean;
+        dismissed: boolean;
+    };
 }
 
 export default function SellerDashboardPage() {
@@ -55,7 +62,7 @@ export default function SellerDashboardPage() {
     };
 
     useEffect(() => {
-        if (!store?.id || stats) return; // Only fetch if not already loaded or store changed
+        if (!store?.id) return;
         fetchStats();
     }, [store?.id]);
 
@@ -120,6 +127,7 @@ export default function SellerDashboardPage() {
                         </div>
                     </div>
                 </div>
+
 
                 {/* 2. TOP STATS */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -191,9 +199,9 @@ export default function SellerDashboardPage() {
                                     barSize={50}
                                     className="transition-all duration-300"
                                 />
-                                <Tooltip
+                                <RechartsTooltip
                                     cursor={{ fill: 'rgba(0,0,0,0.03)' }}
-                                    content={({ active, payload }) => {
+                                    content={({ active, payload }: any) => {
                                         if (active && payload && payload.length) {
                                             const data = payload[0].payload;
                                             return (
@@ -400,6 +408,30 @@ function NotificationsWidget({ storeId }: { storeId: string }) {
                 )}
             </div>
         </div>
+    );
+}
+
+function OnboardingStep({ label, done, href, icon, desc }: { label: string; done: boolean; href: string; icon: string; desc: string }) {
+    return (
+        <Link
+            href={href}
+            className={`p-6 rounded-3xl border transition-all flex flex-col gap-4 relative group/step ${done
+                ? 'bg-emerald-50/50 border-emerald-100'
+                : 'bg-white border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/30'
+                }`}
+        >
+            <div className="flex justify-between items-start">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl ${done ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-slate-400 group-hover/step:bg-slate-100'}`}>
+                    {done ? '✓' : icon}
+                </div>
+                {!done && <ArrowRight className="w-4 h-4 text-slate-300 group-hover/step:text-slate-900 group-hover/step:translate-x-1 transition-all" />}
+            </div>
+            <div>
+                <p className={`text-[11px] font-black uppercase tracking-widest mb-1 ${done ? 'text-emerald-600' : 'text-slate-900'}`}>{label}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{desc}</p>
+            </div>
+            {done && <div className="absolute top-4 right-4 text-[10px] font-black text-emerald-500 uppercase tracking-widest">Ready</div>}
+        </Link>
     );
 }
 

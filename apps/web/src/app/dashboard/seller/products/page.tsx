@@ -28,6 +28,41 @@ export default function ProductsPage() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
 
+    // Parse store categories from settings
+    const storeCategories: string[] = React.useMemo(() => {
+        try {
+            const raw = (store as any)?.categories;
+            if (!raw) return [];
+            return Array.isArray(raw) ? raw : JSON.parse(raw);
+        } catch { return []; }
+    }, [store]);
+
+    const handleExportCSV = () => {
+        if (products.length === 0) return;
+
+        const headers = ['Product ID', 'Name', 'Price', 'Stock', 'Category', 'Status'];
+        const rows = products.map(p => [
+            p.id,
+            p.name,
+            p.price,
+            p.stock,
+            p.category,
+            p.status || 'Active'
+        ]);
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `inventory_${new Date().toISOString().split('T')[0]}.csv`);
+        link.click();
+    };
+
     // Fetch Products
     const fetchProducts = async () => {
         try {
@@ -54,12 +89,31 @@ export default function ProductsPage() {
                 </div>
                 <div className="flex space-x-3">
                     <button
+                        onClick={handleExportCSV}
+                        className="px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2"
+                    >
+                        Export CSV
+                    </button>
+                    <button
                         onClick={() => setIsAddModalOpen(true)}
                         className="px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold hover:brightness-110 transition-all shadow-lg shadow-emerald-900/10 flex items-center gap-2"
                     >
                         <Plus className="w-4 h-4" />
                         Add New Product
                     </button>
+                </div>
+            </div>
+
+            {/* Quick Tip for Non-Technical Users */}
+            <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm flex items-start gap-4">
+                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shrink-0">
+                    <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                    <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-1">Quick Tip: Your Store Catalog</p>
+                    <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
+                        This is where you list what you're selling. Add clear photos and detailed descriptions to help customers find your items on Google. Use our <strong className="text-primary uppercase tracking-tighter">BigT AI Agent</strong> to write professional descriptions automatically!
+                    </p>
                 </div>
             </div>
 
@@ -153,6 +207,7 @@ export default function ProductsPage() {
                                                     product={product}
                                                     onClose={() => setExpandedProductId(null)}
                                                     onUpdate={fetchProducts}
+                                                    storeCategories={storeCategories}
                                                 />
                                             </td>
                                         </tr>
@@ -174,6 +229,7 @@ export default function ProductsPage() {
                         fetchProducts();
                     }}
                     storeId={store?.id}
+                    storeCategories={storeCategories}
                 />
             )}
         </div>
@@ -189,7 +245,41 @@ function ProductStatCard({ label, value, color = 'text-slate-900' }: { label: st
     );
 }
 
-function ProductDetailView({ product, onClose, onUpdate }: { product: Product; onClose: () => void; onUpdate: () => void }) {
+// ── Category Selector ────────────────────────────────────────────────
+function CategorySelector({
+    value, onChange, storeCategories = []
+}: { value: string; onChange: (val: string) => void; storeCategories?: string[] }) {
+    return (
+        <div className="space-y-2">
+            {storeCategories.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                    {storeCategories.map(cat => (
+                        <button
+                            key={cat}
+                            type="button"
+                            onClick={() => onChange(value === cat ? '' : cat)}
+                            className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border ${value === cat
+                                    ? 'bg-slate-900 text-white border-slate-900'
+                                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-900 hover:text-slate-900'
+                                }`}
+                        >
+                            {cat}
+                        </button>
+                    ))}
+                </div>
+            )}
+            <input
+                type="text"
+                value={value}
+                onChange={e => onChange(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-300 transition-all placeholder:text-slate-300"
+                placeholder={storeCategories.length > 0 ? 'Or type a custom category...' : 'e.g. Fashion, Electronics'}
+            />
+        </div>
+    );
+}
+
+function ProductDetailView({ product, onClose, onUpdate, storeCategories = [] }: { product: Product; onClose: () => void; onUpdate: () => void; storeCategories?: string[] }) {
     const [loading, setLoading] = useState(false);
     const [name, setName] = useState(product.name);
     const [stock, setStock] = useState(product.stock);
@@ -396,12 +486,10 @@ function ProductDetailView({ product, onClose, onUpdate }: { product: Product; o
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Category</label>
-                            <input
-                                type="text"
+                            <CategorySelector
                                 value={category}
-                                onChange={e => setCategory(e.target.value)}
-                                className="w-full h-12 bg-white border border-slate-200 rounded-xl px-4 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                placeholder="e.g. Fashion"
+                                onChange={setCategory}
+                                storeCategories={storeCategories}
                             />
                         </div>
                         <div>
@@ -539,7 +627,7 @@ function ProductDetailView({ product, onClose, onUpdate }: { product: Product; o
     );
 }
 
-function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: boolean; onClose: () => void; onSuccess: () => void; storeId?: string }) {
+function AddProductModal({ isOpen, onClose, onSuccess, storeId, storeCategories = [] }: { isOpen: boolean; onClose: () => void; onSuccess: () => void; storeId?: string; storeCategories?: string[] }) {
     const [loading, setLoading] = useState(false);
     const [aiLoading, setAiLoading] = useState(false);
     const [aiSuggestion, setAiSuggestion] = useState<any>(null);
@@ -770,15 +858,12 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId }: { isOpen: bool
                                     <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
                                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-between">
-                                                Category <span className="text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-md text-[8px]">BOUTIQUE STYLE</span>
+                                                Category {storeCategories.length > 0 && <span className="text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-md text-[8px]">FROM YOUR STORE</span>}
                                             </label>
-                                            <input
-                                                type="text"
-                                                required
+                                            <CategorySelector
                                                 value={formData.category}
-                                                onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
-                                                placeholder="e.g. Traditional Wedding Attire"
+                                                onChange={val => setFormData({ ...formData, category: val })}
+                                                storeCategories={storeCategories}
                                             />
                                         </div>
                                         <div>

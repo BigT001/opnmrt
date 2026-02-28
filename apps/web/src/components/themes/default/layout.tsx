@@ -24,7 +24,7 @@ export const DefaultLayout: React.FC<StoreThemeProps> = ({ store, children, isPr
                 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800;900&display=swap');
 
                 .theme-standard-scope {
-                    --primary-color: ${config.primaryColor || '#4f46e5'};
+                    --primary-color: ${store.primaryColor || config.primaryColor || '#4f46e5'};
                     --primary: var(--primary-color);
                     --color-primary: var(--primary-color);
                     
@@ -141,7 +141,14 @@ export const DefaultLayout: React.FC<StoreThemeProps> = ({ store, children, isPr
             <CartNotification />
             <main className="flex-grow">{children}</main>
             {!shouldHideFooter && (
-                <DefaultFooter storeName={store.name} subdomain={store.subdomain} />
+                <DefaultFooter
+                    storeName={store.name}
+                    subdomain={store.subdomain}
+                    instagram={store.instagram}
+                    twitter={store.twitter}
+                    facebook={store.facebook}
+                    tiktok={store.tiktok}
+                />
             )}
         </div>
     );

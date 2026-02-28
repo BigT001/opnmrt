@@ -8,12 +8,18 @@ import { useStoreCart } from '@/store/useStoreCart';
 import { formatPrice } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useWishlistStore } from '@/store/useWishlistStore';
+import { EditableText } from '../EditableContent';
 
-export function VantageProductGrid({ products, subdomain, storeId, hideHeader, store }: ProductGridProps) {
+export function VantageProductGrid({ products, subdomain, storeId, hideHeader, hideControls, store, isPreview, onConfigChange }: ProductGridProps & { isPreview?: boolean; onConfigChange?: (cfg: any) => void }) {
     const { addItem, toggleCart } = useStoreCart(storeId);
     const { toggleItem, isInWishlist } = useWishlistStore();
     const [mounted, setMounted] = React.useState(false);
     const primaryColor = store?.primaryColor || '#000000';
+    const config = store?.themeConfig || {};
+
+    const handleSave = (key: string, value: string) => {
+        onConfigChange?.({ [key]: value });
+    };
 
     React.useEffect(() => {
         setMounted(true);
@@ -50,14 +56,24 @@ export function VantageProductGrid({ products, subdomain, storeId, hideHeader, s
                             whileInView={{ opacity: 1, y: 0 }}
                             className="text-[10px] font-black text-neutral-900/10 uppercase tracking-[0.6em] absolute -top-12 left-1/2 -translate-x-1/2 lg:left-0 lg:translate-x-0 w-max"
                         >
-                            The Catalogue
+                            <EditableText
+                                value={config.catalogueBadge || 'The Catalogue'}
+                                onSave={(val: string) => handleSave('catalogueBadge', val)}
+                                isPreview={isPreview}
+                                label="Catalogue Badge"
+                            />
                         </motion.span>
                         <motion.h2
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             className="text-6xl md:text-8xl font-black text-neutral-900 tracking-tighter uppercase leading-[0.8]"
                         >
-                            Curated <br />Selections.
+                            <EditableText
+                                value={config.catalogueTitle || 'Curated Selections.'}
+                                onSave={(val: string) => handleSave('catalogueTitle', val)}
+                                isPreview={isPreview}
+                                label="Catalogue Title"
+                            />
                         </motion.h2>
                         <motion.div
                             initial={{ width: 0 }}

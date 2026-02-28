@@ -19,13 +19,15 @@ export function AppifyChatDrawer() {
     const { isOpen, toggleDrawer, unreadCount, incrementUnread, resetUnread } = useChatStore();
     const { subdomain } = useParams<{ subdomain: string }>();
     const { user } = useAuthStore();
-    const socket = useSocket(user?.id);
 
     const [messages, setMessages] = useState<any[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
     const [storeInfo, setStoreInfo] = useState<any>(null);
+
+    const socket = useSocket(user?.id, storeInfo?.id);
+
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const [isMobile, setIsMobile] = useState(false);
@@ -72,11 +74,17 @@ export function AppifyChatDrawer() {
 
         socket.on('newMessage', (message: any) => {
             // Only add if it belongs to this store
-            if (storeInfo && message.storeId === storeInfo.id) {
-                setMessages(prev => [...prev, message]);
-                incrementUnread();
+            if (storeInfo && (message.storeId === storeInfo.id || message.conversationId === storeInfo.id)) {
+                setMessages(prev => {
+                    // Deduplicate with optimistic messages
+                    if (prev.some(m => m.id === message.id || (m.isOptimistic && m.content === message.content))) {
+                        return prev.map(m => (m.isOptimistic && m.content === message.content) ? message : m);
+                    }
+                    return [...prev, message];
+                });
 
                 if (message.senderRole === 'SELLER') {
+                    incrementUnread();
                     api.post('/chat/read', {
                         otherUserId: message.senderId,
                         storeId: message.storeId
@@ -115,18 +123,32 @@ export function AppifyChatDrawer() {
         e.preventDefault();
         if (!newMessage.trim() || !storeInfo || sending) return;
 
-        setSending(true);
+        const content = newMessage;
+        setNewMessage('');
+
+        // Optimistic UI
+        const optimisticMsg = {
+            id: 'temp-' + Date.now(),
+            content,
+            senderRole: 'BUYER',
+            senderId: user?.id,
+            createdAt: new Date().toISOString(),
+            isOptimistic: true
+        };
+        setMessages(prev => [...prev, optimisticMsg]);
+
         try {
             const res = await api.post('/chat/send', {
-                content: newMessage,
+                content,
                 storeId: storeInfo.id,
             });
-            setMessages(prev => [...prev, res.data]);
-            setNewMessage('');
+            // Update temp with real message
+            setMessages(prev => prev.map(m => m.id === optimisticMsg.id ? res.data : m));
         } catch (error) {
             console.error("Failed to send message:", error);
-        } finally {
-            setSending(false);
+            // Revert on error
+            setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
+            setNewMessage(content);
         }
     };
 

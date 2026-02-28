@@ -164,7 +164,16 @@ export function AppifyNavbar({ storeName, logo, storeId, isPreview, onConfigChan
                     <div className="flex items-center justify-between gap-10">
                         {/* Brand & Core Nav */}
                         <div className="flex items-center gap-12">
-                            <Link href={`/store/${subdomain}`} className="flex items-center gap-3 active:scale-95 transition-all group">
+                            <Link
+                                href={isPreview ? '#' : `/store/${subdomain}`}
+                                onClick={(e) => {
+                                    if (isPreview && onNavigate) {
+                                        e.preventDefault();
+                                        onNavigate('index');
+                                    }
+                                }}
+                                className="flex items-center gap-3 active:scale-95 transition-all group"
+                            >
                                 <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm shrink-0 group-hover:border-gray-900 transition-colors">
                                     <EditableImage
                                         src={logo}
@@ -173,7 +182,14 @@ export function AppifyNavbar({ storeName, logo, storeId, isPreview, onConfigChan
                                         className="w-full h-full"
                                     />
                                 </div>
-                                <p className="text-[17px] font-black text-gray-900 tracking-tighter leading-none whitespace-nowrap">{storeName}</p>
+                                <p className="text-[17px] font-black text-gray-900 tracking-tighter leading-none whitespace-nowrap">
+                                    <EditableText
+                                        value={storeName || 'APPIFY'}
+                                        onSave={(val) => handleConfigSave({ name: val })}
+                                        isPreview={isPreview}
+                                        label="Store Name"
+                                    />
+                                </p>
                             </Link>
 
                             <div className="flex items-center gap-8">
@@ -187,7 +203,12 @@ export function AppifyNavbar({ storeName, logo, storeId, isPreview, onConfigChan
                                     }}
                                     className={`text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:text-gray-900 px-3 py-1.5 rounded-full ${type === 'home' ? 'text-gray-900 bg-gray-50' : 'text-gray-400 hover:bg-gray-50'}`}
                                 >
-                                    Home
+                                    <EditableText
+                                        value={themeConfig?.navHome || 'Home'}
+                                        onSave={(val) => handleConfigSave({ navHome: val })}
+                                        isPreview={isPreview}
+                                        label="Home Label"
+                                    />
                                 </Link>
                                 <Link
                                     href={isPreview ? '#' : `/store/${subdomain}/shop`}
@@ -199,7 +220,12 @@ export function AppifyNavbar({ storeName, logo, storeId, isPreview, onConfigChan
                                     }}
                                     className={`text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:text-gray-900 px-3 py-1.5 rounded-full ${type === 'shop' ? 'text-gray-900 bg-gray-50' : 'text-gray-400 hover:bg-gray-50'}`}
                                 >
-                                    Shop
+                                    <EditableText
+                                        value={themeConfig?.navShop || 'Shop'}
+                                        onSave={(val) => handleConfigSave({ navShop: val })}
+                                        isPreview={isPreview}
+                                        label="Shop Label"
+                                    />
                                 </Link>
                             </div>
                         </div>
@@ -248,7 +274,14 @@ export function AppifyNavbar({ storeName, logo, storeId, isPreview, onConfigChan
                                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-[10px] font-bold text-white shadow-sm ring-1 ring-white/20">
                                         {user.name?.[0] || 'U'}
                                     </div>
-                                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest leading-none">My Account</span>
+                                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest leading-none">
+                                        <EditableText
+                                            value={themeConfig?.navAccount || 'My Account'}
+                                            onSave={(val) => handleConfigSave({ navAccount: val })}
+                                            isPreview={isPreview}
+                                            label="Account Label"
+                                        />
+                                    </span>
                                 </Link>
                             ) : (
                                 <Link
@@ -262,7 +295,14 @@ export function AppifyNavbar({ storeName, logo, storeId, isPreview, onConfigChan
                                     className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 rounded-2xl hover:bg-black transition-all border border-black ml-2 shadow-xl"
                                 >
                                     <User className="w-4 h-4 text-white" />
-                                    <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Sign In</span>
+                                    <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">
+                                        <EditableText
+                                            value={themeConfig?.navSignIn || 'Sign In'}
+                                            onSave={(val) => handleConfigSave({ navSignIn: val })}
+                                            isPreview={isPreview}
+                                            label="Sign In Label"
+                                        />
+                                    </span>
                                 </Link>
                             )}
                         </div>
@@ -306,7 +346,14 @@ export function AppifyNavbar({ storeName, logo, storeId, isPreview, onConfigChan
                                         />
                                     </div>
                                     <div className="flex flex-col">
-                                        <p className="text-[17px] font-black text-gray-900 tracking-tighter leading-none">{storeName}</p>
+                                        <p className="text-[17px] font-black text-gray-900 tracking-tighter leading-none">
+                                            <EditableText
+                                                value={storeName || 'APPIFY'}
+                                                onSave={(val) => handleConfigSave({ name: val })}
+                                                isPreview={isPreview}
+                                                label="Store Name"
+                                            />
+                                        </p>
                                     </div>
                                 </Link>
                             ) : (

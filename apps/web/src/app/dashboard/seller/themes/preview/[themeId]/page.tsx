@@ -7,7 +7,7 @@ import { getThemeComponents, themeMetadata } from '@/components/themes/registry'
 import { ThemeEditor } from '@/components/themes/ThemeEditor';
 import { ThemeConfig } from '@/components/themes/types';
 import api from '@/lib/api';
-import { Loader2, ArrowLeft, Eye, Layout as LayoutIcon, Zap, PanelRight } from 'lucide-react';
+import { Loader2, ArrowLeft, Eye, Layout as LayoutIcon, Zap, PanelRight, Home, LayoutGrid, Type, Columns } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ThemePreviewPage() {
@@ -31,8 +31,44 @@ export default function ThemePreviewPage() {
     });
 
     const [themeComponents, setThemeComponents] = useState<any>(null);
-    const theme = themeMetadata.find(t => t.id === params.themeId);
-    const themeName = params.themeId || 'DEFAULT';
+    const themeName = params.themeId?.toUpperCase() || 'DEFAULT';
+
+    const themePages = React.useMemo(() => {
+        if (themeName === 'ELECTSHOP') {
+            return [
+                { id: 'index', name: 'Home Page', desc: 'Main Storefront', icon: Home },
+                { id: 'shop', name: 'Shop / Collections', desc: 'Product Listing', icon: LayoutGrid },
+                { id: 'shop/electronics', name: 'Electronics', desc: 'Category View', icon: LayoutGrid },
+                { id: 'shop/smartphones', name: 'Smartphones', desc: 'Category View', icon: LayoutGrid },
+                { id: 'blog', name: 'Our Blog', desc: 'Content & News', icon: Type },
+                { id: 'contact', name: 'Contact Us', desc: 'Stay Connected', icon: Columns }
+            ];
+        }
+        if (themeName === 'VANTAGE') {
+            return [
+                { id: 'index', name: 'Home Page', desc: 'Main Storefront', icon: Home },
+                { id: 'shop', name: 'Collections', desc: 'Style Listing', icon: LayoutGrid },
+                { id: 'about', name: 'Our Story', desc: 'Brand Narrative', icon: Type }
+            ];
+        }
+        return [
+            { id: 'index', name: 'Home Page', desc: 'Main Storefront', icon: Home },
+            { id: 'shop', name: 'Shop / Collections', desc: 'Product Listing', icon: LayoutGrid },
+            { id: 'about', name: 'About / Story', desc: 'Brand Narrative', icon: Type }
+        ];
+    }, [themeName]);
+
+
+    const filteredProducts = React.useMemo(() => {
+        if (!previewPath.startsWith('shop/')) return products;
+        const category = previewPath.split('/')[1];
+        if (!category) return products;
+
+        return products.filter((p: any) =>
+            p.category?.toLowerCase() === category.toLowerCase() ||
+            p.type?.toLowerCase() === category.toLowerCase()
+        );
+    }, [products, previewPath]);
 
     useEffect(() => {
         const loadComponents = async () => {
@@ -46,7 +82,7 @@ export default function ThemePreviewPage() {
         loadComponents();
     }, [themeName]);
 
-    const { Layout, StorefrontHero, ProductGrid, StorefrontPage } = themeComponents || {};
+    const { Layout, StorefrontHero, ProductGrid, StorefrontPage, BlogPage, ContactPage, AboutPage } = themeComponents || {};
 
     useEffect(() => {
         if (store?.themeConfig) {
@@ -91,6 +127,24 @@ export default function ThemePreviewPage() {
         }
     };
 
+    const handleConfigChange = React.useCallback((newConfig: Partial<ThemeConfig>) => {
+        setTempConfig(prev => ({ ...prev, ...newConfig }));
+    }, []);
+
+    const publishHandler = React.useCallback(handlePublish, [handlePublish]);
+
+    // Merge store data with temp config for preview
+    const previewStore = React.useMemo(() => ({
+        ...store,
+        ...tempConfig,
+        themeConfig: tempConfig,
+        id: store?.id || '',
+        name: tempConfig.name || store?.name || '',
+        subdomain: store?.subdomain || '',
+        logo: tempConfig.logo || store?.logo,
+        heroImage: tempConfig.heroImage || store?.heroImage,
+    }), [store, tempConfig]);
+
     if (isLoading || !themeComponents) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 min-h-screen">
@@ -102,17 +156,6 @@ export default function ThemePreviewPage() {
         );
     }
 
-    // Merge store data with temp config for preview
-    const previewStore = {
-        ...store,
-        ...tempConfig,
-        themeConfig: tempConfig,
-        id: store?.id || '',
-        name: tempConfig.name || store?.name || '',
-        subdomain: store?.subdomain || '',
-        logo: tempConfig.logo || store?.logo,
-        heroImage: tempConfig.heroImage || store?.heroImage,
-    } as any;
 
     if (!store) {
         return (
@@ -123,170 +166,138 @@ export default function ThemePreviewPage() {
         );
     }
 
-    const handleConfigChange = (newConfig: Partial<ThemeConfig>) => {
-        setTempConfig(prev => ({ ...prev, ...newConfig }));
-    };
 
     return (
         <div className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50">
-            {/* Premium Studio Control Bar */}
-            <div className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-8 shrink-0 z-[110] shadow-sm">
-                <div className="flex items-center gap-6">
-                    <button
-                        onClick={() => router.back()}
-                        className="p-2.5 hover:bg-slate-50 rounded-2xl transition-all text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-100 active:scale-95"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                    </button>
-                    <div className="h-8 w-px bg-slate-100"></div>
-                    <div>
-                        <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">Design Studio</span>
-                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse shadow-[0_0_8px_rgba(79,70,229,0.5)]"></div>
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Live Preview</span>
-                        </div>
-                        <h1 className="text-xs font-black uppercase tracking-widest text-slate-900">{theme?.name || themeName} <span className="text-slate-400 ml-1">v2.0</span></h1>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100 hidden lg:flex">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Auto-Saving Enabled</span>
-                    </div>
-
-                    <button
-                        onClick={() => window.open(`http://${store?.subdomain}.localhost:3000`, '_blank')}
-                        className="h-11 px-6 bg-white border border-slate-100 text-slate-600 hover:text-slate-900 rounded-2xl transition-all shadow-sm active:scale-95 flex items-center gap-2.5 group"
-                    >
-                        <Eye className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">View Live</span>
-                    </button>
-
-                    <button
-                        onClick={handlePublish}
-                        disabled={isSaving}
-                        className="h-11 px-8 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:bg-black transition-all flex items-center gap-3 active:scale-95 disabled:opacity-50"
-                    >
-                        {isSaving ? (
-                            <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Publishing...
-                            </>
-                        ) : (
-                            <>
-                                <Zap className="w-4 h-4 text-orange-400 fill-orange-400" />
-                                Publish Design
-                            </>
-                        )}
-                    </button>
-                </div>
-            </div>
 
             <div className="flex-1 overflow-hidden relative flex bg-slate-50/50">
                 {/* 1. Main Preview Container */}
-                <div className="flex-1 overflow-y-auto no-scrollbar relative">
-                    <div className="max-w-[1400px] mx-auto p-6 md:p-12 pb-32">
-                        <div className="bg-white rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.08)] border border-slate-100 overflow-hidden relative">
-                            {/* Browser Decoration */}
-                            <div className="h-12 bg-slate-50/50 border-b border-slate-50 flex items-center px-6 gap-3">
-                                <div className="flex gap-1.5">
-                                    <div className="w-3 h-3 rounded-full bg-[#ff5f57]"></div>
-                                    <div className="w-3 h-3 rounded-full bg-[#febc2e]"></div>
-                                    <div className="w-3 h-3 rounded-full bg-[#28c840]"></div>
-                                </div>
-                                <div className="mx-auto flex items-center gap-2 bg-white px-10 py-1.5 rounded-xl border border-slate-100 shadow-sm">
-                                    <div className="w-3 h-3 rounded-md bg-slate-100 flex items-center justify-center">
-                                        <div className="w-1.5 h-1.5 border-b border-r border-slate-400 rotate-45 mb-1.5 ml-1.5 transform scale-50"></div>
-                                    </div>
-                                    <span className="text-[10px] font-bold text-slate-400 tracking-wide">
-                                        {store?.subdomain}.opnmart.com
-                                    </span>
-                                </div>
-                            </div>
+                <div
+                    className="flex-1 overflow-y-auto no-scrollbar relative preview-canvas transition-all duration-500 ease-in-out"
+                    style={{
+                        transform: 'translateZ(0)', // Forces fixed/absolute children to be relative to this container
+                        isolation: 'isolate'
+                    }}
+                >
+                    <div className="w-full h-full p-0">
+                        <div className="bg-white min-h-screen shadow-none border-none overflow-hidden relative">
 
-                            <Layout
-                                store={previewStore}
-                                isPreview={true}
-                                onConfigChange={handleConfigChange}
-                                onNavigate={setPreviewPath}
-                                virtualPath={previewPath}
-                            >
-                                <div className="min-h-[800px]">
-                                    {previewPath === 'index' && StorefrontPage && (
-                                        <StorefrontPage
-                                            store={previewStore}
-                                            products={products}
-                                            subdomain={previewStore.subdomain}
-                                            isPreview={true}
-                                            onConfigChange={handleConfigChange}
-                                        />
-                                    )}
-                                    {previewPath === 'shop' && (
-                                        <div className="p-8">
-                                            <h2 className="text-2xl font-black mb-8 uppercase tracking-tight">Full Collection</h2>
-                                            {ProductGrid && (
-                                                <ProductGrid
-                                                    products={products.map((p: any) => ({
-                                                        ...p,
-                                                        image: p.image || p.images?.[0] || 'https://via.placeholder.com/400'
-                                                    }))}
-                                                    subdomain={store?.subdomain || ''}
-                                                    storeId={store?.id || ''}
-                                                    store={previewStore}
-                                                    isPreview={true}
-                                                    onConfigChange={handleConfigChange}
-                                                />
-                                            )}
-                                        </div>
-                                    )}
-                                    {previewPath === 'about' && (
-                                        <div className="p-8 max-w-2xl mx-auto space-y-6">
-                                            <h2 className="text-4xl font-black uppercase tracking-tight">Our Story</h2>
-                                            <p className="text-slate-500 leading-relaxed font-medium">
-                                                Welcome to {previewStore.name}. We believe in providing the best quality products to our customers.
-                                                Our journey started with a simple idea: to make premium items accessible to everyone.
-                                            </p>
-                                            <div className="aspect-video bg-slate-100 rounded-2xl flex items-center justify-center">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">About Us Media Placeholder</p>
+                            {Layout && (
+                                <Layout
+                                    store={previewStore as any}
+                                    isPreview={true}
+                                    onConfigChange={handleConfigChange}
+                                    onNavigate={setPreviewPath}
+                                    virtualPath={previewPath}
+                                >
+                                    <div className="min-h-[800px]">
+                                        {previewPath === 'index' && StorefrontPage && (
+                                            <StorefrontPage
+                                                store={previewStore as any}
+                                                products={products}
+                                                subdomain={previewStore.subdomain}
+                                                isPreview={true}
+                                                onConfigChange={handleConfigChange}
+                                            />
+                                        )}
+                                        {previewPath.startsWith('shop') && (
+                                            <div className="p-8">
+                                                <h2 className="text-2xl font-black mb-8 uppercase tracking-tight">
+                                                    {previewPath === 'shop' ? 'Full Collection' : previewPath.split('/')[1]?.toUpperCase()}
+                                                </h2>
+                                                {ProductGrid && (
+                                                    <ProductGrid
+                                                        products={filteredProducts.map((p: any) => ({
+                                                            ...p,
+                                                            image: p.image || p.images?.[0] || 'https://via.placeholder.com/400'
+                                                        }))}
+                                                        subdomain={store?.subdomain || ''}
+                                                        storeId={store?.id || ''}
+                                                        store={previewStore as any}
+                                                        isPreview={true}
+                                                        onConfigChange={handleConfigChange}
+                                                    />
+                                                )}
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </Layout>
+                                        )}
+                                        {previewPath === 'about' && (
+                                            AboutPage ? (
+                                                <AboutPage
+                                                    store={previewStore as any}
+                                                    products={products}
+                                                    subdomain={previewStore.subdomain}
+                                                    isPreview={true}
+                                                />
+                                            ) : (
+                                                <div className="p-8 max-w-2xl mx-auto space-y-6">
+                                                    <h2 className="text-4xl font-black uppercase tracking-tight">Our Story</h2>
+                                                    <p className="text-slate-500 leading-relaxed font-medium">
+                                                        Welcome to {previewStore.name}. We believe in providing the best quality products to our customers.
+                                                        Our journey started with a simple idea: to make premium items accessible to everyone.
+                                                    </p>
+                                                    <div className="aspect-video bg-slate-100 rounded-2xl flex items-center justify-center">
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">About Us Media Placeholder</p>
+                                                    </div>
+                                                </div>
+                                            )
+                                        )}
+                                        {previewPath === 'blog' && BlogPage && (
+                                            <BlogPage
+                                                store={previewStore as any}
+                                                subdomain={previewStore.subdomain}
+                                                isPreview={true}
+                                            />
+                                        )}
+                                        {previewPath === 'contact' && ContactPage && (
+                                            <ContactPage
+                                                store={previewStore as any}
+                                                subdomain={previewStore.subdomain}
+                                                isPreview={true}
+                                            />
+                                        )}
+                                    </div>
+                                </Layout>
+                            )}
                         </div>
                     </div>
                 </div>
 
                 {/* 2. Theme Settings Sidebar */}
-                <AnimatePresence>
+                <AnimatePresence mode="wait">
                     {showEditor && (
                         <motion.div
-                            initial={{ x: 350 }}
-                            animate={{ x: 0 }}
-                            exit={{ x: 350 }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="h-full"
+                            initial={{ width: 0, opacity: 0 }}
+                            animate={{ width: 350, opacity: 1 }}
+                            exit={{ width: 0, opacity: 0 }}
+                            transition={{ type: 'spring', damping: 30, stiffness: 250 }}
+                            className="h-full overflow-hidden shrink-0 border-l border-slate-100"
                         >
                             <ThemeEditor
                                 config={tempConfig}
+                                subdomain={store?.subdomain}
                                 onChange={handleConfigChange}
-                                onSave={handlePublish}
+                                onSave={publishHandler}
                                 onClose={() => setShowEditor(false)}
                                 isSaving={isSaving}
+                                currentPath={previewPath}
+                                onPathChange={setPreviewPath}
+                                pages={themePages}
                             />
                         </motion.div>
                     )}
                 </AnimatePresence>
 
                 {/* Sidebar Toggle Button */}
-                <button
-                    onClick={() => setShowEditor(!showEditor)}
-                    className={`absolute bottom-8 right-8 z-[110] p-4 rounded-full shadow-2xl transition-all active:scale-90 ${showEditor ? 'bg-slate-900 translate-x-12 opacity-0' : 'bg-indigo-600'
-                        }`}
-                >
-                    <PanelRight className="w-6 h-6 text-white" />
-                </button>
+                {!showEditor && (
+                    <motion.button
+                        initial={{ opacity: 0, scale: 0.5, x: 50 }}
+                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                        onClick={() => setShowEditor(true)}
+                        className="absolute bottom-8 right-8 z-[110] p-4 rounded-full bg-indigo-600 shadow-2xl transition-all active:scale-90 hover:bg-slate-900 group"
+                    >
+                        <PanelRight className="w-6 h-6 text-white group-hover:rotate-180 transition-transform duration-500" />
+                    </motion.button>
+                )}
             </div>
         </div>
     );

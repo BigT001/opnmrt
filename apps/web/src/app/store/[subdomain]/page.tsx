@@ -2,13 +2,14 @@ import { notFound } from 'next/navigation';
 import { getThemeComponents } from '@/components/themes/registry';
 
 async function getStore(subdomain: string) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api';
     const url = `${apiUrl}/stores/resolve?subdomain=${subdomain}`;
     console.log(`[STORE_PAGE] Resolving store: ${subdomain}`);
     try {
         const res = await fetch(url);
         if (!res.ok) return null;
-        return res.json();
+        const text = await res.text();
+        return text ? JSON.parse(text) : null;
     } catch (error) {
         console.error(`[STORE_PAGE] Resolve error:`, error);
         return null;
@@ -16,13 +17,14 @@ async function getStore(subdomain: string) {
 }
 
 async function getProducts(subdomain: string) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api';
     const url = `${apiUrl}/products?subdomain=${subdomain}`;
     console.log(`[STORE_PAGE] Fetching products for: ${subdomain}`);
     try {
         const res = await fetch(url);
         if (!res.ok) return [];
-        return res.json();
+        const text = await res.text();
+        return text ? JSON.parse(text) : [];
     } catch (error) {
         console.error(`[STORE_PAGE] Products error:`, error);
         return [];

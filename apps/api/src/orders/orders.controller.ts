@@ -31,6 +31,24 @@ export class OrdersController {
     return this.ordersService.create(userId, data);
   }
 
+  @Post('offline')
+  async createOfflineOrder(
+    @GetUser('userId') userId: string,
+    @Body()
+    data: {
+      storeId: string;
+      customerName?: string;
+      customerEmail?: string;
+      customerPhone?: string;
+      paymentMethod?: string;
+      discount?: number;
+      totalAmount: number;
+      items: { productId: string; quantity: number; price: number }[];
+    },
+  ) {
+    return this.ordersService.createOfflineOrder(userId, data);
+  }
+
   @Patch(':orderId/abandon')
   async trackAbandonment(
     @Param('orderId') orderId: string,

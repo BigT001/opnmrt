@@ -24,6 +24,8 @@ export const getThemeComponents = async (themeName: string = 'DEFAULT'): Promise
                 AboutPage: (await import('./appify/HomePage')).AppifyHomePage,
                 ShopPage: (await import('./appify/ShopPage')).AppifyShopPage,
                 FavoritesPage: (await import('./appify/FavoritesPage')).AppifyFavoritesPage,
+                ContactPage: (await import('./appify/ContactPage')).AppifyContactPage,
+                BlogPage: (await import('./appify/HomePage')).AppifyHomePage,
             } as ThemeComponents;
         case 'VANTAGE':
             return {
@@ -40,6 +42,26 @@ export const getThemeComponents = async (themeName: string = 'DEFAULT'): Promise
                 AboutPage: (await import('./vantage/AboutPage')).VantageAboutPage,
                 ShopPage: (await import('./vantage/ShopPage')).VantageShopPage,
                 FavoritesPage: (await import('./vantage/FavoritesPage')).VantageFavoritesPage,
+                ContactPage: (await import('./vantage/ContactPage')).VantageContactPage,
+                BlogPage: (await import('./vantage/HomePage')).VantageHomePage,
+            } as ThemeComponents;
+        case 'ELECTSHOP':
+            return {
+                Navbar: (await import('./electshop/Navbar')).ElectshopNavbar,
+                Footer: (await import('./electshop/Footer')).ElectshopFooter,
+                StorefrontHero: (await import('./electshop/StorefrontHero')).ElectshopHero,
+                ProductGrid: (await import('./electshop/ProductGrid')).ElectshopProductGrid,
+                ProductDetail: (await import('./electshop/ProductDetail')).ElectshopProductDetail,
+                CartDrawer: (await import('./electshop/CartDrawer')).ElectshopCartDrawer,
+                CheckoutPage: (await import('./electshop/CheckoutPage')).ElectshopCheckout,
+                Layout: (await import('./electshop/layout')).ElectshopLayout,
+                StorefrontPage: (await import('./electshop/HomePage')).ElectshopHomePage,
+                ProductPage: (await import('./electshop/ProductPage')).ElectshopProductPage,
+                AboutPage: (await import('./electshop/About')).ElectshopAboutPage,
+                ShopPage: (await import('./electshop/ShopPage')).ElectshopShopPage,
+                FavoritesPage: (await import('./electshop/FavoritesPage')).ElectshopFavoritesPage,
+                ContactPage: (await import('./electshop/ContactPage')).ElectshopContactPage,
+                BlogPage: (await import('./electshop/BlogPage')).ElectshopBlogPage,
             } as ThemeComponents;
         case 'MINIMAL_LUXE':
         case 'GLAMOUR_EVE':
@@ -60,6 +82,8 @@ export const getThemeComponents = async (themeName: string = 'DEFAULT'): Promise
                 AboutPage: (await import('./default/AboutPage')).DefaultAboutPage,
                 ShopPage: (await import('./default/ShopPage')).DefaultShopPage,
                 FavoritesPage: (await import('./default/FavoritesPage')).DefaultFavoritesPage,
+                ContactPage: (await import('./default/ContactPage')).DefaultContactPage,
+                BlogPage: (await import('./default/StorefrontPage')).DefaultStorefrontPage,
             } as ThemeComponents;
     }
 };

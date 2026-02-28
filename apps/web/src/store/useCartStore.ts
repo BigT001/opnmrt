@@ -28,10 +28,12 @@ export interface CartItem {
 
 interface CartState {
     items: CartItem[];
+    directCheckoutItem: CartItem | null;
     isOpen: boolean;
     notification: string | null;
     error: string | null; // Added for stock errors
     addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
+    setDirectCheckoutItem: (item: CartItem | null) => void;
     removeItem: (id: string, storeId?: string) => void;
     updateQuantity: (id: string, quantity: number, storeId?: string) => void;
     clearCart: () => void;
@@ -48,9 +50,12 @@ export const useCartStore = create<CartState>()(
     persist(
         (set, get) => ({
             items: [],
+            directCheckoutItem: null,
             isOpen: false,
             notification: null,
             error: null,
+
+            setDirectCheckoutItem: (item) => set({ directCheckoutItem: item }),
 
             addItem: (item, quantity = 1) => {
                 const currentItems = get().items;

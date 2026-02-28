@@ -4,7 +4,7 @@ import { TrackSession } from '@/components/analytics/TrackSession';
 import { CartSync } from '@/components/storefront/CartSync';
 
 async function getStore(subdomain: string) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api';
     const url = `${apiUrl}/stores/resolve?subdomain=${subdomain}`;
     console.log(`[STORE_LAYOUT] Starting resolve for: ${subdomain}`);
     try {
@@ -13,7 +13,12 @@ async function getStore(subdomain: string) {
         if (!res.ok) {
             return null;
         }
-        return res.json();
+        const text = await res.text();
+        if (!text || text.trim() === '') {
+            console.warn(`[STORE_LAYOUT] Empty response from server for subdomain: ${subdomain}`);
+            return null;
+        }
+        return JSON.parse(text);
     } catch (error) {
         console.error('[STORE_LAYOUT] Resolve error:', error);
         return null;

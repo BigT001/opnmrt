@@ -28,10 +28,21 @@ const TiktokIcon = () => (
     </svg>
 );
 
-export function AppifyFooter({ storeName, isPreview, onConfigChange }: FooterProps) {
+export function AppifyFooter({
+    storeName,
+    isPreview,
+    onConfigChange,
+    themeConfig,
+    instagram,
+    twitter,
+    facebook,
+    tiktok
+}: FooterProps) {
     const handleSave = (key: string, value: string) => {
         onConfigChange?.({ [key]: value });
     };
+
+    const config = themeConfig || {};
 
     return (
         <footer className="bg-[#0a0a0a] text-white">
@@ -40,13 +51,18 @@ export function AppifyFooter({ storeName, isPreview, onConfigChange }: FooterPro
                     {/* Brand & Powered By */}
                     <div className="flex items-center gap-6">
                         <h3 className="text-[14px] font-black text-white tracking-tight uppercase">
-                            {storeName}
+                            <EditableText
+                                value={storeName || 'APPIFY'}
+                                onSave={(val) => handleSave('name', val)}
+                                isPreview={isPreview}
+                                label="Footer Brand Name"
+                            />
                         </h3>
                         <div className="h-4 w-px bg-white/10" />
                         <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.15em]">
                             <EditableText
-                                value="Powered by OpenMart"
-                                onSave={(val) => { }} // Usually fixed but let user change if they want? 
+                                value={config.footerCredits || 'Powered by OPNMRT'}
+                                onSave={(val) => handleSave('footerCredits', val)}
                                 isPreview={isPreview}
                                 label="Credits"
                             />
@@ -55,18 +71,22 @@ export function AppifyFooter({ storeName, isPreview, onConfigChange }: FooterPro
 
                     {/* Social Media Icons */}
                     <div className="flex items-center gap-3">
-                        <a href="#" className="w-8 h-8 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
-                            <InstagramIcon />
-                        </a>
-                        <a href="#" className="w-8 h-8 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
-                            <TwitterIcon />
-                        </a>
-                        <a href="#" className="w-8 h-8 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
-                            <FacebookIcon />
-                        </a>
-                        <a href="#" className="w-8 h-8 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
-                            <TiktokIcon />
-                        </a>
+                        {[
+                            { Icon: InstagramIcon, name: 'Instagram', handle: instagram },
+                            { Icon: TwitterIcon, name: 'Twitter', handle: twitter },
+                            { Icon: FacebookIcon, name: 'Facebook', handle: facebook },
+                            { Icon: TiktokIcon, name: 'TikTok', handle: tiktok }
+                        ].filter(social => social.handle).map((social, i) => (
+                            <a
+                                key={i}
+                                href={social.handle ? (social.handle.startsWith('http') ? social.handle : `https://${social.name.toLowerCase()}.com/${social.handle.replace('@', '')}`) : '#'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-8 h-8 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                            >
+                                <social.Icon />
+                            </a>
+                        ))}
                     </div>
 
                     {/* Links & Copyright */}
@@ -77,7 +97,12 @@ export function AppifyFooter({ storeName, isPreview, onConfigChange }: FooterPro
                         </div>
                         <div className="h-4 w-px bg-white/10" />
                         <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.1em]">
-                            &copy; {new Date().getFullYear()} {storeName}
+                            <EditableText
+                                value={config.footerCopyright || `© ${new Date().getFullYear()} ${storeName}`}
+                                onSave={(val) => handleSave('footerCopyright', val)}
+                                isPreview={isPreview}
+                                label="Copyright"
+                            />
                         </p>
                     </div>
                 </div>

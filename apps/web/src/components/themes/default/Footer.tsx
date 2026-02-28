@@ -50,7 +50,14 @@ function TiktokIcon() {
     );
 }
 
-export function DefaultFooter({ storeName, subdomain }: FooterProps) {
+export function DefaultFooter({
+    storeName,
+    subdomain,
+    instagram,
+    twitter,
+    facebook,
+    tiktok
+}: FooterProps) {
     const base = subdomain ? `/store/${subdomain}` : '#';
     const year = new Date().getFullYear();
 
@@ -62,11 +69,11 @@ export function DefaultFooter({ storeName, subdomain }: FooterProps) {
     ];
 
     const socials = [
-        { label: 'Instagram', href: '#', icon: <InstagramIcon /> },
-        { label: 'X (Twitter)', href: '#', icon: <XIcon /> },
-        { label: 'LinkedIn', href: '#', icon: <LinkedinIcon /> },
-        { label: 'TikTok', href: '#', icon: <TiktokIcon /> },
-    ];
+        { label: 'Instagram', name: 'instagram', handle: instagram, icon: <InstagramIcon /> },
+        { label: 'X (Twitter)', name: 'twitter', handle: twitter, icon: <XIcon /> },
+        { label: 'Facebook', name: 'facebook', handle: facebook, icon: <LinkedinIcon /> }, // Using LinkedinIcon box as a placeholder for FB or keep it simple
+        { label: 'TikTok', name: 'tiktok', handle: tiktok, icon: <TiktokIcon /> },
+    ].filter(s => s.handle);
 
     return (
         <footer className="bg-[#f9f9f9] border-t border-gray-100">
@@ -79,11 +86,13 @@ export function DefaultFooter({ storeName, subdomain }: FooterProps) {
                             {storeName}
                         </h3>
                         <div className="flex items-center gap-3 sm:border-l sm:border-gray-200 sm:pl-6">
-                            {socials.map(({ label, href, icon }) => (
+                            {socials.map(({ label, name, handle, icon }) => (
                                 <a
                                     key={label}
-                                    href={href}
+                                    href={handle ? (handle.startsWith('http') ? handle : `https://${name}.com/${handle.replace('@', '')}`) : '#'}
                                     aria-label={label}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="hover:-translate-y-1 hover:scale-110 transition-all duration-200"
                                 >
                                     {icon}

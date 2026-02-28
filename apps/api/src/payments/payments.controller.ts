@@ -1,40 +1,94 @@
-import { Controller, Get, Post, Body, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Query,
+  Req,
+  RawBodyRequest,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Param,
+} from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from '../common/decorators/get-user.decorator';
+import { Request } from 'express';
 
 @Controller('payments')
-@UseGuards(AuthGuard('jwt'))
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(private readonly paymentsService: PaymentsService) { }
 
-  @Post('connect')
-  async connectStore(
-    @GetUser('userId') userId: string,
-    @Body()
-    data: {
-      storeId: string;
-      publicKey: string;
-      secretKey: string;
-    },
+  // ── Public: Paystack Webhook (no JWT, signature-verified) ──
+  @Post('webhook')
+  @HttpCode(HttpStatus.OK)
+  async webhookBase(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers('x-paystack-signature') signature: string,
   ) {
-    // In a real app, we'd verify user owns storeId here
-    return this.paymentsService.connectStore(data.storeId, data);
+    const rawBody = (req as any).rawBody || Buffer.from(JSON.stringify(req.body));
+    return this.paymentsService.handleWebhook(rawBody, signature);
   }
 
+  @Post('webhook/:storeId')
+  @HttpCode(HttpStatus.OK)
+  async webhookWithStoreId(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers('x-paystack-signature') signature: string,
+    @Param('storeId') storeId: string,
+  ) {
+    const rawBody = (req as any).rawBody || Buffer.from(JSON.stringify(req.body));
+    return this.paymentsService.handleWebhook(rawBody, signature, storeId);
+  }
+
+  // ── Seller: Config & Transactions ──
   @Get('config')
+  @UseGuards(AuthGuard('jwt'))
   async getConfig(@Query('storeId') storeId: string) {
     return this.paymentsService.getStorePaymentConfig(storeId);
   }
 
-  @Post('verify')
-  async verify(
-    @Body() data: { storeId: string; reference: string; orderId?: string },
+  @Get('transactions')
+  @UseGuards(AuthGuard('jwt'))
+  async getTransactions(@Query('storeId') storeId: string) {
+    return this.paymentsService.getSellerTransactions(storeId);
+  }
+
+  // ── Buyer: Initialize Payment ──
+  @Post('initialize')
+  @UseGuards(AuthGuard('jwt'))
+  async initializePayment(
+    @Body()
+    data: {
+      email: string;
+      amount: number;
+      orderId: string;
+      storeId: string;
+      metadata?: Record<string, any>;
+    },
   ) {
-    return this.paymentsService.verifyPayment(
-      data.storeId,
-      data.reference,
-      data.orderId,
-    );
+    return this.paymentsService.initializePayment(data);
+  }
+
+  // ── Verify Payment (server-side, after redirect) ──
+  @Post('verify')
+  @UseGuards(AuthGuard('jwt'))
+  async verify(
+    @Body() data: { reference: string; orderId?: string },
+  ) {
+    return this.paymentsService.verifyPayment(data.reference, data.orderId);
+  }
+
+
+
+  // ── Seller: Refund ──
+  @Post('refund')
+  @UseGuards(AuthGuard('jwt'))
+  async refund(
+    @Body() data: { reference: string; amount?: number },
+  ) {
+    return this.paymentsService.refundPayment(data.reference, data.amount);
   }
 }

@@ -27,7 +27,7 @@ export const VantageLayout: React.FC<StoreThemeProps> = ({ children, store, isPr
         <div className={`theme-vantage-scope ${outfit.variable} ${primaryFont} selection:bg-black selection:text-white bg-white min-h-screen`}>
             <style jsx global>{`
                 .theme-vantage-scope {
-                    --primary-color: ${config.primaryColor || '#000000'};
+                    --primary-color: ${store.primaryColor || config.primaryColor || '#000000'};
                     --font-outfit: ${outfit.style.fontFamily};
                     --navbar-height: 72px;
                 }
@@ -90,6 +90,10 @@ export const VantageLayout: React.FC<StoreThemeProps> = ({ children, store, isPr
                 <VantageFooter
                     storeName={store.name}
                     isPreview={isPreview}
+                    instagram={store.instagram}
+                    twitter={store.twitter}
+                    facebook={store.facebook}
+                    tiktok={store.tiktok}
                 />
             )}
         </div>

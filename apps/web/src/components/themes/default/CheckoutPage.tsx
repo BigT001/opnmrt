@@ -12,7 +12,7 @@ import dynamic from 'next/dynamic';
 import api from '@/lib/api';
 import { useCheckoutProfile } from '@/hooks/useCheckoutProfile';
 
-const PaystackPayment = dynamic(() => import('../PaystackPayment'), { ssr: false });
+const BackendPaystack = dynamic(() => import('../PaystackPayment'), { ssr: false });
 
 export function DefaultCheckout({ store, subdomain }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
@@ -45,47 +45,32 @@ export function DefaultCheckout({ store, subdomain }: CheckoutProps) {
         }
     }, [items.length, params?.subdomain, router, isSuccess]);
 
-    const config = {
-        reference: (new Date()).getTime().toString(),
-        email: formData.email,
-        amount: Math.round(subtotal * 100),
-        publicKey: store.paystackPublicKey || '',
-    };
-
-    const onPaystackSuccess = async (reference: any) => {
+    const handlePaymentSuccess = async (reference: string) => {
         if (!activeOrderId.current) return;
         try {
             await api.post('/payments/verify', {
-                storeId: store.id,
-                reference: reference.reference,
-                orderId: activeOrderId.current
+                reference,
+                orderId: activeOrderId.current,
             });
             setIsSuccess(true);
             clearStoreCart(store.id);
         } catch (err: any) {
-            setError('Payment verification failed. Please contact support.');
+            setError('Payment verified by Paystack but our server could not confirm. Please contact support.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const onPaystackClose = () => {
+    const handlePaymentClose = () => {
         setIsSubmitting(false);
     };
 
-    const handleProcessOrder = async (e: React.FormEvent, initializePayment: () => void) => {
+    const handleProcessOrder = async (e: React.FormEvent, initPay: () => Promise<void>) => {
         e.preventDefault();
-
-        if (!store.paystackPublicKey) {
-            setError('Payment gateway is not configured for this store.');
-            return;
-        }
-
         setIsSubmitting(true);
         setError(null);
 
         try {
-            // Centralized profile sync
             await syncProfile();
 
             const orderRes = await api.post('/orders', {
@@ -99,7 +84,7 @@ export function DefaultCheckout({ store, subdomain }: CheckoutProps) {
             });
 
             activeOrderId.current = orderRes.data.id;
-            initializePayment();
+            await initPay(); // backend-initialized — safe
 
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to initialize order. Please try again.');
@@ -165,9 +150,16 @@ export function DefaultCheckout({ store, subdomain }: CheckoutProps) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
                     <div className="lg:col-span-7">
-                        <PaystackPayment config={config} onSuccess={onPaystackSuccess} onClose={onPaystackClose}>
-                            {(initializePayment) => (
-                                <form onSubmit={(e) => handleProcessOrder(e, initializePayment)} className="space-y-12">
+                        <BackendPaystack
+                            email={formData.email}
+                            amount={subtotal}
+                            orderId={activeOrderId.current || ''}
+                            storeId={store.id}
+                            onSuccess={handlePaymentSuccess}
+                            onClose={handlePaymentClose}
+                        >
+                            {(initPay, payLoading) => (
+                                <form onSubmit={(e) => handleProcessOrder(e, initPay)} className="space-y-12">
                                     <section>
                                         <div className="flex items-center gap-3 mb-8">
                                             <div className="w-8 h-8 bg-gray-900 text-white rounded-lg flex items-center justify-center text-xs font-black">1</div>
@@ -292,11 +284,11 @@ export function DefaultCheckout({ store, subdomain }: CheckoutProps) {
 
                                     <button
                                         type="submit"
-                                        disabled={isSubmitting}
+                                        disabled={isSubmitting || payLoading}
                                         className="w-full py-6 bg-gray-900 text-white text-sm font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-black transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl relative overflow-hidden group"
                                     >
                                         <AnimatePresence mode="wait">
-                                            {isSubmitting ? (
+                                            {(isSubmitting || payLoading) ? (
                                                 <motion.div
                                                     key="loading"
                                                     initial={{ opacity: 0, y: 20 }}
@@ -321,7 +313,7 @@ export function DefaultCheckout({ store, subdomain }: CheckoutProps) {
                                     </button>
                                 </form>
                             )}
-                        </PaystackPayment>
+                        </BackendPaystack>
                     </div>
 
                     <div className="lg:col-span-5">

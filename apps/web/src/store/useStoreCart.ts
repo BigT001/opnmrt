@@ -28,6 +28,8 @@ export function useStoreCart(storeId?: string) {
     return {
         ...store, // Provides addItem, removeItem, toggleCart, etc.
         storeItems,
+        directCheckoutItem: store.directCheckoutItem,
+        setDirectCheckoutItem: store.setDirectCheckoutItem,
         totalCount,
         subtotal,
     };

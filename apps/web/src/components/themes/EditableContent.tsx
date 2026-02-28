@@ -18,13 +18,13 @@ interface EditableTextProps {
 export function EditableText({ value, onSave, isPreview, className = '', multiline = false, label }: EditableTextProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [tempValue, setTempValue] = useState(value);
-    const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
-        if (isEditing && inputRef.current) {
-            inputRef.current.focus();
+        if (isEditing) {
+            setTempValue(value);
         }
-    }, [isEditing]);
+    }, [isEditing, value]);
 
     if (!isPreview) {
         return <span className={className}>{value}</span>;
@@ -36,58 +36,104 @@ export function EditableText({ value, onSave, isPreview, className = '', multili
     };
 
     const handleCancel = () => {
-        setTempValue(value);
         setIsEditing(false);
     };
 
-    if (isEditing) {
-        return (
-            <div className="relative group/editable min-w-[100px] w-full">
-                {multiline ? (
-                    <textarea
-                        ref={inputRef as any}
-                        value={tempValue}
-                        onChange={(e) => setTempValue(e.target.value)}
-                        className={`w-full bg-white/10 backdrop-blur-md border-2 border-primary/50 rounded-xl p-2 outline-none text-inherit ${className}`}
-                        rows={3}
-                    />
-                ) : (
-                    <input
-                        ref={inputRef as any}
-                        type="text"
-                        value={tempValue}
-                        onChange={(e) => setTempValue(e.target.value)}
-                        className={`w-full bg-white/10 backdrop-blur-md border-2 border-primary/50 rounded-xl px-2 py-1 outline-none text-inherit ${className}`}
-                    />
-                )}
-                <div className="absolute -bottom-10 right-0 flex items-center gap-1 z-50">
-                    <button
-                        onClick={handleSave}
-                        className="p-2 bg-emerald-500 text-white rounded-lg shadow-lg hover:bg-emerald-600 transition-colors"
-                    >
-                        <Check className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={handleCancel}
-                        className="p-2 bg-rose-500 text-white rounded-lg shadow-lg hover:bg-rose-600 transition-colors"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
-                </div>
-            </div>
-        );
-    }
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
 
     return (
         <span
-            className={`relative group/editable cursor-pointer inline-block ${className}`}
-            onClick={() => setIsEditing(true)}
+            className={`relative group/editable inline-flex items-center gap-2 ${className}`}
         >
-            {value || <span className="opacity-50 italic">Set {label || 'content'}...</span>}
-            <span className="absolute -top-4 -right-4 p-1.5 bg-primary text-white rounded-full opacity-0 group-hover/editable:opacity-100 transition-opacity shadow-lg z-20">
-                <Pencil className="w-3 h-3" />
+            <span className="relative">
+                {value || <span className="opacity-50 italic">Set {label || 'content'}...</span>}
+                <span className="absolute inset-x-0 -bottom-0.5 h-0.5 bg-primary/30 scale-x-0 group-hover/editable:scale-x-100 transition-transform origin-left" />
             </span>
-            <span className="absolute inset-0 border-2 border-transparent group-hover/editable:border-primary/30 rounded-lg pointer-events-none -m-1" />
+
+            <span
+                onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setIsEditing(true);
+                }}
+                className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 border border-primary/20 rounded-lg text-primary text-[8px] font-black uppercase tracking-tighter opacity-100 sm:opacity-0 sm:group-hover/editable:opacity-100 transition-all shadow-sm whitespace-nowrap group-hover/editable:scale-105 origin-left cursor-pointer pointer-events-auto"
+            >
+                <Pencil className="w-2.5 h-2.5" />
+                <span>Edit Content</span>
+            </span>
+
+            {mounted && isEditing && createPortal(
+                <AnimatePresence>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[6000] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-[2px]"
+                        onClick={handleCancel}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+                            className="bg-white rounded-[2.5rem] p-8 w-full max-w-lg shadow-[0_32px_120px_-20px_rgba(0,0,0,0.3)] relative border border-slate-100"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between mb-8">
+                                <div>
+                                    <h3 className="text-base font-black text-slate-900 uppercase tracking-widest leading-none">Edit {label || 'Content'}</h3>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Aura Live Editor</p>
+                                </div>
+                                <button onClick={handleCancel} className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 rounded-2xl transition-all active:scale-90">
+                                    <X className="w-6 h-6 text-slate-400" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-8">
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between px-1">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Text Content</label>
+                                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{tempValue.length} Characters</span>
+                                    </div>
+                                    <div className="relative group/field">
+                                        <textarea
+                                            ref={inputRef}
+                                            value={tempValue}
+                                            onChange={(e) => setTempValue(e.target.value)}
+                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-6 outline-none text-[15px] font-bold text-slate-900 focus:border-primary focus:bg-white focus:shadow-2xl focus:shadow-primary/5 transition-all scrollbar-hide min-h-[160px] leading-relaxed resize-none"
+                                            autoFocus
+                                            placeholder={`Enter your ${label || 'content'} here...`}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={handleSave}
+                                        className="flex-[2] py-5 bg-slate-900 text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.25em] shadow-xl hover:bg-black active:scale-95 transition-all flex items-center justify-center gap-3 group/save"
+                                    >
+                                        <Check className="w-4 h-4 text-emerald-400 group-hover/save:scale-110 transition-transform" />
+                                        Confirm Changes
+                                    </button>
+                                    <button
+                                        onClick={handleCancel}
+                                        className="flex-1 py-5 bg-slate-100 text-slate-500 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+
+                                <div className="flex items-center justify-center gap-2 pt-2">
+                                    <div className="w-1 h-1 rounded-full bg-slate-200" />
+                                    <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.3em]">Changes apply instantly in preview</span>
+                                    <div className="w-1 h-1 rounded-full bg-slate-200" />
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                </AnimatePresence>,
+                document.body
+            )}
         </span>
     );
 }
@@ -164,12 +210,21 @@ export function EditableImage({ src, onSave, isPreview, className = '', aspectRa
             )}
 
             <div
-                className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10"
-                onClick={() => setIsEditing(true)}
+                className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10 pointer-events-none"
             >
-                <div className="p-3 bg-white rounded-2xl shadow-xl flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4 text-primary" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">Change Media</span>
+                <div
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setIsEditing(true);
+                    }}
+                    className="mx-4 p-4 bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl flex flex-col items-center gap-2 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500 cursor-pointer pointer-events-auto"
+                >
+                    <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center">
+                        <ImageIcon className="w-5 h-5 text-primary" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">Change Image</span>
+                    <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">Click to Expand</span>
                 </div>
             </div>
 

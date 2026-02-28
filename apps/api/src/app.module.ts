@@ -13,12 +13,15 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { AiModule } from './ai/ai.module';
 import { ChatModule } from './chat/chat.module';
 import { AdminModule } from './admin/admin.module';
-import { PrismaService } from './prisma/prisma.service';
+
 import { PrismaModule } from './prisma/prisma.module';
 
 import { SearchModule } from './search/search.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { ThemesModule } from './themes/themes.module';
+import { ThemesController } from './themes/themes.controller';
+import { ThemesService } from './themes/themes.service';
 
 @Module({
   imports: [
@@ -38,8 +41,9 @@ import { RealtimeModule } from './realtime/realtime.module';
     SearchModule,
     ReviewsModule,
     RealtimeModule,
+    ThemesModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, ThemesController],
+  providers: [AppService, ThemesService],
 })
-export class AppModule { }
+export class AppModule {}

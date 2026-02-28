@@ -168,7 +168,12 @@ export function AppifyProductGrid({ products, subdomain, storeId, hideHeader, st
                         href={`/store/${subdomain}/shop`}
                         className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 hover:text-[#0a0a0a] transition-colors"
                     >
-                        See All
+                        <EditableText
+                            value={store?.themeConfig?.seeAllText || 'See All'}
+                            onSave={(val) => handleSave('seeAllText', val)}
+                            isPreview={isPreview}
+                            label="Link Text"
+                        />
                         <div className="w-7 h-7 rounded-full border border-gray-200 group-hover:border-gray-900 group-hover:bg-gray-900 group-hover:text-white flex items-center justify-center transition-all">
                             <ArrowUpRight className="w-3.5 h-3.5" />
                         </div>

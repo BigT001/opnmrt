@@ -4,13 +4,15 @@ import { getThemeComponents } from '@/components/themes/registry';
 async function getStore(subdomain: string) {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stores/resolve?subdomain=${subdomain}`, { cache: 'no-store' });
     if (!res.ok) return null;
-    return res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
 }
 
 async function getProducts(storeId: string) {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/store/${storeId}`, { cache: 'no-store' });
     if (!res.ok) return [];
-    return res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : [];
 }
 
 export default async function FavoritesPage({

@@ -13,14 +13,25 @@ import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.setGlobalPrefix('api');
   app.enableCors();
 
-  // Increase body limit for large file uploads
   app.use(json({ limit: '50mb' }));
   app.use(urlencoded({ extended: true, limit: '50mb' }));
+
+  // Store raw body for webhook signature verification
+  // We attach it to the request so that PaymentsService can use it
+  app.use(['/api/payments/webhook', '/api/payments/webhook/:storeId'], (req: any, res: any, next: any) => {
+    if (req.method !== 'POST') return next();
+
+    // If the body is already parsed by json() middleware, we can recreate the raw buffer
+    if (req.body && !req.rawBody) {
+      req.rawBody = Buffer.from(JSON.stringify(req.body));
+    }
+    next();
+  });
 
   const port = process.env.PORT ?? 4000;
   await app.listen(port);

@@ -54,13 +54,18 @@ export class StoresController {
     FileFieldsInterceptor([
       { name: 'logo', maxCount: 1 },
       { name: 'heroImage', maxCount: 1 },
+      { name: 'utilityBill', maxCount: 1 },
     ]),
   )
   async update(
     @Param('id') id: string,
     @Body() body: any,
     @UploadedFiles()
-    files: { logo?: Express.Multer.File[]; heroImage?: Express.Multer.File[] },
+    files: {
+      logo?: Express.Multer.File[];
+      heroImage?: Express.Multer.File[];
+      utilityBill?: Express.Multer.File[];
+    },
   ) {
     const data = { ...body };
     return this.storesService.update(id, data, files);

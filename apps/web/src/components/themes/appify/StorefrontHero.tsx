@@ -38,10 +38,15 @@ export function AppifyHero({ store, isPreview, onConfigChange }: HeroProps) {
                     <div>
                         <button
                             onClick={() => document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black text-[12px] font-black uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-xl"
+                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black text-[12px] font-black uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-xl group/btn"
                         >
-                            Shop Now
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <EditableText
+                                value={store.themeConfig?.heroButtonText || 'Shop Now'}
+                                onSave={(val) => handleSave('heroButtonText', val)}
+                                isPreview={isPreview}
+                                label="Button Text"
+                            />
+                            <svg className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M7 17L17 7" />
                                 <path d="M7 7h10v10" />
                             </svg>

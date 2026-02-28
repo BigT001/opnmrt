@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { EncryptionUtil } from '../common/encryption.util';
 
 @Injectable()
 export class StoresService {
@@ -46,11 +47,49 @@ export class StoresService {
   async update(
     id: string,
     data: any,
-    files?: { logo?: Express.Multer.File[]; heroImage?: Express.Multer.File[] },
+    files?: {
+      logo?: Express.Multer.File[];
+      heroImage?: Express.Multer.File[];
+      utilityBill?: Express.Multer.File[];
+    },
   ) {
     try {
       const updateData: any = { ...data };
       console.log('Update Store Data:', JSON.stringify(updateData, null, 2));
+
+      // Handle boolean strings from multipart/form-data
+      const booleanFields = [
+        'aiMessaging',
+        'aiInventory',
+        'aiStrategy',
+        'aiFinancials',
+        'chatAiEnabled',
+        'useWhatsAppCheckout',
+      ];
+      booleanFields.forEach((field) => {
+        if (updateData[field] !== undefined) {
+          if (updateData[field] === 'true' || updateData[field] === true) {
+            updateData[field] = true;
+          } else if (
+            updateData[field] === 'false' ||
+            updateData[field] === false
+          ) {
+            updateData[field] = false;
+          }
+        }
+      });
+
+      // Parse categories JSON string from multipart form-data
+      if (updateData.categories !== undefined) {
+        try {
+          updateData.categories =
+            typeof updateData.categories === 'string'
+              ? JSON.parse(updateData.categories)
+              : updateData.categories;
+        } catch {
+          updateData.categories = [];
+        }
+      }
 
       if (files?.logo?.[0]) {
         const result = await this.cloudinary.uploadFile(
@@ -68,6 +107,19 @@ export class StoresService {
         updateData.heroImage = result.secure_url;
       }
 
+      // Handle encryption for Paystack keys if they are being updated
+      if (updateData.paystackSecretKey === '********') {
+        delete updateData.paystackSecretKey;
+      } else if (updateData.paystackSecretKey) {
+        updateData.paystackSecretKey = await EncryptionUtil.encrypt(updateData.paystackSecretKey);
+      }
+
+      if (updateData.paystackWebhookSecret === '********') {
+        delete updateData.paystackWebhookSecret;
+      } else if (updateData.paystackWebhookSecret) {
+        updateData.paystackWebhookSecret = await EncryptionUtil.encrypt(updateData.paystackWebhookSecret);
+      }
+
       return await this.prisma.store.update({
         where: { id },
         data: updateData,
@@ -78,12 +130,26 @@ export class StoresService {
     }
   }
 
+  public invalidateStats(storeId: string) {
+    this.statsCache.delete(storeId);
+    console.log(`[GET_STATS][${storeId}] Cache invalidated manually`);
+  }
+
+  private statsCache = new Map<string, { data: any; timestamp: number }>();
+  private readonly CACHE_TTL = 2 * 60 * 1000; // 2 minutes cache for "instant" feel
+
   async getStoreStats(storeId: string) {
+    const cached = this.statsCache.get(storeId);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      console.log(`[GET_STATS][${storeId}] Returning cached data`);
+      return cached.data;
+    }
+
     const startTime = Date.now();
     try {
       console.log(`[GET_STATS][${storeId}] Execution started at ${new Date().toISOString()}`);
 
-      // Parallelize all primary queries to maximize throughput and give the event loop breathing room
+      // Parallelize all primary queries
       const [
         totalOrders,
         totalRevenueResult,
@@ -93,7 +159,8 @@ export class StoresService {
         totalCustomers,
         activeOrders,
         weeklySalesData,
-        topProductsResult
+        topProductsResult,
+        storeData
       ] = await Promise.all([
         this.prisma.order.count({ where: { storeId } }).catch(e => { console.error(`[STATS_ERROR][${storeId}] totalOrders:`, e.message); return 0; }),
         this.prisma.order.aggregate({
@@ -159,34 +226,41 @@ export class StoresService {
             },
           },
           take: 5,
-        }).catch(e => { console.error(`[STATS_ERROR][${storeId}] topProducts:`, e.message); return []; })
+        }).catch(e => { console.error(`[STATS_ERROR][${storeId}] topProducts:`, e.message); return []; }),
+        this.prisma.store.findUnique({
+          where: { id: storeId },
+          select: {
+            logo: true,
+            paystackPublicKey: true,
+            biography: true,
+            theme: true,
+            primaryColor: true,
+            onboardingDismissed: true,
+          }
+        })
       ]);
 
       console.log(`[GET_STATS][${storeId}] DB Core Queries completed in ${Date.now() - startTime}ms`);
 
-      // Fetch product details for top products with concurrency
-      const topProductsWithDetails = await Promise.all(
-        topProductsResult.map(async (item) => {
-          try {
-            const product = await this.prisma.product.findUnique({
-              where: { id: item.productId },
-            });
-            if (!product) return null;
-            return {
-              id: product.id,
-              name: product.name,
-              price: Number(product.price || 0),
-              stocks: product.stock || 0,
-              sales: item._sum.quantity || 0,
-              earnings: Number(product.price || 0) * (item._sum.quantity || 0),
-              image: product.images?.[0] || '',
-            };
-          } catch (e) {
-            console.error(`[STATS_ERROR][${storeId}] product_fetch ${item.productId}:`, e.message);
-            return null;
-          }
-        }),
-      );
+      // Optimize product details fetching - use findMany instead of findUnique in a loop
+      const productIds = topProductsResult.map(item => item.productId);
+      const products = productIds.length > 0
+        ? await this.prisma.product.findMany({ where: { id: { in: productIds } } })
+        : [];
+
+      const topProductsWithDetails = topProductsResult.map((item) => {
+        const product = products.find(p => p.id === item.productId);
+        if (!product) return null;
+        return {
+          id: product.id,
+          name: product.name,
+          price: Number(product.price || 0),
+          stocks: product.stock || 0,
+          sales: item._sum.quantity || 0,
+          earnings: Number(product.price || 0) * (item._sum.quantity || 0),
+          image: product.images?.[0] || '',
+        };
+      }).filter(Boolean);
 
       const funnel: any = {
         sessions: 0,
@@ -232,9 +306,17 @@ export class StoresService {
         topProducts: topProductsWithDetails.filter(Boolean),
         funnel,
         weeklySales,
+        onboarding: {
+          hasProducts: totalProducts > 0,
+          hasLogo: !!storeData?.logo,
+          hasPayments: !!storeData?.paystackPublicKey,
+          hasBio: !!storeData?.biography,
+          dismissed: !!storeData?.onboardingDismissed,
+        }
       };
 
       console.log(`[GET_STATS][${storeId}] Total execution time: ${Date.now() - startTime}ms`);
+      this.statsCache.set(storeId, { data: result, timestamp: Date.now() });
       return result;
     } catch (error) {
       console.error(`[GET_STORE_STATS_FATAL][${storeId}]`, {

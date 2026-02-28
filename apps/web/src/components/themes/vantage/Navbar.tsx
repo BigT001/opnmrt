@@ -15,8 +15,9 @@ import { Trash2, Minus, Plus, Send, Loader2 as LoaderIcon, CheckCircle, ArrowLef
 import api from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { EditableText, EditableColor } from '../EditableContent';
 
-export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColor, themeConfig }: NavbarProps) {
+export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColor, themeConfig, onConfigChange, onNavigate }: NavbarProps & { onConfigChange?: (cfg: any) => void }) {
     const { toggleCart, totalCount: itemCount } = useStoreCart(storeId);
     const effectivePrimaryColor = primaryColor || themeConfig?.primaryColor || '#000000';
     const { user } = useAuthStore();
@@ -37,6 +38,12 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
     const [newMessage, setNewMessage] = React.useState('');
     const [sendingMessage, setSendingMessage] = React.useState(false);
     const [selectedOrderDetails, setSelectedOrderDetails] = React.useState<any>(null);
+
+    const config = themeConfig || {};
+
+    const handleConfigSave = (newCfg: any) => {
+        onConfigChange?.(newCfg);
+    };
 
     React.useEffect(() => {
         if (isOrdersOpen && user) {
@@ -103,9 +110,9 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
     };
 
     const navLinks = [
-        { name: 'Home', href: `/store/${subdomain}` },
-        { name: 'Collections', href: `/store/${subdomain}/shop` },
-        { name: 'Our Story', href: `/store/${subdomain}/#lookbook` },
+        { name: config.navHome || 'Home', href: `/store/${subdomain}`, key: 'navHome' },
+        { name: config.navCollections || 'Collections', href: `/store/${subdomain}/shop`, key: 'navCollections' },
+        { name: config.navStory || 'Our Story', href: `/store/${subdomain}/#lookbook`, key: 'navStory' },
     ];
 
     return (
@@ -118,7 +125,16 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
             >
                 <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between">
                     {/* Brand */}
-                    <Link href={`/store/${subdomain}`} className="group relative z-10 shrink-0">
+                    <Link
+                        href={isPreview ? '#' : `/store/${subdomain}`}
+                        onClick={(e) => {
+                            if (isPreview && onNavigate) {
+                                e.preventDefault();
+                                onNavigate('index');
+                            }
+                        }}
+                        className="group relative z-10 shrink-0"
+                    >
                         {logo ? (
                             <div className="flex items-center gap-4">
                                 <img
@@ -127,13 +143,23 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
                                     className="h-8 lg:h-12 w-auto object-contain transition-transform group-hover:scale-105"
                                 />
                                 <span className="text-xl lg:text-2xl font-black tracking-tighter text-black uppercase block">
-                                    {storeName}
+                                    <EditableText
+                                        value={storeName || 'VANTAGE'}
+                                        onSave={(val: string) => handleConfigSave({ name: val })}
+                                        isPreview={isPreview}
+                                        label="Store Name"
+                                    />
                                 </span>
                             </div>
                         ) : (
                             <div className="flex flex-col leading-none">
                                 <span className="text-xl lg:text-2xl font-black tracking-tighter text-black lg:text-gray-900 uppercase">
-                                    {storeName || 'VANTAGE'}
+                                    <EditableText
+                                        value={storeName || 'VANTAGE'}
+                                        onSave={(val: string) => handleConfigSave({ name: val })}
+                                        isPreview={isPreview}
+                                        label="Store Name"
+                                    />
                                 </span>
                                 <div className="h-0.5 w-0 group-hover:w-full transition-all duration-500" style={{ backgroundColor: effectivePrimaryColor }} />
                             </div>
@@ -145,10 +171,23 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
                         {navLinks.map((link) => (
                             <Link
                                 key={link.name}
-                                href={link.href}
+                                href={isPreview ? '#' : link.href}
+                                onClick={(e) => {
+                                    if (isPreview && onNavigate) {
+                                        e.preventDefault();
+                                        if (link.key === 'navHome') onNavigate('index');
+                                        else if (link.href.includes('/shop')) onNavigate('shop');
+                                        else if (link.href.includes('#lookbook') || link.href.includes('/story')) onNavigate('about');
+                                    }
+                                }}
                                 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 hover:text-black transition-all relative group"
                             >
-                                {link.name}
+                                <EditableText
+                                    value={link.name}
+                                    onSave={(val: string) => link.key && handleConfigSave({ [link.key]: val })}
+                                    isPreview={isPreview}
+                                    label={link.name}
+                                />
                                 <span className={`absolute -bottom-1 left-0 w-0 h-[2px] transition-all group-hover:w-full ${pathname === link.href ? 'w-full' : ''}`} style={{ backgroundColor: effectivePrimaryColor }} />
                             </Link>
                         ))}
@@ -156,6 +195,18 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 lg:gap-6">
+                        {/* Brand Color Picker in Preview */}
+                        {isPreview && (
+                            <div className="mr-2">
+                                <EditableColor
+                                    value={effectivePrimaryColor}
+                                    onSave={(color: string) => handleConfigSave({ primaryColor: color })}
+                                    isPreview={isPreview}
+                                    label="Brand Color"
+                                />
+                            </div>
+                        )}
+
                         {/* Search Bar - Expanding Masterpiece */}
                         <div className="relative flex items-center">
                             <AnimatePresence>
@@ -203,7 +254,12 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
                             className="hidden lg:flex text-white px-10 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-black/10"
                             style={{ backgroundColor: effectivePrimaryColor }}
                         >
-                            {user ? 'My Account' : 'Sign In'}
+                            <EditableText
+                                value={user ? (config.navAccountLabel || 'My Account') : (config.navSignInLabel || 'Sign In')}
+                                onSave={(val: string) => handleConfigSave({ [user ? 'navAccountLabel' : 'navSignInLabel']: val })}
+                                isPreview={isPreview}
+                                label="Account Button"
+                            />
                         </Link>
 
                         {/* Mobile Menu Toggle */}
@@ -229,7 +285,17 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
                     >
                         {/* Header */}
                         <div className="flex justify-between items-center mb-12">
-                            <Link href={`/store/${subdomain}`} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3">
+                            <Link
+                                href={isPreview ? '#' : `/store/${subdomain}`}
+                                onClick={(e) => {
+                                    setIsMenuOpen(false);
+                                    if (isPreview && onNavigate) {
+                                        e.preventDefault();
+                                        onNavigate('index');
+                                    }
+                                }}
+                                className="flex items-center gap-3"
+                            >
                                 {logo && <img src={logo} alt={storeName} className="h-10 w-auto object-contain" />}
                                 <span className="text-2xl font-black tracking-tighter uppercase text-black">{storeName || 'VANTAGE'}</span>
                             </Link>
@@ -251,11 +317,19 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
                                     transition={{ delay: idx * 0.1, type: "spring", stiffness: 100 }}
                                 >
                                     <Link
-                                        href={link.href}
-                                        onClick={() => setIsMenuOpen(false)}
+                                        href={isPreview ? '#' : link.href}
+                                        onClick={(e) => {
+                                            setIsMenuOpen(false);
+                                            if (isPreview && onNavigate) {
+                                                e.preventDefault();
+                                                if (link.key === 'navHome') onNavigate('index');
+                                                else if (link.href.includes('/shop')) onNavigate('shop');
+                                                else if (link.href.includes('#lookbook') || link.href.includes('/story')) onNavigate('about');
+                                            }
+                                        }}
                                         className="group flex flex-col"
                                     >
-                                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-300 group-hover:text-black transition-colors">0{idx + 1}</span>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-300 group-hover:text-black transition-colors">0{idx + (link.name === 'Home' ? 1 : 3)}</span>
                                         <span className="text-5xl font-black uppercase tracking-tighter text-black mt-1 leading-none">
                                             {link.name}
                                         </span>

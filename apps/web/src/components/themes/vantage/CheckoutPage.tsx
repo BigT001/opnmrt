@@ -12,7 +12,7 @@ import dynamic from 'next/dynamic';
 import api from '@/lib/api';
 import { useCheckoutProfile } from '@/hooks/useCheckoutProfile';
 
-const PaystackPayment = dynamic(() => import('../PaystackPayment'), { ssr: false });
+const BackendPaystack = dynamic(() => import('../PaystackPayment'), { ssr: false });
 
 export function VantageCheckout({ store, subdomain }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
@@ -43,42 +43,26 @@ export function VantageCheckout({ store, subdomain }: CheckoutProps) {
         }
     }, [items.length, params?.subdomain, router, isSuccess]);
 
-    const config = {
-        reference: (new Date()).getTime().toString(),
-        email: formData.email,
-        amount: Math.round(subtotal * 100),
-        publicKey: store.paystackPublicKey || '',
-    };
-
-    const onPaystackSuccess = async (reference: any) => {
+    const handlePaymentSuccess = async (reference: string) => {
         if (!activeOrderId.current) return;
         try {
             await api.post('/payments/verify', {
-                storeId: store.id,
-                reference: reference.reference,
-                orderId: activeOrderId.current
+                reference,
+                orderId: activeOrderId.current,
             });
             setIsSuccess(true);
             clearStoreCart(store.id);
-        } catch (err: any) {
-            setError('Payment verification failed. Please contact support.');
+        } catch {
+            setError('Payment verified but confirmation failed. Please contact support.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const onPaystackClose = () => {
-        setIsSubmitting(false);
-    };
+    const handlePaymentClose = () => setIsSubmitting(false);
 
-    const handleProcessOrder = async (e: React.FormEvent, initializePayment: () => void) => {
+    const handleProcessOrder = async (e: React.FormEvent, initPay: () => Promise<void>) => {
         e.preventDefault();
-
-        if (!store.paystackPublicKey) {
-            setError('Payment gateway is not configured for this store.');
-            return;
-        }
-
         setIsSubmitting(true);
         setError(null);
 
@@ -95,7 +79,7 @@ export function VantageCheckout({ store, subdomain }: CheckoutProps) {
             });
 
             activeOrderId.current = orderRes.data.id;
-            initializePayment();
+            await initPay();
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to initialize order. Please try again.');
             setIsSubmitting(false);
@@ -157,9 +141,16 @@ export function VantageCheckout({ store, subdomain }: CheckoutProps) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
                     <div className="lg:col-span-7">
-                        <PaystackPayment config={config} onSuccess={onPaystackSuccess} onClose={onPaystackClose}>
-                            {(initializePayment) => (
-                                <form onSubmit={(e) => handleProcessOrder(e, initializePayment)} className="space-y-16">
+                        <BackendPaystack
+                            email={formData.email}
+                            amount={subtotal}
+                            orderId={activeOrderId.current || ''}
+                            storeId={store.id}
+                            onSuccess={handlePaymentSuccess}
+                            onClose={handlePaymentClose}
+                        >
+                            {(initPay, payLoading) => (
+                                <form onSubmit={(e) => handleProcessOrder(e, initPay)} className="space-y-16">
                                     <section>
                                         <div className="flex flex-col gap-2 mb-10">
                                             <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em]">Section 01</span>
@@ -247,10 +238,10 @@ export function VantageCheckout({ store, subdomain }: CheckoutProps) {
 
                                     <button
                                         type="submit"
-                                        disabled={isSubmitting}
+                                        disabled={isSubmitting || payLoading}
                                         className="w-full py-8 bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] rounded-full hover:scale-[1.01] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-4 shadow-2xl group"
                                     >
-                                        {isSubmitting ? (
+                                        {(isSubmitting || payLoading) ? (
                                             <div className="flex items-center gap-3">
                                                 <Loader2 className="w-6 h-6 animate-spin" />
                                                 <span>Processing Securely...</span>
@@ -263,7 +254,7 @@ export function VantageCheckout({ store, subdomain }: CheckoutProps) {
                                     </button>
                                 </form>
                             )}
-                        </PaystackPayment>
+                        </BackendPaystack>
                     </div>
 
                     <div className="lg:col-span-5">

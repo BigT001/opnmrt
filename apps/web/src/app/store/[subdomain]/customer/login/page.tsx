@@ -141,7 +141,7 @@ export default function CustomerAuthPage() {
     };
 
     return (
-        <div className="min-h-[90vh] flex items-center justify-center p-6 bg-white">
+        <div className="min-h-[75vh] flex items-center justify-center p-6 bg-white transition-all duration-500">
             <div className="w-full max-w-sm">
                 {/* Simplified Branding */}
                 <div className="flex flex-col items-center mb-12">

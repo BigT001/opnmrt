@@ -12,7 +12,7 @@ import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCheckoutProfile } from '@/hooks/useCheckoutProfile';
 
-const PaystackPayment = dynamic(() => import('../PaystackPayment'), { ssr: false });
+const BackendPaystack = dynamic(() => import('../PaystackPayment'), { ssr: false });
 
 export function AppifyCheckout({ store, subdomain }: CheckoutProps) {
     const { storeItems: items, subtotal, clearStoreCart } = useStoreCart(store.id);
@@ -34,40 +34,25 @@ export function AppifyCheckout({ store, subdomain }: CheckoutProps) {
     const shipping = 0;
     const total = subtotal + shipping;
 
-    const paystackConfig = {
-        reference: (new Date()).getTime().toString(),
-        email: formData.email,
-        amount: Math.round(total * 100),
-        publicKey: store.paystackPublicKey || '',
-    };
-
-    const onPaystackSuccess = async (reference: any) => {
+    const handlePaymentSuccess = async (reference: string) => {
         if (!activeOrderId.current) return;
         try {
             await api.post('/payments/verify', {
-                storeId: store.id,
-                reference: reference.reference,
-                orderId: activeOrderId.current
+                reference,
+                orderId: activeOrderId.current,
             });
             setIsSuccess(true);
             clearStoreCart(store.id);
-        } catch (err: any) {
-            setError('Payment verification failed. Please contact support.');
+        } catch {
+            setError('Payment verified but confirmation failed. Please contact support.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const onPaystackClose = () => {
-        setIsSubmitting(false);
-    };
+    const handlePaymentClose = () => setIsSubmitting(false);
 
-    const handleProcessOrder = async (initializePayment: () => void) => {
-        if (!store.paystackPublicKey) {
-            setError('Payment gateway is not configured.');
-            return;
-        }
-
+    const handleProcessOrder = async (initPay: () => Promise<void>) => {
         if (!formData.email || !formData.phone || !formData.address) {
             setError('Please fill in all required shipping details.');
             return;
@@ -89,7 +74,7 @@ export function AppifyCheckout({ store, subdomain }: CheckoutProps) {
             });
 
             activeOrderId.current = orderRes.data.id;
-            initializePayment();
+            await initPay();
         } catch (err: any) {
             setError(err.response?.data?.message || 'Order failed. Please try again.');
             setIsSubmitting(false);
@@ -242,15 +227,22 @@ export function AppifyCheckout({ store, subdomain }: CheckoutProps) {
                         </div>
                     )}
 
-                    <PaystackPayment config={paystackConfig} onSuccess={onPaystackSuccess} onClose={onPaystackClose}>
-                        {(initializePayment) => (
+                    <BackendPaystack
+                        email={formData.email}
+                        amount={total}
+                        orderId={activeOrderId.current || ''}
+                        storeId={store.id}
+                        onSuccess={handlePaymentSuccess}
+                        onClose={handlePaymentClose}
+                    >
+                        {(initPay, payLoading) => (
                             <button
-                                onClick={() => handleProcessOrder(initializePayment)}
-                                disabled={isSubmitting}
+                                onClick={() => handleProcessOrder(initPay)}
+                                disabled={isSubmitting || payLoading}
                                 className="w-full h-18 bg-orange-500 hover:bg-orange-600 font-bold text-white rounded-[24px] flex items-center justify-center gap-3 text-[14px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-orange-500/30 active:scale-[0.98] disabled:opacity-50 relative z-10"
                             >
                                 <AnimatePresence mode="wait">
-                                    {isSubmitting ? (
+                                    {(isSubmitting || payLoading) ? (
                                         <motion.div
                                             key="loading"
                                             initial={{ opacity: 0, y: 10 }}
@@ -275,7 +267,7 @@ export function AppifyCheckout({ store, subdomain }: CheckoutProps) {
                                 </AnimatePresence>
                             </button>
                         )}
-                    </PaystackPayment>
+                    </BackendPaystack>
 
                     <p className="text-[9px] text-white/20 text-center uppercase font-black tracking-[0.3em] flex items-center justify-center gap-2 relative z-10">
                         <Lock className="w-3 h-3" /> Secure Paystack Gateway
