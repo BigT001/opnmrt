@@ -1,5 +1,4 @@
 import 'dotenv/config'; // RESTART_V4: 2026-02-14 11:42
-import 'tsconfig-paths/register';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as dns from 'dns';

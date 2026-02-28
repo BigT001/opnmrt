@@ -19,12 +19,7 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false,
-    "paths": {
-      "@opnmart/shared": [
-        "../../packages/shared/src/index.ts"
-      ]
-    }
+    "noFallthroughCasesInSwitch": false
   },
   "include": [
     "src/**/*",
