@@ -18,8 +18,9 @@ export const useSocket = (userId: string | undefined, storeId?: string) => {
         }
 
         // Extract origin to avoid connecting to /api namespace
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000';
-        const socketUrl = new URL(apiUrl).origin;
+        // Use explicit Socket URL or derive from API URL origin
+        const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL ||
+            (process.env.NEXT_PUBLIC_API_URL ? new URL(process.env.NEXT_PUBLIC_API_URL).origin : 'http://127.0.0.1:4000');
 
         console.log(`[SOCKET] Connecting to ${socketUrl} for user: ${userId}`);
 
