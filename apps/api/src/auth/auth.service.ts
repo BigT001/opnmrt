@@ -38,7 +38,7 @@ export class AuthService {
     try {
       // Send Email via Resend
       const { data, error } = await this.resend.emails.send({
-        from: 'OPNMRT <onboarding@opnmrt.com>',
+        from: 'OPNMRT <onboarding@send.opnmrt.com>',
         to: [normalizedEmail],
         subject: 'Your OPNMRT Verification Code',
         html: `
