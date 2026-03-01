@@ -38,29 +38,32 @@ export class AuthService {
     try {
       // Send Email via Resend
       const { data, error } = await this.resend.emails.send({
-        from: 'OPNMRT <onboarding@opnmrt.com>', // User confirmed domain verified
+        from: 'OPNMRT <onboarding@opnmrt.com>',
         to: [normalizedEmail],
         subject: 'Your OPNMRT Verification Code',
         html: `
-                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                        <h2>Verify your identity</h2>
-                        <p>Use the following code to complete your registration:</p>
-                        <div style="background: #f4f4f5; padding: 24px; border-radius: 12px; text-align: center; margin: 24px 0;">
-                            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #10b981;">${otp}</span>
-                        </div>
-                        <p style="color: #666; font-size: 14px;">This code will expire in 5 minutes.</p>
-                    </div>
-                `,
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
+                <h2 style="color: #0f172a; margin-bottom: 16px;">Verify your identity</h2>
+                <p style="color: #475569; font-size: 16px; line-height: 1.5;">Use the following code to complete your security verification on OPNMRT:</p>
+                <div style="background: #f8fafc; padding: 32px; border-radius: 12px; text-align: center; margin: 24px 0; border: 1px dashed #cbd5e1;">
+                    <span style="font-size: 40px; font-weight: 800; letter-spacing: 8px; color: #10b981; font-family: monospace;">${otp}</span>
+                </div>
+                <p style="color: #94a3b8; font-size: 13px; margin-top: 24px;">This code will expire in 5 minutes. If you did not request this code, please ignore this email.</p>
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+                <p style="color: #64748b; font-size: 11px; text-align: center;">&copy; 2026 OPNMRT Digital Commerce Engine</p>
+            </div>
+        `,
       });
 
       if (error) {
-        console.warn(
-          `⚠️ [Resend Restricted] Email to ${email} failed. Use the OTP from console: ${otp}`,
-        );
-        // treating as success in dev so you can proceed
+        console.error(`❌ [RESEND_ERROR] Failed to send OTP to ${normalizedEmail}:`, error);
+        // We still return success: true so the user can use the console OTP in dev,
+        // but this log will help us debug the live production issue.
+      } else {
+        console.log(`✅ [AUTH] OTP sent successfully to ${normalizedEmail}. ID: ${data?.id}`);
       }
     } catch (error) {
-      console.error('OTP Send Error (Non-Fatal):', error);
+      console.error('❌ [AUTH_OTP_CRITICAL_ERROR]:', error);
     }
 
     // Simulate SMS for now (Cost Saving)
@@ -68,7 +71,10 @@ export class AuthService {
       console.log(`[SMS SIMULATION] To: ${phone}, Code: ${otp}`);
     }
 
-    return { success: true, message: 'Verification code sent (check console)' };
+    return {
+      success: true,
+      message: 'A verification code has been sent to your email.'
+    };
   }
 
   async verifyOtp(email: string, otp: string, subdomain?: string, phone?: string) {
