@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, Users, ShoppingCart, Zap, TrendingUp } from 'lucide-react';
+import { Logo } from '@/components/ui/Logo';
 
 export function DashboardMockup() {
     return (
@@ -10,7 +10,7 @@ export function DashboardMockup() {
             {/* Sidebar Overlay */}
             <div className="flex h-full">
                 <div className="w-16 border-r border-white/5 bg-slate-950 flex flex-col items-center py-6 space-y-8">
-                    <div className="w-8 h-8 bg-emerald-500 rounded-lg" />
+                    <Logo showText={false} size="sm" />
                     <div className="w-8 h-8 bg-white/5 rounded-lg" />
                     <div className="w-8 h-8 bg-white/5 rounded-lg" />
                     <div className="w-8 h-8 bg-white/5 rounded-lg" />

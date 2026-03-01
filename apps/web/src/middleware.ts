@@ -13,17 +13,19 @@ export async function middleware(request: NextRequest) {
     }
 
     // Determine if we are on a subdomain
-    const baseDomain = process.env.NEXT_PUBLIC_APP_BASE_DOMAIN || 'localhost:3000';
+    const rawHostname = hostname || '';
+    const cleanHostname = rawHostname.toLowerCase().split(':')[0]; // Force lowercase and strip port
+    const baseDomain = (process.env.NEXT_PUBLIC_APP_BASE_DOMAIN || 'localhost:3000').toLowerCase().split(':')[0];
 
-    if (hostname && hostname !== baseDomain) {
-        const subdomain = hostname.replace(`.${baseDomain}`, '');
+    // We only rewrite if the hostname ends with .baseDomain and is not just baseDomain or www.baseDomain
+    if (cleanHostname !== baseDomain && cleanHostname.endsWith(`.${baseDomain}`)) {
+        const subdomain = cleanHostname.replace(`.${baseDomain}`, '');
 
-        // Rewrite to store path
-        if (subdomain && subdomain !== hostname) {
-            console.log(`[MIDDLEWARE] Rewriting ${hostname}${path} to /store/${subdomain}${path}`);
-            return NextResponse.rewrite(
-                new URL(`/store/${subdomain}${path}${searchParams ? `?${searchParams}` : ''}`, request.url)
-            );
+        // Skip 'www' and empty subdomains
+        if (subdomain && subdomain !== 'www') {
+            const rewriteUrl = `/store/${subdomain}${path}${searchParams ? `?${searchParams}` : ''}`;
+            console.log(`[MIDDLEWARE] Subdomain rewrite: ${cleanHostname}${path} -> ${rewriteUrl}`);
+            return NextResponse.rewrite(new URL(rewriteUrl, request.url));
         }
     }
 

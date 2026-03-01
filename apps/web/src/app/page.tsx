@@ -29,7 +29,7 @@ export default function LandingPage() {
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">V1.0 Engine Live</span>
             </div>
 
-            <h1 className="text-6xl md:text-8xl font-black text-foreground tracking-tight leading-[0.9] mb-8">
+            <h1 className="text-5xl sm:text-6xl md:text-8xl font-black text-foreground tracking-tight leading-[0.9] mb-8 px-4">
               Build your <span className="text-emerald-500 emerald-text-glow italic">Digital Legacy</span> in minutes.
             </h1>
 

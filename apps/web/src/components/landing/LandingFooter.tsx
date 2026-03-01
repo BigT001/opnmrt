@@ -2,17 +2,15 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { Logo } from '@/components/ui/Logo';
 
 export function LandingFooter() {
     return (
         <footer className="border-t border-border py-20 px-6 bg-background relative z-10 transition-colors duration-500">
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-20">
                 <div className="md:col-span-2">
-                    <div className="flex items-center space-x-2 mb-8">
-                        <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-                            <span className="text-white dark:text-[#030712] font-black italic">O</span>
-                        </div>
-                        <span className="text-lg font-black tracking-tighter text-foreground uppercase">OPNMRT</span>
+                    <div className="mb-8">
+                        <Logo size="md" />
                     </div>
                     <p className="text-muted-foreground font-medium max-w-sm mb-10 leading-relaxed uppercase text-xs tracking-wider">
                         Empowering the next generation of digital merchants with independent stores and AI intelligence.

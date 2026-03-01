@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/useAuthStore';
 import { LandingBackground } from '@/components/landing/LandingBackground';
+import { Logo } from '@/components/ui/Logo';
 import { Loader2, ShieldCheck, Smartphone, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { NIGERIAN_STATES, GHANA_REGIONS, KENYA_COUNTIES, SOUTH_AFRICA_PROVINCES } from '@/lib/nigeria-data';
 
@@ -156,11 +157,8 @@ export default function RegisterPage() {
                 <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse" />
 
                 <div className="relative z-10 max-w-md">
-                    <Link href="/" className="flex items-center space-x-2 mb-12">
-                        <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                            <span className="text-[#030712] font-black italic text-xl">O</span>
-                        </div>
-                        <span className="text-xl font-black tracking-tighter text-white uppercase italic">OPNMRT</span>
+                    <Link href="/" className="mb-12 block">
+                        <Logo size="lg" />
                     </Link>
 
                     <h1 className="text-5xl font-black leading-[0.9] text-white mb-8 tracking-tighter">

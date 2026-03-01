@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/store/useAuthStore';
 import { LandingBackground } from '@/components/landing/LandingBackground';
+import { Logo } from '@/components/ui/Logo';
 
 export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
@@ -52,11 +53,8 @@ export default function LoginPage() {
 
             <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
                 <div className="text-center mb-12">
-                    <Link href="/" className="flex items-center justify-center space-x-2 mb-8">
-                        <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                            <span className="text-[#030712] font-black italic text-2xl">O</span>
-                        </div>
-                        <span className="text-2xl font-black tracking-tighter text-white">OPNMRT</span>
+                    <Link href="/" className="mb-12 flex justify-center">
+                        <Logo size="lg" />
                     </Link>
                     <h2 className="text-4xl font-black text-white tracking-tighter uppercase">Merchant Portal</h2>
                     <p className="mt-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
