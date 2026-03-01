@@ -38,27 +38,27 @@ export class AuthService {
     try {
       // Send Email via Resend
       const { data, error } = await this.resend.emails.send({
-        from: 'OPNMRT <onboarding@send.opnmrt.com>',
+        from: 'OPNMRT <onboarding@opnmrt.com>',
         to: [normalizedEmail],
         subject: 'Your OPNMRT Verification Code',
         html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
-                <h2 style="color: #0f172a; margin-bottom: 16px;">Verify your identity</h2>
-                <p style="color: #475569; font-size: 16px; line-height: 1.5;">Use the following code to complete your security verification on OPNMRT:</p>
-                <div style="background: #f8fafc; padding: 32px; border-radius: 12px; text-align: center; margin: 24px 0; border: 1px dashed #cbd5e1;">
-                    <span style="font-size: 40px; font-weight: 800; letter-spacing: 8px; color: #10b981; font-family: monospace;">${otp}</span>
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #030712; border: 1px solid #1e293b; border-radius: 20px;">
+                <h2 style="color: #ffffff; margin-bottom: 24px; font-weight: 900; letter-spacing: -0.05em; text-align: center;">SECURITY CHECK</h2>
+                <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; text-align: center;">Please use the following code to authorize your identity on OPNMRT:</p>
+                <div style="background: #0f172a; padding: 40px; border-radius: 16px; text-align: center; margin: 32px 0; border: 1px solid #10b981;">
+                    <span style="font-size: 48px; font-weight: 900; letter-spacing: 12px; color: #10b981; font-family: monospace;">${otp}</span>
                 </div>
-                <p style="color: #94a3b8; font-size: 13px; margin-top: 24px;">This code will expire in 5 minutes. If you did not request this code, please ignore this email.</p>
-                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-                <p style="color: #64748b; font-size: 11px; text-align: center;">&copy; 2026 OPNMRT Digital Commerce Engine</p>
+                <p style="color: #475569; font-size: 12px; text-align: center; margin-top: 32px; font-style: italic;">This security code will expire in 5 minutes.</p>
+                <div style="border-top: 1px solid #1e293b; margin-top: 32px; padding-top: 24px; text-align: center;">
+                    <p style="color: #334155; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;">OPNMRT Digital Commerce Engine</p>
+                </div>
             </div>
         `,
       });
 
       if (error) {
-        console.error(`❌ [RESEND_ERROR] Failed to send OTP to ${normalizedEmail}:`, error);
-        // We still return success: true so the user can use the console OTP in dev,
-        // but this log will help us debug the live production issue.
+        console.error(`❌ [RESEND_ERROR] StatusCode: ${error.name} | Message: ${error.message}`);
+        console.warn(`⚠️ [AUTH_LOG] Resend is reporting domain issues for ${normalizedEmail}. Check if SPF/MX records for opnmrt.com are fully ready.`);
       } else {
         console.log(`✅ [AUTH] OTP sent successfully to ${normalizedEmail}. ID: ${data?.id}`);
       }
