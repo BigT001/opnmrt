@@ -66,6 +66,13 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  alternates: {
+    canonical: 'https://opnmrt.com',
+    languages: {
+      'en-US': 'https://opnmrt.com',
+    },
+  },
+  manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
     shortcut: '/shortcut-icon.png',
