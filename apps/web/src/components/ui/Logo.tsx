@@ -25,7 +25,11 @@ export function Logo({ className = '', showText = true, size = 'md' }: LogoProps
     };
 
     return (
-        <div className={`flex items-center space-x-2.5 group cursor-pointer ${className}`}>
+        <div
+            aria-label="OPNMRT (OpenMart) - Multi-Tenant AI Commerce Engine"
+            title="OPNMRT (OpenMart)"
+            className={`flex items-center space-x-2.5 group cursor-pointer ${className}`}
+        >
             <div className={`relative ${iconSizes[size]} flex items-center justify-center`}>
                 {/* Outer decorative ring */}
                 <motion.div

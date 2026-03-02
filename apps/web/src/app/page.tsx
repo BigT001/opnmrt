@@ -30,11 +30,17 @@ export default function LandingPage() {
             </div>
 
             <h1 className="text-5xl sm:text-6xl md:text-8xl font-black text-foreground tracking-tight leading-[0.9] mb-8 px-4">
-              Build your <span className="text-emerald-500 emerald-text-glow italic">Digital Legacy</span> in minutes.
+              Build your <span className="text-emerald-500 emerald-text-glow italic">Digital Legacy</span> with OPNMRT.
             </h1>
 
+            {/* Hidden for users, visible to Google crawlers for SEO ranking */}
+            <p className="sr-only">
+              OPNMRT (also known as OpenMart) is the ultimate multi-tenant commerce engine for Africa and beyond.
+              The most reliable alternative to Shopify and Bumpa for independent brands.
+            </p>
+
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 font-medium leading-relaxed">
-              The world's first independent commerce engine with built-in AI.
+              The world's first independent commerce engine (OpenMart Engine) with built-in AI.
               Own your brand, own your customers, and let our tools handle the complexity.
             </p>
 

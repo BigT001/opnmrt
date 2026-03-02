@@ -1,35 +1,19 @@
 import { MetadataRoute } from 'next';
 
-async function getStores() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api';
-    try {
-        const res = await fetch(`${apiUrl}/stores`, { next: { revalidate: 3600 } });
-        if (!res.ok) return [];
-        return await res.json();
-    } catch (err) {
-        console.error('Sitemap: Failed to fetch stores', err);
-        return [];
-    }
-}
+export default function sitemap(): MetadataRoute.Sitemap {
+    const baseUrl = 'https://opnmrt.com';
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const stores = await getStores();
+    // List main public routes here
+    const routes = [
+        '',
+        '/register',
+        '/login',
+    ];
 
-    // Base URLs
-    const routes = ['', '/login', '/register'].map((route) => ({
-        url: `https://opnmart.com${route}`,
+    return routes.map((route) => ({
+        url: `${baseUrl}${route}`,
         lastModified: new Date(),
-        changeFrequency: 'daily' as const,
-        priority: 1.0,
+        changeFrequency: 'weekly',
+        priority: route === '' ? 1 : 0.8,
     }));
-
-    // Dynamic Store URLs (including all brand variations like opnmrt)
-    const storeRoutes = stores.map((store: any) => ({
-        url: `https://${store.subdomain}.opnmart.com`,
-        lastModified: new Date(store.updatedAt),
-        changeFrequency: 'weekly' as const,
-        priority: 0.8,
-    }));
-
-    return [...routes, ...storeRoutes];
 }

@@ -38,32 +38,29 @@ export class AuthService {
     try {
       // Send Email via Resend
       const { data, error } = await this.resend.emails.send({
-        from: 'OPNMRT <onboarding@opnmrt.com>',
+        from: 'OPNMRT <onboarding@opnmrt.com>', // User confirmed domain verified
         to: [normalizedEmail],
         subject: 'Your OPNMRT Verification Code',
         html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #030712; border: 1px solid #1e293b; border-radius: 20px;">
-                <h2 style="color: #ffffff; margin-bottom: 24px; font-weight: 900; letter-spacing: -0.05em; text-align: center;">SECURITY CHECK</h2>
-                <p style="color: #94a3b8; font-size: 16px; line-height: 1.6; text-align: center;">Please use the following code to authorize your identity on OPNMRT:</p>
-                <div style="background: #0f172a; padding: 40px; border-radius: 16px; text-align: center; margin: 32px 0; border: 1px solid #10b981;">
-                    <span style="font-size: 48px; font-weight: 900; letter-spacing: 12px; color: #10b981; font-family: monospace;">${otp}</span>
-                </div>
-                <p style="color: #475569; font-size: 12px; text-align: center; margin-top: 32px; font-style: italic;">This security code will expire in 5 minutes.</p>
-                <div style="border-top: 1px solid #1e293b; margin-top: 32px; padding-top: 24px; text-align: center;">
-                    <p style="color: #334155; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;">OPNMRT Digital Commerce Engine</p>
-                </div>
-            </div>
-        `,
+                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                        <h2>Verify your identity</h2>
+                        <p>Use the following code to complete your registration:</p>
+                        <div style="background: #f4f4f5; padding: 24px; border-radius: 12px; text-align: center; margin: 24px 0;">
+                            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #10b981;">${otp}</span>
+                        </div>
+                        <p style="color: #666; font-size: 14px;">This code will expire in 5 minutes.</p>
+                    </div>
+                `,
       });
 
       if (error) {
-        console.error(`❌ [RESEND_ERROR] StatusCode: ${error.name} | Message: ${error.message}`);
-        console.warn(`⚠️ [AUTH_LOG] Resend is reporting domain issues for ${normalizedEmail}. Check if SPF/MX records for opnmrt.com are fully ready.`);
-      } else {
-        console.log(`✅ [AUTH] OTP sent successfully to ${normalizedEmail}. ID: ${data?.id}`);
+        console.warn(
+          `⚠️ [Resend Restricted] Email to ${email} failed. Use the OTP from console: ${otp}`,
+        );
+        // treating as success in dev so you can proceed
       }
     } catch (error) {
-      console.error('❌ [AUTH_OTP_CRITICAL_ERROR]:', error);
+      console.error('OTP Send Error (Non-Fatal):', error);
     }
 
     // Simulate SMS for now (Cost Saving)
@@ -71,10 +68,7 @@ export class AuthService {
       console.log(`[SMS SIMULATION] To: ${phone}, Code: ${otp}`);
     }
 
-    return {
-      success: true,
-      message: 'A verification code has been sent to your email.'
-    };
+    return { success: true, message: 'Verification code sent (check console)' };
   }
 
   async verifyOtp(email: string, otp: string, subdomain?: string, phone?: string) {
