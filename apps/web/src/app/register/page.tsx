@@ -17,7 +17,7 @@ import { NIGERIAN_STATES, GHANA_REGIONS, KENYA_COUNTIES, SOUTH_AFRICA_PROVINCES 
 const ExtendedRegisterSchema = z.object({
     name: z.string().refine(val => val.trim().split(/\s+/).length >= 2, "Please enter your full name (first and last)"),
     email: z.string().email('Invalid email address'),
-    phone: z.string().min(10, 'Valid phone number required'),
+    phone: z.string().min(8, 'Phone number too short'),
     password: z.string().min(8, 'Password must be at least 8 characters')
         .regex(/[A-Z]/, 'Must contain a capital letter')
         .regex(/[0-9]/, 'Must contain a number')
@@ -34,6 +34,16 @@ const ExtendedRegisterSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
+}).refine((data) => {
+    const len = data.phone.replace(/\D/g, '').length;
+    if (data.country === 'Nigeria') return len >= 10 && len <= 11;
+    if (data.country === 'Ghana') return len >= 9 && len <= 10;
+    if (data.country === 'Kenya') return len >= 9 && len <= 10;
+    if (data.country === 'South Africa') return len >= 9 && len <= 10;
+    return true;
+}, {
+    message: "Invalid phone number length for your country",
+    path: ["phone"],
 });
 
 type FormData = z.infer<typeof ExtendedRegisterSchema>;
@@ -241,7 +251,9 @@ export default function RegisterPage() {
                                                 <input
                                                     {...register('phone')}
                                                     type="tel"
-                                                    placeholder="800 000 0000"
+                                                    maxLength={selectedCountry === 'Nigeria' ? 11 : 10}
+                                                    onInput={(e: any) => e.target.value = e.target.value.replace(/\D/g, '')}
+                                                    placeholder={selectedCountry === 'Nigeria' ? "803 000 0000" : "20 000 0000"}
                                                     className="w-full h-14 px-5 bg-slate-900 border border-slate-800 rounded-2xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-white font-bold transition-all outline-none placeholder:text-slate-700"
                                                 />
                                             </div>
