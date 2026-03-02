@@ -80,7 +80,7 @@ export default async function StorefrontPage({
                         '@type': 'Store',
                         name: store.name,
                         description: store.description,
-                        url: `https://${subdomain}.opnmart.com`,
+                        url: `https://${subdomain}.opnmrt.com`,
                         image: store.logo,
                     }),
                 }}

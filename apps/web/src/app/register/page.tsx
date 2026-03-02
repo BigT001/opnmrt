@@ -451,7 +451,7 @@ export default function RegisterPage() {
                                                 placeholder="samstorez"
                                                 className="flex-1 h-12 px-4 bg-transparent outline-none text-white font-bold text-sm"
                                             />
-                                            <span className="px-4 text-slate-500 font-black text-[9px] uppercase tracking-widest bg-slate-800/50 h-12 flex items-center">.opnmart.com</span>
+                                            <span className="px-4 text-slate-500 font-black text-[9px] uppercase tracking-widest bg-slate-800/50 h-12 flex items-center">.opnmrt.com</span>
                                         </div>
                                         {errors.subdomain && <p className="text-[10px] text-rose-500 mt-1 font-bold uppercase ml-1">{errors.subdomain.message}</p>}
                                     </div>

@@ -8,10 +8,10 @@ async function main() {
 
     // 1. Create Admin
     const admin = await prisma.user.upsert({
-        where: { email: 'admin@opnmart.com' },
+        where: { email: 'admin@opnmrt.com' },
         update: {},
         create: {
-            email: 'admin@opnmart.com',
+            email: 'admin@opnmrt.com',
             password,
             name: 'System Admin',
             role: 'ADMIN',
@@ -20,10 +20,10 @@ async function main() {
 
     // 2. Create Seller
     const seller = await prisma.user.upsert({
-        where: { email: 'seller@opnmart.com' },
+        where: { email: 'seller@opnmrt.com' },
         update: {},
         create: {
-            email: 'seller@opnmart.com',
+            email: 'seller@opnmrt.com',
             password,
             name: 'Demo Merchant',
             role: 'SELLER',
@@ -59,3 +59,4 @@ main()
     .finally(async () => {
         await prisma.$disconnect();
     });
+

@@ -11,8 +11,8 @@ export default function AdminSettings() {
                     <h3 className="text-lg font-black text-white tracking-tight mb-8">General Configuration</h3>
                     <div className="space-y-6">
                         <SettingsField label="Platform Name" value="Open Mart" />
-                        <SettingsField label="Support Email" value="support@opnmart.com" />
-                        <SettingsField label="Base Domain" value="opnmart.com" />
+                        <SettingsField label="Support Email" value="support@opnmrt.com" />
+                        <SettingsField label="Base Domain" value="opnmrt.com" />
                         <div className="pt-4 flex items-center justify-between">
                             <div>
                                 <h5 className="text-xs font-bold text-slate-200">Maintenance Mode</h5>
@@ -76,3 +76,4 @@ function SettingsField({ label, value, action = 'Edit' }: any) {
         </div>
     );
 }
+

@@ -29,8 +29,8 @@ export function ProductCard({ product, storeId, subdomain }: ProductCardProps) {
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const hostname = window.location.hostname;
-            // Check if we are on a subdomain (e.g., samstar.localhost or samstar.opnmart.com)
-            const isSubdomain = hostname.includes(subdomain) && (hostname.includes('localhost') || hostname.includes('opnmart.com'));
+            // Check if we are on a subdomain (e.g., samstar.localhost or samstar.opnmrt.com)
+            const isSubdomain = hostname.includes(subdomain) && (hostname.includes('localhost') || hostname.includes('opnmrt.com'));
 
             if (isSubdomain) {
                 // If on subdomain, use direct path
@@ -92,3 +92,4 @@ export function ProductCard({ product, storeId, subdomain }: ProductCardProps) {
         </Link>
     );
 }
+

@@ -10,7 +10,7 @@ export default function AdminPayments() {
                 <TierCard
                     name="Free Tier"
                     price="$0"
-                    features={['Up to 10 products', 'Basic themes', 'opnmart.com subdomain', '2% transaction fee']}
+                    features={['Up to 10 products', 'Basic themes', 'opnmrt.com subdomain', '2% transaction fee']}
                     activeSellers={120}
                     color="slate"
                 />
@@ -102,3 +102,4 @@ function GatewayCard({ name, status, icon, lastSync }: any) {
         </div>
     );
 }
+

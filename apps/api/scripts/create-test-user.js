@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
-    const email = 'test@opnmart.com';
+    const email = 'test@opnmrt.com';
     const password = 'Password123!';
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -39,3 +39,4 @@ async function main() {
 main()
     .catch(e => console.error(e))
     .finally(async () => await prisma.$disconnect());
+

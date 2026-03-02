@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: { params: Promise<{ subdomain
         };
     }
 
-    const shareUrl = `https://${subdomain}.opnmart.com/products/${slug}`;
+    const shareUrl = `https://${subdomain}.opnmrt.com/products/${slug}`;
     const productImg = product.images?.[0] || 'https://via.placeholder.com/1200x630';
 
     return {
@@ -120,7 +120,7 @@ export default async function ProductPage({
         },
         offers: {
             '@type': 'Offer',
-            url: `https://${subdomain}.opnmart.com/products/${slug}`,
+            url: `https://${subdomain}.opnmrt.com/products/${slug}`,
             priceCurrency: 'NGN',
             price: product.price,
             availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',

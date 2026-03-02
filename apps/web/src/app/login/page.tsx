@@ -82,7 +82,7 @@ export default function LoginPage() {
                                 label="Access Key (Email)"
                                 register={register('email')}
                                 error={errors.email?.message}
-                                placeholder="commander@opnmart.com"
+                                placeholder="commander@opnmrt.com"
                             />
 
                             <div className="relative">
