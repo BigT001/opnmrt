@@ -201,11 +201,10 @@ export default function RegisterPage() {
                                     <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 mb-2">
                                         <div className="flex items-center gap-2 mb-1">
                                             <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none">Legal Identity Notice</p>
+                                            <p className="text-[10px] text-emerald-100/70 font-medium leading-normal italic">
+                                                Please use your <strong className="text-white">Legal Full Name</strong> as it appears on your NIN or BVN.
+                                            </p>
                                         </div>
-                                        <p className="text-[10px] text-emerald-100/70 font-medium leading-normal italic">
-                                            Please use your <strong className="text-white">Legal Full Name</strong> as it appears on your NIN or BVN. This is required for secure payment settlements.
-                                        </p>
                                     </div>
                                     <Input
                                         label="Legal Full Name"
@@ -220,13 +219,6 @@ export default function RegisterPage() {
                                         type="email"
                                         placeholder="samuel@example.com"
                                     />
-                                    <Input
-                                        label="Phone Number"
-                                        register={register('phone')}
-                                        error={errors.phone?.message}
-                                        type="tel"
-                                        placeholder="+234 800 000 0000"
-                                    />
                                     <Select
                                         label="Operating Country"
                                         name="country"
@@ -236,6 +228,26 @@ export default function RegisterPage() {
                                         placeholder="Select your business region"
                                         options={countries}
                                     />
+                                    <div className="relative">
+                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Phone Number</label>
+                                        <div className="flex gap-2">
+                                            <div className="w-20 h-14 flex items-center justify-center bg-slate-900 border border-slate-800 rounded-2xl text-white font-black text-sm">
+                                                {selectedCountry === 'Nigeria' ? '+234' :
+                                                    selectedCountry === 'Ghana' ? '+233' :
+                                                        selectedCountry === 'Kenya' ? '+254' :
+                                                            selectedCountry === 'South Africa' ? '+27' : '+...'}
+                                            </div>
+                                            <div className="flex-1">
+                                                <input
+                                                    {...register('phone')}
+                                                    type="tel"
+                                                    placeholder="800 000 0000"
+                                                    className="w-full h-14 px-5 bg-slate-900 border border-slate-800 rounded-2xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-white font-bold transition-all outline-none placeholder:text-slate-700"
+                                                />
+                                            </div>
+                                        </div>
+                                        {errors.phone && <p className="text-[10px] text-rose-500 mt-2 font-bold uppercase ml-1">{errors.phone.message}</p>}
+                                    </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <Input
