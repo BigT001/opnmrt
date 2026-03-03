@@ -149,17 +149,11 @@ export default function SellerLayout({
     return (
         <div className="h-screen bg-white flex overflow-hidden font-sans relative">
             <AnimatePresence>
-                {isNotificationsOpen && (
-                    <div className="fixed inset-0 z-[2000] flex items-start justify-center pt-24 px-4 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsNotificationsOpen(false)}>
-                        <div onClick={e => e.stopPropagation()}>
-                            <NotificationDropdown
-                                storeId={store?.id || ''}
-                                isOpen={isNotificationsOpen}
-                                onClose={() => setIsNotificationsOpen(false)}
-                            />
-                        </div>
-                    </div>
-                )}
+                <NotificationDropdown
+                    storeId={store?.id || ''}
+                    isOpen={isNotificationsOpen}
+                    onClose={() => setIsNotificationsOpen(false)}
+                />
             </AnimatePresence>
 
             {/* Mobile Menu Overlay */}
@@ -291,16 +285,27 @@ export default function SellerLayout({
                         onSearchClick={() => setIsSearchOpen(true)}
                     />
                 ) : (
-                    /* Minimal header for mobile only to allow menu access on other pages */
-                    <header className="lg:hidden h-14 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center px-4 sticky top-0 z-[100]">
-                        <button
-                            onClick={() => setIsMobileMenuOpen(true)}
-                            className="p-2 hover:bg-slate-50 rounded-xl text-slate-600 transition-all"
-                        >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
+                    /* Sub-page header for mobile */
+                    <header className="lg:hidden h-16 bg-white/80 backdrop-blur-md border-b border-slate-50 flex items-center justify-between px-6 sticky top-0 z-[100]">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setIsMobileMenuOpen(true)}
+                                className="w-10 h-10 bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all border border-slate-100 active:scale-95"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
+                            <h2 className="text-sm font-black text-slate-900 uppercase tracking-tighter">
+                                {pathname.split('/').pop()?.replace(/-/g, ' ')}
+                            </h2>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setIsNotificationsOpen(true)} className="w-10 h-10 bg-white border border-slate-100 flex items-center justify-center rounded-xl relative shadow-sm">
+                                <span className="text-base">🔔</span>
+                                {notifications.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white" />}
+                            </button>
+                        </div>
                     </header>
                 )}
 
@@ -311,7 +316,7 @@ export default function SellerLayout({
                 />
 
                 <main className="flex-1 overflow-y-auto bg-slate-50/20 no-scrollbar">
-                    <div className="max-w-[1600px] mx-auto p-6 md:p-8 lg:p-10">
+                    <div className="max-w-[1600px] mx-auto p-4 md:p-8 lg:p-10">
                         {children}
                     </div>
                 </main>

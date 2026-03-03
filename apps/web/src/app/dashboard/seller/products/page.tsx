@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Plus, X, Upload, Loader2, Package, Sparkles, Wand2, ArrowRight } from 'lucide-react';
+import { Plus, X, Upload, Loader2, Package, Sparkles, Wand2, ArrowRight, Download, ChevronDown, Search, Filter } from 'lucide-react';
 import api from '@/lib/api';
 
 interface Product {
@@ -27,6 +27,7 @@ export default function ProductsPage() {
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Parse store categories from settings
     const storeCategories: string[] = React.useMemo(() => {
@@ -80,142 +81,223 @@ export default function ProductsPage() {
         fetchProducts();
     }, []);
 
+    const filteredProducts = products.filter(p => {
+        const query = (searchQuery || '').toLowerCase();
+        return p.name.toLowerCase().includes(query) ||
+            p.category?.toLowerCase().includes(query);
+    });
+
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-end">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Products</h1>
-                    <p className="text-slate-500 mt-1">Manage your store catalog and inventory</p>
+            {/* Header Section */}
+            <div className="hidden lg:flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                <div className="flex flex-col md:flex-row md:items-center gap-8 flex-1">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-slate-200">
+                            <Package className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h1 className="text-4xl font-black text-slate-900 tracking-tight uppercase">Products</h1>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em] mt-2 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                Master Catalog
+                            </p>
+                        </div>
+                    </div>
+                    {/* Desktop Global Search */}
+                    <div className="max-w-md w-full relative group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Find products by name or category..."
+                            value={searchQuery || ''}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full h-12 bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-4 text-sm font-bold placeholder:text-slate-300 focus:outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-500/5 transition-all text-slate-900"
+                        />
+                    </div>
                 </div>
-                <div className="flex space-x-3">
+
+                <div className="flex items-center gap-3">
                     <button
                         onClick={handleExportCSV}
-                        className="px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2"
+                        className="flex-1 sm:flex-none h-11 px-6 rounded-2xl bg-white border border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 hover:border-slate-200 transition-all flex items-center justify-center gap-2"
                     >
-                        Export CSV
+                        <Download className="w-4 h-4" />
+                        <span className="hidden sm:inline">Export CSV</span>
+                        <span className="sm:hidden">CSV</span>
                     </button>
                     <button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold hover:brightness-110 transition-all shadow-lg shadow-emerald-900/10 flex items-center gap-2"
+                        className="flex-[2] sm:flex-none h-11 px-8 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 active:scale-95 flex items-center justify-center gap-2"
                     >
                         <Plus className="w-4 h-4" />
-                        Add New Product
+                        <span>Add New Product</span>
                     </button>
                 </div>
             </div>
 
-            {/* Quick Tip for Non-Technical Users */}
-            <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm flex items-start gap-4">
-                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shrink-0">
-                    <Sparkles className="w-5 h-5" />
+            {/* Mobile Actions Header - Clean, non-overlapping section */}
+            <div className="lg:hidden flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Products</h1>
+                    <button
+                        onClick={handleExportCSV}
+                        className="w-10 h-10 bg-white border border-slate-100 text-slate-600 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-sm"
+                    >
+                        <Download className="w-4 h-4" />
+                    </button>
                 </div>
-                <div>
-                    <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-1">Quick Tip: Your Store Catalog</p>
-                    <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-                        This is where you list what you're selling. Add clear photos and detailed descriptions to help customers find your items on Google. Use our <strong className="text-primary uppercase tracking-tighter">BigT AI Agent</strong> to write professional descriptions automatically!
-                    </p>
-                </div>
+                <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="w-full h-14 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/10 flex items-center justify-center gap-3 active:scale-95 transition-all"
+                >
+                    <Plus className="w-5 h-5" />
+                    Record New Item
+                </button>
             </div>
 
             {/* Product Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <ProductStatCard label="Total Products" value={products.length.toString()} />
-                <ProductStatCard label="Live on Store" value={products.length.toString()} color="text-emerald-600" />
-                <ProductStatCard label="Low Stock" value={products.filter(p => p.stock < 10).length.toString()} color="text-amber-600" />
+            <div className="grid grid-cols-3 gap-2 md:gap-6">
+                <ProductStatCard label="Total" value={products.length.toString()} />
+                <ProductStatCard label="Active" value={products.length.toString()} color="text-emerald-600" />
+                <ProductStatCard label="Critical" value={products.filter(p => p.stock < 10).length.toString()} color="text-rose-600" />
             </div>
 
-            {/* Products Table */}
-            <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
+            {/* List Section */}
+            <div className="bg-white lg:rounded-[2.5rem] lg:p-10 lg:shadow-sm lg:border lg:border-slate-100 -mx-4 sm:mx-0 rounded-[1.5rem] overflow-hidden mt-2">
+                <div className="px-6 py-6 border-b border-slate-50 lg:hidden bg-slate-50/10">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex flex-col">
+                            <h3 className="text-xs font-black text-slate-900 uppercase tracking-tighter">Catalog Overview</h3>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{products.length} Items Live</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400">
+                                <Filter className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    </div>
+                    {/* Mobile Search */}
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Search catalog..."
+                            value={searchQuery || ''}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full h-10 bg-white border border-slate-100 rounded-xl pl-9 pr-4 text-[10px] font-bold uppercase tracking-widest text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all"
+                        />
+                    </div>
+                </div>
+
                 {loading ? (
-                    <div className="flex justify-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+                    <div className="flex flex-col items-center justify-center py-20">
+                        <Loader2 className="w-10 h-10 text-emerald-500 animate-spin mb-4" />
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Syncing Products...</p>
                     </div>
                 ) : products.length === 0 ? (
-                    <div className="text-center py-20">
-                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Package className="w-8 h-8 text-slate-400" />
+                    <div className="text-center py-24">
+                        <div className="w-20 h-20 bg-slate-50 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6">
+                            <Package className="w-10 h-10 text-slate-300" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-900">No products yet</h3>
-                        <p className="text-slate-500">Add your first product to start selling.</p>
+                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Master Catalog is Empty</h3>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-2 tracking-widest">Add your first product to start generating sales.</p>
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead>
-                            <tr className="text-left text-[10px] text-slate-400 uppercase tracking-widest border-b border-slate-50">
-                                <th className="pb-6 font-bold">Product</th>
-                                <th className="pb-6 font-bold">Category</th>
-                                <th className="pb-6 font-bold">Stock</th>
-                                <th className="pb-6 font-bold">Price</th>
-                                <th className="pb-6 font-bold text-right">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-sm font-bold text-slate-900">
-                            {products.map((product) => (
-                                <React.Fragment key={product.id}>
-                                    <tr
-                                        onClick={() => setExpandedProductId(expandedProductId === product.id ? null : product.id)}
-                                        className={`border-t border-slate-50 group hover:bg-slate-50 transition-all cursor-pointer ${expandedProductId === product.id ? 'bg-slate-50' : ''}`}
-                                    >
-                                        <td className="py-5">
-                                            <div className="flex items-center space-x-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center overflow-hidden shadow-sm border border-slate-200 group-hover:scale-105 transition-transform">
-                                                    {product.images[0] ? (
-                                                        <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-full h-full bg-slate-50 flex items-center justify-center">
-                                                            <Package className="w-5 h-5 text-slate-300" />
-                                                        </div>
+                    <>
+                        {/* Desktop Table */}
+                        <table className="w-full hidden lg:table">
+                            <thead>
+                                <tr className="text-left text-[10px] text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                                    <th className="pb-6 font-bold">Product Asset</th>
+                                    <th className="pb-6 font-bold">Category</th>
+                                    <th className="pb-6 font-bold">Inventory</th>
+                                    <th className="pb-6 font-bold">Settlement Price</th>
+                                    <th className="pb-6 font-bold text-right">Visibility</th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-sm font-bold text-slate-900">
+                                {filteredProducts.map((product) => (
+                                    <React.Fragment key={product.id}>
+                                        <tr
+                                            onClick={() => setExpandedProductId(expandedProductId === product.id ? null : product.id)}
+                                            className={`border-t border-slate-50 group hover:bg-slate-50 transition-all cursor-pointer ${expandedProductId === product.id ? 'bg-slate-50/50' : ''}`}
+                                        >
+                                            <td className="py-6">
+                                                <div className="flex items-center space-x-5">
+                                                    <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center overflow-hidden shadow-sm border border-slate-200 group-hover:scale-105 transition-transform duration-500">
+                                                        {product.images[0] ? (
+                                                            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-full h-full bg-slate-50/50 flex items-center justify-center text-2xl">📦</div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-slate-900 font-black uppercase tracking-tight text-sm">{product.name}</span>
+                                                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-[0.2em] mt-1 italic">#{product.id.slice(-8).toUpperCase()}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-6">
+                                                <span className="px-3 py-1.5 bg-slate-100 text-slate-500 rounded-xl text-[9px] font-black uppercase tracking-widest">
+                                                    {product.category || 'Uncategorized'}
+                                                </span>
+                                            </td>
+                                            <td className="py-6">
+                                                <div className="flex flex-col">
+                                                    <span className={`text-sm font-black ${product.stock < 10 ? 'text-rose-500' : 'text-slate-950'}`}>{product.stock}</span>
+                                                    <span className="text-[8px] text-slate-400 uppercase font-black tracking-widest">Available</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-6">
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-black text-slate-950">₦{Number(product.price).toLocaleString()}</span>
+                                                    {product.discountPrice && product.discountPrice > 0 && (
+                                                        <span className="text-[9px] text-rose-500 font-black line-through opacity-60">
+                                                            ₦{Number(product.discountPrice).toLocaleString()}
+                                                        </span>
                                                     )}
                                                 </div>
-                                                <div className="flex flex-col">
-                                                    <span className="text-slate-900">{product.name}</span>
-                                                    <span className="text-[10px] text-slate-400 font-medium">ID: {product.id.slice(-8)}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="py-5">
-                                            <span className="px-2 py-1 bg-slate-100 text-slate-500 rounded text-[9px] font-black uppercase tracking-widest leading-none">
-                                                {product.category || 'Uncategorized'}
-                                            </span>
-                                        </td>
-                                        <td className="py-5">
-                                            <div className="flex flex-col">
-                                                <span className={`${product.stock < 10 ? 'text-amber-500' : 'text-slate-900'}`}>{product.stock}</span>
-                                                <span className="text-[9px] text-slate-400 uppercase font-black">Available</span>
-                                            </div>
-                                        </td>
-                                        <td className="py-5">
-                                            <div className="flex flex-col">
-                                                <span className="text-slate-900 font-mono">₦{Number(product.price).toFixed(2)}</span>
-                                                {product.discountPrice && product.discountPrice > 0 && (
-                                                    <span className="text-[9px] text-primary font-black line-through opacity-50">
-                                                        ₦{Number(product.discountPrice).toFixed(2)}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="py-5 text-right">
-                                            <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${product.stock > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
-                                                {product.stock > 0 ? 'Active' : 'Stock Out'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    {expandedProductId === product.id && (
-                                        <tr>
-                                            <td colSpan={5} className="pb-8 px-6">
-                                                <ProductDetailView
-                                                    product={product}
-                                                    onClose={() => setExpandedProductId(null)}
-                                                    onUpdate={fetchProducts}
-                                                    storeCategories={storeCategories}
-                                                />
+                                            </td>
+                                            <td className="py-6 text-right">
+                                                <span className={`px-2.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${product.stock > 0 ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'bg-rose-50 text-rose-500 border-rose-100 shadow-[0_0_15px_rgba(244,63,94,0.1)]'}`}>
+                                                    {product.stock > 0 ? 'Online' : 'Sold Out'}
+                                                </span>
                                             </td>
                                         </tr>
-                                    )}
-                                </React.Fragment>
+                                        {expandedProductId === product.id && (
+                                            <tr>
+                                                <td colSpan={5} className="p-0">
+                                                    <div className="bg-slate-50 px-8 py-10 border-t border-slate-100 animate-in slide-in-from-top-2 duration-300">
+                                                        <ProductDetailView
+                                                            product={product}
+                                                            onClose={() => setExpandedProductId(null)}
+                                                            onUpdate={fetchProducts}
+                                                            storeCategories={storeCategories}
+                                                        />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        {/* Mobile List View */}
+                        <div className="lg:hidden divide-y divide-slate-50">
+                            {filteredProducts.map((product) => (
+                                <ProductListItem
+                                    key={product.id}
+                                    product={product}
+                                    isExpanded={expandedProductId === product.id}
+                                    onToggle={() => setExpandedProductId(expandedProductId === product.id ? null : product.id)}
+                                    onUpdate={fetchProducts}
+                                    storeCategories={storeCategories}
+                                />
                             ))}
-                        </tbody>
-                    </table>
+                        </div>
+                    </>
                 )}
             </div>
 
@@ -236,11 +318,64 @@ export default function ProductsPage() {
     );
 }
 
-function ProductStatCard({ label, value, color = 'text-slate-900' }: { label: string; value: string; color?: string }) {
+function ProductStatCard({ label, value, color = 'text-slate-900', className = '' }: { label: string; value: string; color?: string; className?: string }) {
     return (
-        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col items-center">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</span>
-            <span className={`text-3xl font-black ${color}`}>{value}</span>
+        <div className={`bg-white rounded-[1.5rem] md:rounded-3xl p-5 md:p-6 border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center ${className}`}>
+            <span className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</span>
+            <span className={`text-2xl md:text-3xl font-black tracking-tighter ${color}`}>{value}</span>
+        </div>
+    );
+}
+
+function ProductListItem({ product, isExpanded, onToggle, onUpdate, storeCategories }: any) {
+    return (
+        <div className="bg-white">
+            <div
+                onClick={onToggle}
+                className="p-5 flex items-center gap-4 cursor-pointer active:bg-slate-50 transition-colors"
+            >
+                <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 overflow-hidden shadow-sm shrink-0">
+                    {product.images[0] ? (
+                        <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full bg-slate-50 flex items-center justify-center text-xl">📦</div>
+                    )}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-black text-slate-900 uppercase tracking-tight truncate">{product.name}</p>
+                        <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                    </div>
+                    <div className="flex items-center gap-2 mt-1.5">
+                        <span className="px-2 py-0.5 bg-slate-100 text-[8px] font-black text-slate-400 uppercase tracking-widest rounded-md">
+                            {product.category || 'NO CATEGORY'}
+                        </span>
+                        <div className="w-px h-2 bg-slate-200" />
+                        <span className={`text-[8px] font-black uppercase tracking-widest ${product.stock < 10 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
+                            {product.stock} Units
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                        <p className="text-sm font-black text-slate-900 tracking-tighter leading-none">₦{Number(product.price).toLocaleString()}</p>
+                        {product.discountPrice && (
+                            <p className="text-[9px] text-rose-500 font-black line-through opacity-50">₦{Number(product.discountPrice).toLocaleString()}</p>
+                        )}
+                    </div>
+                </div>
+                <div className={`w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center transition-all ${isExpanded ? 'rotate-180 bg-slate-900 text-white' : 'text-slate-300'}`}>
+                    <ChevronDown className="w-4 h-4" />
+                </div>
+            </div>
+            {isExpanded && (
+                <div className="p-4 bg-slate-50/50 border-t border-slate-50 animate-in slide-in-from-top-2 duration-300">
+                    <ProductDetailView
+                        product={product}
+                        onClose={onToggle}
+                        onUpdate={onUpdate}
+                        storeCategories={storeCategories}
+                    />
+                </div>
+            )}
         </div>
     );
 }
@@ -259,8 +394,8 @@ function CategorySelector({
                             type="button"
                             onClick={() => onChange(value === cat ? '' : cat)}
                             className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border ${value === cat
-                                    ? 'bg-slate-900 text-white border-slate-900'
-                                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-900 hover:text-slate-900'
+                                ? 'bg-slate-900 text-white border-slate-900'
+                                : 'bg-white text-slate-500 border-slate-200 hover:border-slate-900 hover:text-slate-900'
                                 }`}
                         >
                             {cat}

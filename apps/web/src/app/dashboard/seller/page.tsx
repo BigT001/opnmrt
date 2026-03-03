@@ -97,25 +97,25 @@ export default function SellerDashboardPage() {
             <div className="xl:col-span-3 space-y-8">
 
                 {/* 1. HERO SECTION */}
-                <div className="bg-gradient-to-br from-[#2E6B4E] via-[#1F4D36] to-[#153625] rounded-[2rem] p-6 lg:p-8 text-white relative overflow-hidden group min-h-[180px] flex items-center shadow-2xl shadow-emerald-900/10">
-                    <div className="relative z-10 w-full flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="bg-gradient-to-br from-[#2E6B4E] via-[#1F4D36] to-[#153625] rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8 text-white relative overflow-hidden group min-h-[160px] sm:min-h-[180px] flex items-center shadow-2xl shadow-emerald-900/10">
+                    <div className="relative z-10 w-full flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
                         {/* Left Side: Metrics */}
                         <div className="max-w-md w-full md:w-auto text-center md:text-left">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-300/80 mb-2 block">Weekly Sales Performance</span>
-                            <h2 className="text-3xl font-black leading-tight mb-1">
+                            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-emerald-300/80 mb-1 sm:mb-2 block">Weekly Sales Performance</span>
+                            <h2 className="text-2xl sm:text-3xl font-black leading-tight mb-1">
                                 {formatPrice(Number(stats?.totalRevenue || 0))}
                             </h2>
-                            <p className="text-xs text-emerald-100/70 font-medium mb-6">Total revenue generated</p>
+                            <p className="text-[10px] sm:text-xs text-emerald-100/70 font-medium mb-4 sm:mb-6">Total revenue generated</p>
 
-                            <div className="flex items-center justify-center md:justify-start space-x-3 mb-6">
-                                <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/5 flex items-center space-x-2">
-                                    <span className="text-emerald-300">📦</span>
-                                    <span className="font-bold text-sm">{stats?.totalOrders || 0}</span>
-                                    <span className="text-[10px] uppercase tracking-wide opacity-70">Orders</span>
+                            <div className="flex items-center justify-center md:justify-start space-x-2 sm:space-x-3 mb-2 sm:mb-6">
+                                <div className="bg-white/10 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-white/5 flex items-center space-x-2">
+                                    <span className="text-xs sm:text-emerald-300">📦</span>
+                                    <span className="font-bold text-xs sm:text-sm">{stats?.totalOrders || 0}</span>
+                                    <span className="text-[8px] sm:text-[10px] uppercase tracking-wide opacity-70">Orders</span>
                                 </div>
-                                <div className="bg-emerald-500/20 px-3 py-1.5 rounded-lg border border-emerald-500/20 flex items-center space-x-1">
-                                    <span className="text-emerald-400 text-xs">📈</span>
-                                    <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wide">Verified Growth</span>
+                                <div className="bg-emerald-500/20 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-emerald-500/20 flex items-center space-x-1">
+                                    <span className="text-emerald-400 text-[10px] sm:text-xs">📈</span>
+                                    <span className="text-[8px] sm:text-[10px] font-bold text-emerald-300 uppercase tracking-wide">Growth</span>
                                 </div>
                             </div>
                         </div>
@@ -130,118 +130,40 @@ export default function SellerDashboardPage() {
 
 
                 {/* 2. TOP STATS */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <InfusedStat label="Active Orders" value={stats?.activeOrders?.toString() || "0"} color="text-amber-600" bgColor="bg-amber-50" icon="🔥" />
-                    <InfusedStat label="Products sold" value={stats?.totalProductsSold?.toString() || "0"} color="text-blue-600" bgColor="bg-blue-50" icon="🏷️" />
-                    <InfusedStat label="New Customers" value={stats?.totalCustomers?.toString() || "0"} color="text-violet-600" bgColor="bg-violet-50" icon="👥" />
-                    <InfusedStat label="Website Visits" value={stats?.funnel?.sessions?.toString() || "0"} color="text-emerald-600" bgColor="bg-emerald-50" icon="🌍" />
-                </div>
-
-                {/* Sales Funnel Section */}
-                <div className="bg-white rounded-[2rem] p-6 lg:p-8 shadow-sm border border-slate-100">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-bold text-slate-900">Sales funnel</h3>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100 uppercase tracking-widest flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                Live Tracking
-                            </span>
-                            <button className="w-8 h-8 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 font-bold tracking-widest px-2">•••</button>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                        <FunnelStat
-                            label="All sessions"
-                            value={funnel.sessions >= 1000 ? `${(funnel.sessions / 1000).toFixed(1)}K` : funnel.sessions.toString()}
-                            trend={null}
-                            sub={funnel.sessions > 0 ? `${((funnel.productViews / (funnel.sessions || 1)) * 100).toFixed(0)}% conversion` : 'No data yet'}
-                        />
-                        <FunnelStat
-                            label="Product views"
-                            value={funnel.productViews >= 1000 ? `${(funnel.productViews / 1000).toFixed(1)}K` : funnel.productViews.toString()}
-                            trend={null}
-                            sub={funnel.productViews > 0 ? `${((funnel.addToCart / (funnel.productViews || 1)) * 100).toFixed(0)}% click-thru` : 'No data yet'}
-                        />
-                        <FunnelStat
-                            label="Add to cart"
-                            value={funnel.addToCart >= 1000 ? `${(funnel.addToCart / 1000).toFixed(1)}K` : funnel.addToCart.toString()}
-                            trend={null}
-                            sub={funnel.addToCart > 0 ? `${((funnel.checkout / (funnel.addToCart || 1)) * 100).toFixed(0)}% completion` : 'No data yet'}
-                        />
-                        <FunnelStat
-                            label="Checkout"
-                            value={funnel.checkout >= 1000 ? `${(funnel.checkout / 1000).toFixed(1)}K` : funnel.checkout.toString()}
-                            trend={null}
-                            sub="Revenue Optimized"
-                        />
-                    </div>
-
-                    {/* Functional Chart with Custom Dark Tooltip and No White Cursor */}
-                    <div className="h-40 w-full mt-4 bg-slate-50/50 rounded-2xl p-4 border border-slate-100 group/chart">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={[
-                                { name: 'Sessions', value: funnel.sessions, detail: 'Total store visitors' },
-                                { name: 'Views', value: funnel.productViews, detail: 'Customers viewing products' },
-                                { name: 'Cart', value: funnel.addToCart, detail: 'Items added to shopping cart' },
-                                { name: 'Checkout', value: funnel.checkout, detail: 'Successful transactions' }
-                            ]}>
-                                <defs>
-                                    <linearGradient id="funnelGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
-                                        <stop offset="100%" stopColor="#10b981" stopOpacity={0.2} />
-                                    </linearGradient>
-                                </defs>
-                                <Bar
-                                    dataKey="value"
-                                    fill="url(#funnelGradient)"
-                                    radius={[8, 8, 4, 4]}
-                                    barSize={50}
-                                    className="transition-all duration-300"
-                                />
-                                <RechartsTooltip
-                                    cursor={{ fill: 'rgba(0,0,0,0.03)' }}
-                                    content={({ active, payload }: any) => {
-                                        if (active && payload && payload.length) {
-                                            const data = payload[0].payload;
-                                            return (
-                                                <div className="bg-slate-900 text-white p-3 rounded-xl shadow-2xl border border-slate-800 animate-in zoom-in duration-200">
-                                                    <div className="flex items-center gap-2 mb-1.5">
-                                                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">{data.name}</span>
-                                                    </div>
-                                                    <p className="text-sm font-black mb-0.5">{payload[0].value.toLocaleString()}</p>
-                                                    <p className="text-[9px] text-slate-400 font-medium leading-tight">{data.detail}</p>
-                                                </div>
-                                            );
-                                        }
-                                        return null;
-                                    }}
-                                />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <InfusedStat label="Orders" value={stats?.activeOrders?.toString() || "0"} color="text-amber-600" bgColor="bg-amber-50" icon="🔥" />
+                    <InfusedStat label="Sold" value={stats?.totalProductsSold?.toString() || "0"} color="text-blue-600" bgColor="bg-blue-50" icon="🏷️" />
+                    <InfusedStat label="Users" value={stats?.totalCustomers?.toString() || "0"} color="text-violet-600" bgColor="bg-violet-50" icon="👥" />
+                    <InfusedStat label="Visits" value={stats?.funnel?.sessions?.toString() || "0"} color="text-emerald-600" bgColor="bg-emerald-50" icon="🌍" />
                 </div>
 
                 {/* Top Selling Products */}
-                <div className="bg-white rounded-[2.5rem] p-6 lg:p-10 shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="flex justify-between items-center mb-10">
-                        <h3 className="text-xl font-bold text-slate-900">Top selling products</h3>
-                        <button className="w-8 h-8 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 font-bold tracking-widest px-2">•••</button>
+                <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-8 lg:p-10 shadow-sm border border-slate-100 overflow-hidden">
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-6 sm:mb-8 px-1">
+                        <div>
+                            <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-none">Top selling products</h3>
+                            <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-1">Best Performing Items</p>
+                        </div>
+                        <Link
+                            href="/dashboard/seller/products"
+                            className="bg-slate-50 hover:bg-slate-100 text-slate-600 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-slate-100 transition-all text-center"
+                        >
+                            View All
+                        </Link>
                     </div>
 
-                    <div className="overflow-x-auto no-scrollbar">
-                        <table className="w-full min-w-[600px]">
+                    <div className="overflow-x-auto -mx-4 sm:mx-0 no-scrollbar">
+                        <table className="w-full min-w-[500px] sm:min-w-0">
                             <thead>
-                                <tr className="text-left text-[10px] text-slate-400 uppercase tracking-widest">
-                                    <th className="pb-6 font-bold">Products</th>
-                                    <th className="pb-6 font-bold">Stocks</th>
-                                    <th className="pb-6 font-bold">Price</th>
-                                    <th className="pb-6 font-bold">Sales</th>
-                                    <th className="pb-6 font-bold text-right">Earnings</th>
+                                <tr className="text-left text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-[0.15em] border-b border-slate-50">
+                                    <th className="pb-3 pt-2 font-black px-4 sm:px-6">Product Details</th>
+                                    <th className="pb-3 pt-2 font-black hidden md:table-cell">Stock</th>
+                                    <th className="pb-3 pt-2 font-black hidden lg:table-cell">Price</th>
+                                    <th className="pb-3 pt-2 font-black hidden sm:table-cell text-center">Sales</th>
+                                    <th className="pb-3 pt-2 font-black text-right px-4 sm:px-6">Earnings</th>
                                 </tr>
                             </thead>
-                            <tbody className="text-sm font-bold text-slate-900">
+                            <tbody className="text-xs sm:text-sm font-bold text-slate-900">
                                 {stats?.topProducts && stats.topProducts.length > 0 ? (
                                     stats.topProducts.map((p) => (
                                         <ProductRow
@@ -256,17 +178,109 @@ export default function SellerDashboardPage() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={5} className="py-10 text-center text-slate-400 italic">No products sold yet</td>
+                                        <td colSpan={5} className="py-16 sm:py-24 text-center">
+                                            <div className="flex flex-col items-center opacity-40 scale-90 sm:scale-100">
+                                                <div className="w-12 sm:w-16 h-12 sm:h-16 bg-slate-50 rounded-2xl sm:rounded-3xl flex items-center justify-center text-2xl sm:text-3xl mb-3 sm:mb-4 border border-slate-100">🏷️</div>
+                                                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Inventory is fresh</p>
+                                            </div>
+                                        </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
                     </div>
                 </div>
+
+                {/* Sales Funnel Section */}
+                <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 lg:p-8 shadow-sm border border-slate-100">
+                    <div className="flex justify-between items-center mb-6 px-1">
+                        <div className="flex flex-col">
+                            <h3 className="text-lg font-bold text-slate-900 leading-none">Sales funnel</h3>
+                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight mt-1">Performance Pipeline</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[9px] sm:text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl border border-emerald-100 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
+                                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Live
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-10 px-1">
+                        <FunnelStat
+                            label="Visitors"
+                            value={funnel.sessions >= 1000 ? `${(funnel.sessions / 1000).toFixed(1)}K` : funnel.sessions.toString()}
+                            trend={null}
+                            sub={funnel.sessions > 0 ? `${((funnel.productViews / (funnel.sessions || 1)) * 100).toFixed(0)}% conv.` : 'No data'}
+                        />
+                        <FunnelStat
+                            label="Views"
+                            value={funnel.productViews >= 1000 ? `${(funnel.productViews / 1000).toFixed(1)}K` : funnel.productViews.toString()}
+                            trend={null}
+                            sub={funnel.productViews > 0 ? `${((funnel.addToCart / (funnel.productViews || 1)) * 100).toFixed(0)}% click` : 'No data'}
+                        />
+                        <FunnelStat
+                            label="Added"
+                            value={funnel.addToCart >= 1000 ? `${(funnel.addToCart / 1000).toFixed(1)}K` : funnel.addToCart.toString()}
+                            trend={null}
+                            sub={funnel.addToCart > 0 ? `${((funnel.checkout / (funnel.addToCart || 1)) * 100).toFixed(0)}% comp.` : 'No data'}
+                        />
+                        <FunnelStat
+                            label="Sales"
+                            value={funnel.checkout >= 1000 ? `${(funnel.checkout / 1000).toFixed(1)}K` : funnel.checkout.toString()}
+                            trend={null}
+                            sub="Optimized"
+                        />
+                    </div>
+
+                    <div className="h-32 sm:h-44 w-full mt-2 sm:mt-4 bg-slate-50/30 rounded-2xl p-3 sm:p-4 border border-slate-100/50 group/chart">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={[
+                                { name: 'Sessions', value: funnel.sessions, detail: 'Store visitors' },
+                                { name: 'Views', value: funnel.productViews, detail: 'Customers views' },
+                                { name: 'Cart', value: funnel.addToCart, detail: 'Items in cart' },
+                                { name: 'Checkout', value: funnel.checkout, detail: 'Conversions' }
+                            ]}>
+                                <defs>
+                                    <linearGradient id="funnelGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
+                                        <stop offset="100%" stopColor="#10b981" stopOpacity={0.2} />
+                                    </linearGradient>
+                                </defs>
+                                <Bar
+                                    dataKey="value"
+                                    fill="url(#funnelGradient)"
+                                    radius={[8, 8, 4, 4]}
+                                    barSize={20}
+                                    className="sm:barSize-40 transition-all duration-300"
+                                />
+                                <RechartsTooltip
+                                    cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                                    content={({ active, payload }: any) => {
+                                        if (active && payload && payload.length) {
+                                            const data = payload[0].payload;
+                                            return (
+                                                <div className="bg-slate-900 text-white p-2 sm:p-3 rounded-xl sm:rounded-2xl shadow-2xl border border-slate-800 animate-in zoom-in duration-200 pointer-events-none">
+                                                    <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+                                                        <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-emerald-500" />
+                                                        <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-emerald-400">{data.name}</span>
+                                                    </div>
+                                                    <p className="text-xs sm:text-[13px] font-black mb-0.5">{payload[0].value.toLocaleString()}</p>
+                                                    <p className="text-[7px] sm:text-[8px] text-slate-400 font-medium leading-tight">{data.detail}</p>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    }}
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
             </div>
 
             {/* Right Widget Rail */}
-            <div className="space-y-6 xl:sticky xl:top-0 self-start">
+            <div className="hidden xl:block space-y-6 xl:sticky xl:top-0 self-start">
                 {/* Recent Notifications Widget */}
                 <NotificationsWidget storeId={store?.id || ''} />
 
@@ -291,35 +305,44 @@ export default function SellerDashboardPage() {
 
 function FunnelStat({ label, value, trend, sub }: { label: string; value: string; trend: string | null; sub: string }) {
     return (
-        <div className="space-y-2">
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{label}</p>
+        <div className="space-y-1 sm:space-y-2 p-1">
+            <p className="text-[9px] sm:text-[10px] text-slate-400 font-black uppercase tracking-[0.15em]">{label}</p>
             <div className="flex items-center space-x-2">
-                <p className="text-2xl font-extrabold text-slate-900">{value}</p>
-                {trend && <span className="text-[10px] bg-emerald-50 text-emerald-500 px-1.5 py-0.5 rounded-full font-bold">%{trend}</span>}
+                <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{value}</p>
+                {trend && <span className="text-[9px] bg-emerald-100/50 text-emerald-600 px-1.5 py-0.5 rounded-full font-black">+{trend}%</span>}
             </div>
-            <p className="text-[10px] text-slate-400 font-medium italic">{sub}</p>
+            <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-tight">{sub}</p>
         </div>
     );
 }
 
 function ProductRow({ name, stocks, price, sales, earnings, image }: { name: string; stocks: string; price: string; sales: string; earnings: string; image?: string }) {
     return (
-        <tr className="border-t border-slate-50 group hover:bg-slate-50/50 transition-colors">
-            <td className="py-5 flex items-center space-x-3">
-                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center overflow-hidden">
+        <tr className="border-t border-slate-50 group hover:bg-slate-50/80 transition-all duration-300">
+            <td className="py-4 px-6 flex items-center space-x-4">
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center overflow-hidden border border-slate-100 shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-300">
                     {image ? (
                         <img src={image} alt={name} className="w-full h-full object-cover" />
                     ) : (
-                        <span className="text-lg">👕</span>
+                        <div className="w-full h-full bg-slate-50 flex items-center justify-center text-xl">🧺</div>
                     )}
                 </div>
-                <span className="truncate max-w-[150px]">{name}</span>
+                <div className="flex flex-col min-w-0">
+                    <span className="text-slate-900 font-black text-sm truncate max-w-[140px] sm:max-w-[220px] tracking-tight">{name}</span>
+                    <span className="text-[8px] text-emerald-600 font-black uppercase tracking-widest mt-0.5 flex items-center gap-1">
+                        <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                        Live on Store
+                    </span>
+                </div>
             </td>
-            <td className="py-5 text-slate-500">{stocks}</td>
-            <td className="py-5 text-slate-500">{price}</td>
-            <td className="py-5 text-slate-500">{sales}</td>
-            <td className="py-5 text-right">
-                <span>{earnings}</span>
+            <td className="py-4 text-slate-500 font-bold text-xs hidden md:table-cell">{stocks}</td>
+            <td className="py-4 text-slate-500 font-bold text-xs hidden lg:table-cell">{price}</td>
+            <td className="py-4 text-slate-500 font-bold text-xs hidden sm:table-cell">{sales}</td>
+            <td className="py-4 text-right px-6">
+                <div className="flex flex-col items-end">
+                    <span className="text-slate-900 font-black text-sm tracking-tight">{earnings}</span>
+                    <span className="text-[8px] text-slate-400 font-bold uppercase tracking-widest sm:hidden">Total Earnings</span>
+                </div>
             </td>
         </tr>
     );
@@ -366,44 +389,45 @@ function NotificationsWidget({ storeId }: { storeId: string }) {
     }, [storeId]);
 
     return (
-        <div className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-100 flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                        <Bell size={16} />
+        <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100 flex flex-col h-full">
+            <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-0.5">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-[0.15em]">Recent Activity</h3>
                     </div>
-                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Recent Activity</h3>
+                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest ml-4">Real-time Stream</p>
                 </div>
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto no-scrollbar max-h-[400px]">
+            <div className="flex-1 space-y-4 overflow-y-auto no-scrollbar max-h-[460px] pb-2">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center h-32">
-                        <Loader2 className="w-5 h-5 text-primary animate-spin mb-2" />
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Syncing Stream...</p>
+                        <div className="w-8 h-8 border-3 border-emerald-500/10 border-t-emerald-500 rounded-full animate-spin mb-3" />
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Syncing Stream...</p>
                     </div>
                 ) : notifications.length > 0 ? (
                     notifications.map((n) => (
-                        <div key={n.id} className="flex gap-3 group">
-                            <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform">
+                        <div key={n.id} className="flex gap-4 group cursor-default">
+                            <div className="w-11 h-11 rounded-[1.25rem] bg-slate-50 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 group-hover:bg-white group-hover:shadow-lg transition-all duration-300 border border-transparent group-hover:border-slate-100">
                                 {n.icon}
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 mb-0.5">
-                                    <p className="text-[11px] font-black text-slate-900 leading-tight uppercase tracking-tight">{n.title}</p>
-                                    <span className="text-[10px] text-slate-300 font-bold">||</span>
+                                    <p className="text-[11px] font-black text-slate-900 leading-tight uppercase tracking-tight group-hover:text-emerald-600 transition-colors">{n.title}</p>
+                                    <span className="text-[10px] text-slate-200 font-bold">//</span>
                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
                                         {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
                                     </p>
                                 </div>
-                                <p className="text-[10px] text-slate-500 leading-normal line-clamp-2 pr-4">{n.message}</p>
+                                <p className="text-[10px] text-slate-500 leading-normal line-clamp-2 pr-4 font-medium">{n.message}</p>
                             </div>
                         </div>
                     ))
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                        <p className="text-2xl mb-2">✨</p>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System is quiet. All caught up!</p>
+                    <div className="flex flex-col items-center justify-center h-48 text-center px-4">
+                        <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center text-3xl mb-4 border border-slate-100 opacity-50">✨</div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">All caught up!</p>
                     </div>
                 )}
             </div>
@@ -415,34 +439,38 @@ function OnboardingStep({ label, done, href, icon, desc }: { label: string; done
     return (
         <Link
             href={href}
-            className={`p-6 rounded-3xl border transition-all flex flex-col gap-4 relative group/step ${done
+            className={`p-6 rounded-[2rem] border transition-all flex flex-col gap-4 relative group/step ${done
                 ? 'bg-emerald-50/50 border-emerald-100'
-                : 'bg-white border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/30'
+                : 'bg-white border-slate-100 hover:border-emerald-500/20 hover:shadow-2xl hover:shadow-emerald-500/5 hover:-translate-y-1'
                 }`}
         >
             <div className="flex justify-between items-start">
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl ${done ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-slate-400 group-hover/step:bg-slate-100'}`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm transition-all duration-500 ${done ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-slate-400 group-hover/step:bg-emerald-50 group-hover/step:text-emerald-600'}`}>
                     {done ? '✓' : icon}
                 </div>
-                {!done && <ArrowRight className="w-4 h-4 text-slate-300 group-hover/step:text-slate-900 group-hover/step:translate-x-1 transition-all" />}
+                {!done && <ArrowRight className="w-5 h-5 text-slate-300 group-hover/step:text-emerald-500 group-hover/step:translate-x-1 transition-all" />}
             </div>
             <div>
-                <p className={`text-[11px] font-black uppercase tracking-widest mb-1 ${done ? 'text-emerald-600' : 'text-slate-900'}`}>{label}</p>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{desc}</p>
+                <p className={`text-[11px] font-black uppercase tracking-[0.15em] mb-1.5 ${done ? 'text-emerald-600' : 'text-slate-900 group-hover/step:text-emerald-600 transition-colors'}`}>{label}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight leading-relaxed">{desc}</p>
             </div>
-            {done && <div className="absolute top-4 right-4 text-[10px] font-black text-emerald-500 uppercase tracking-widest">Ready</div>}
+            {done && (
+                <div className="absolute top-6 right-6 flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500 text-white rounded-full scale-75 origin-right">
+                    <span className="text-[8px] font-black uppercase tracking-widest">Active</span>
+                </div>
+            )}
         </Link>
     );
 }
 
 function InfusedStat({ label, value, color, bgColor, icon }: { label: string; value: string; color: string; bgColor: string; icon: string }) {
     return (
-        <div className={`${bgColor} rounded-[1.5rem] p-5 flex justify-between items-center transition-all hover:scale-[1.02] shadow-sm`}>
-            <div className="flex flex-col">
-                <p className="text-2xl font-black text-slate-900 leading-none mb-2">{value}</p>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide leading-tight">{label}</p>
+        <div className={`${bgColor} rounded-[2rem] p-4 sm:p-5 flex justify-between items-center transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-slate-200/50 border border-white/50 group/stat`}>
+            <div className="flex flex-col min-w-0">
+                <p className="text-xl sm:text-2xl font-black text-slate-900 leading-none mb-2 tracking-tight">{value}</p>
+                <p className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest leading-tight truncate">{label}</p>
             </div>
-            <div className={`w-10 h-10 rounded-xl bg-white flex items-center justify-center text-lg shadow-sm ${color} shrink-0 ml-3`}>
+            <div className={`w-10 sm:w-11 h-10 sm:h-11 rounded-2xl bg-white flex items-center justify-center text-lg sm:text-xl shadow-sm ${color} shrink-0 ml-3 group-hover/stat:rotate-12 transition-transform duration-500`}>
                 {icon}
             </div>
         </div>

@@ -78,7 +78,7 @@ export function DashboardHeader({
 
                 <button
                     onClick={onNotificationsClick}
-                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all relative"
+                    className="xl:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all relative"
                 >
                     <Bell size={18} />
                     {notificationsCount > 0 && (
