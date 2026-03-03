@@ -27,10 +27,10 @@ export function DashboardHeader({
     return (
         <header className="h-16 bg-white border-b border-slate-100 flex items-center px-6 sticky top-0 z-[100] backdrop-blur-xl bg-white/80">
             {/* Left Section: Sidebar Trigger & Separator */}
-            <div className="flex items-center gap-6 h-full min-w-[120px]">
+            <div className="flex items-center gap-4 h-full lg:min-w-[120px]">
                 <button
                     onClick={onMobileMenuToggle}
-                    className="lg:hidden p-2 hover:bg-slate-50 rounded-xl text-slate-600 transition-all"
+                    className="lg:hidden p-2 hover:bg-slate-50 rounded-xl text-slate-600 transition-all shrink-0"
                 >
                     <Menu size={20} />
                 </button>
@@ -46,16 +46,16 @@ export function DashboardHeader({
             </div>
 
             {/* Middle Section: Centered Search Input Area */}
-            <div className="flex-1 flex justify-center px-4 max-w-2xl mx-auto">
+            <div className="flex-1 flex justify-center px-2 sm:px-4 max-w-2xl mx-auto min-w-0">
                 <div
                     onClick={onSearchClick}
-                    className="w-full max-w-md bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 flex items-center gap-3 cursor-pointer group hover:bg-white hover:border-emerald-500/30 transition-all shadow-sm group"
+                    className="w-full max-w-md bg-slate-50 border border-slate-100 rounded-xl px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 cursor-pointer group hover:bg-white hover:border-emerald-500/30 transition-all shadow-sm min-w-0"
                 >
-                    <Search size={16} className="text-slate-400 group-hover:text-emerald-500 transition-colors" />
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest select-none flex-1">
-                        Find Products, Orders...
+                    <Search size={16} className="text-slate-400 group-hover:text-emerald-500 transition-colors shrink-0" />
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest select-none flex-1 truncate whitespace-nowrap overflow-hidden">
+                        Search anything
                     </span>
-                    <div className="hidden sm:flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+                    <div className="hidden sm:flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity shrink-0">
                         <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[9px] font-black text-slate-500 shadow-sm">⌘</kbd>
                         <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[9px] font-black text-slate-500 shadow-sm">K</kbd>
                     </div>
@@ -63,7 +63,7 @@ export function DashboardHeader({
             </div>
 
             {/* Right Section: Actions & Profile */}
-            <div className="flex items-center gap-2 min-w-[300px] justify-end">
+            <div className="flex items-center gap-2 sm:min-w-[300px] justify-end">
                 <div className="hidden xl:flex items-center gap-2 mr-4">
                     <Link
                         href={store?.subdomain ? `https://${store.subdomain}.${APP_BASE_DOMAIN}` : '#'}
