@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_URL } from './config';
 
 const api = axios.create({
-    baseURL: (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api').replace(/\/?$/, '/'),
+    baseURL: API_URL,
 });
 
 // Add interceptor to add token

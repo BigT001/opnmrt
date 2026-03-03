@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Bell, MapPin, ExternalLink, ChevronDown, Menu, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+import { APP_BASE_DOMAIN } from '@/lib/config';
+
 interface DashboardHeaderProps {
     store: any;
     user: any;
@@ -64,7 +66,7 @@ export function DashboardHeader({
             <div className="flex items-center gap-2 min-w-[300px] justify-end">
                 <div className="hidden xl:flex items-center gap-2 mr-4">
                     <Link
-                        href={store?.subdomain ? `https://${store.subdomain}.opnmrt.com` : '#'}
+                        href={store?.subdomain ? `https://${store.subdomain}.${APP_BASE_DOMAIN}` : '#'}
                         target="_blank"
                         className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-700/10 active:scale-95"
                     >
@@ -87,7 +89,7 @@ export function DashboardHeader({
                 <div className="h-8 w-[1px] bg-slate-100 mx-2 hidden sm:block" />
 
                 <Link
-                    href={store?.subdomain ? `https://${store.subdomain}.opnmrt.com` : '#'}
+                    href={store?.subdomain ? `https://${store.subdomain}.${APP_BASE_DOMAIN}` : '#'}
                     target="_blank"
                     className="flex items-center gap-3 pl-2 group cursor-pointer hover:bg-slate-50 p-1.5 rounded-xl transition-all"
                 >

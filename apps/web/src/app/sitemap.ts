@@ -1,7 +1,8 @@
 import { MetadataRoute } from 'next';
+import { APP_URL } from '@/lib/config';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = 'https://opnmrt.com';
+    const baseUrl = APP_URL;
 
     // List main public routes here
     const routes = [

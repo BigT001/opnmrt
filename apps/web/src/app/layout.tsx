@@ -12,8 +12,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import { APP_BASE_DOMAIN, APP_URL } from '@/lib/config';
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://opnmrt.com'),
+  metadataBase: new URL(APP_URL),
   title: {
     template: '%s | OPNMRT',
     default: 'OPNMRT (OpenMart) | The Sovereign AI Commerce Engine',
@@ -35,7 +37,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://opnmrt.com',
+    url: APP_URL,
     siteName: 'OPNMRT',
     title: 'OPNMRT | The Sovereign AI Commerce Engine',
     description: 'Independent storefronts, global scale. Deploy sovereign commerce with AI-powered intelligence using OPNMRT (OpenMart).',
@@ -67,9 +69,9 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: 'https://opnmrt.com',
+    canonical: APP_URL,
     languages: {
-      'en-US': 'https://opnmrt.com',
+      'en-US': APP_URL,
     },
   },
   manifest: '/manifest.json',

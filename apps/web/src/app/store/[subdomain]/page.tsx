@@ -55,6 +55,8 @@ export async function generateMetadata({ params }: { params: Promise<{ subdomain
     };
 }
 
+import { APP_BASE_DOMAIN } from '@/lib/config';
+
 export default async function StorefrontPage({
     params,
 }: {
@@ -80,7 +82,7 @@ export default async function StorefrontPage({
                         '@type': 'Store',
                         name: store.name,
                         description: store.description,
-                        url: `https://${subdomain}.opnmrt.com`,
+                        url: `https://${subdomain}.${APP_BASE_DOMAIN}`,
                         image: store.logo,
                     }),
                 }}

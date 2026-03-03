@@ -13,6 +13,7 @@ import { LandingBackground } from '@/components/landing/LandingBackground';
 import { Logo } from '@/components/ui/Logo';
 import { Loader2, ShieldCheck, Smartphone, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { NIGERIAN_STATES, GHANA_REGIONS, KENYA_COUNTIES, SOUTH_AFRICA_PROVINCES } from '@/lib/nigeria-data';
+import { APP_BASE_DOMAIN } from '@/lib/config';
 
 const ExtendedRegisterSchema = z.object({
     name: z.string().refine(val => val.trim().split(/\s+/).length >= 2, "Please enter your full name (first and last)"),
@@ -451,7 +452,7 @@ export default function RegisterPage() {
                                                 placeholder="samstorez"
                                                 className="flex-1 h-12 px-4 bg-transparent outline-none text-white font-bold text-sm"
                                             />
-                                            <span className="px-4 text-slate-500 font-black text-[9px] uppercase tracking-widest bg-slate-800/50 h-12 flex items-center">.opnmrt.com</span>
+                                            <span className="px-4 text-slate-500 font-black text-[9px] uppercase tracking-widest bg-slate-800/50 h-12 flex items-center">.{APP_BASE_DOMAIN}</span>
                                         </div>
                                         {errors.subdomain && <p className="text-[10px] text-rose-500 mt-1 font-bold uppercase ml-1">{errors.subdomain.message}</p>}
                                     </div>

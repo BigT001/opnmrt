@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import { useAuthStore } from '@/store/useAuthStore';
 import { LandingBackground } from '@/components/landing/LandingBackground';
 import { Logo } from '@/components/ui/Logo';
+import { APP_BASE_DOMAIN } from '@/lib/config';
 
 export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
@@ -82,7 +83,7 @@ export default function LoginPage() {
                                 label="Access Key (Email)"
                                 register={register('email')}
                                 error={errors.email?.message}
-                                placeholder="commander@opnmrt.com"
+                                placeholder={`commander@${APP_BASE_DOMAIN}`}
                             />
 
                             <div className="relative">

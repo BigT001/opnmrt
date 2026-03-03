@@ -4,6 +4,8 @@ import { getThemeLayout } from '@/components/themes/registry';
 import { TrackSession } from '@/components/analytics/TrackSession';
 import { CartSync } from '@/components/storefront/CartSync';
 
+import { APP_BASE_DOMAIN } from '@/lib/config';
+
 async function getStore(subdomain: string) {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api';
     const url = `${apiUrl}/stores/resolve?subdomain=${subdomain}`;
@@ -32,7 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<{ subdomain
         openGraph: {
             title: `${store.name} | OPNMRT`,
             description: store.biography,
-            url: `https://${subdomain}.opnmrt.com`,
+            url: `https://${subdomain}.${APP_BASE_DOMAIN}`,
             siteName: 'OPNMRT (OpenMart)',
         },
     };

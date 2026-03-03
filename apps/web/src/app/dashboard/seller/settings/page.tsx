@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
+import { API_URL } from '@/lib/config';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Building2, AlertCircle, Loader2, Search,
@@ -676,13 +677,14 @@ function PaymentsSection({ store, user }: { store: any; user: any }) {
                             <span className="text-[9px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold uppercase">Required for Paystack</span>
                         </div>
                         <p className="text-[10px] text-slate-500 font-medium">Copy this URL and paste it into "Webhook URL" in your Paystack Dashboard settings.</p>
+
                         <div className="flex gap-2">
                             <code className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-[10px] font-mono text-indigo-600 break-all">
-                                {`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/payments/webhook/${store?.id}`}
+                                {`${API_URL}payments/webhook/${store?.id}`}
                             </code>
                             <button
                                 onClick={() => {
-                                    navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/payments/webhook/${store?.id}`);
+                                    navigator.clipboard.writeText(`${API_URL}payments/webhook/${store?.id}`);
                                     setMessage({ type: 'success', text: 'Webhook URL copied!' });
                                 }}
                                 className="aspect-square w-12 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm"
