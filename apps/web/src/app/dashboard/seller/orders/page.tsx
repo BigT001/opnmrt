@@ -203,6 +203,25 @@ export default function OrdersPage() {
                         </div>
                     </div>
 
+                    {/* Mobile Only Header */}
+                    <div className="sm:hidden flex items-center justify-between">
+                        <div>
+                            <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px] flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                FULFILLMENT MASTER
+                            </p>
+                            <p className="text-slate-900 mt-1 font-black text-xl tracking-tight">Active Stream</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={handleExportCSV} className="w-10 h-10 bg-white border border-slate-100 text-slate-600 rounded-xl flex items-center justify-center">
+                                <Download className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => setIsCreateModalOpen(true)} className="w-10 h-10 bg-emerald-600 text-white rounded-xl flex items-center justify-center">
+                                <Plus className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Controls Row */}
                     <div className="flex flex-col lg:flex-row gap-4 lg:items-center pt-2">
                         <div className="relative flex-1 group">
@@ -214,7 +233,7 @@ export default function OrdersPage() {
                                 placeholder="Search by ID, name or email..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-100 hover:border-slate-200 focus:border-emerald-500 rounded-[1.25rem] py-3.5 pl-12 pr-4 text-[11px] font-bold uppercase tracking-wider text-slate-950 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-50/50 transition-all"
+                                className="w-full bg-slate-50 border border-slate-100 hover:border-slate-200 focus:border-emerald-500 rounded-[1.25rem] py-3.5 pl-12 pr-4 text-base sm:text-[11px] font-bold uppercase tracking-wider text-slate-950 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-50/50 transition-all"
                             />
                         </div>
 

@@ -126,6 +126,16 @@
   body {
     @apply bg-background text-foreground antialiased selection:bg-emerald-500/30 selection:text-emerald-200;
   }
+
+  /* Prevent automatic zoom-on-focus on mobile devices */
+  @media screen and (max-width: 768px) {
+
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
 }
 
 @layer utilities {

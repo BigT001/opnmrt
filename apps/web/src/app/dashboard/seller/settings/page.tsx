@@ -165,12 +165,24 @@ export default function SettingsPage() {
 
     return (
         <div className="space-y-10 max-w-5xl">
-            <div className="flex justify-between items-end">
+            {/* Page Header - Desktop Only */}
+            <div className="hidden sm:flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Settings</h1>
                 </div>
                 {message && (
                     <div className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest animate-in fade-in slide-in-from-top-2 duration-300 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
+                        {message.text}
+                    </div>
+                )}
+            </div>
+
+            {/* Page Header - Mobile Only */}
+            <div className="sm:hidden mb-2">
+                <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px]">PREFERENCES & CONFIG</p>
+                <p className="text-slate-900 mt-1 font-black text-xl tracking-tight">Configure your <span className="text-emerald-600 font-black">store foundation</span></p>
+                {message && (
+                    <div className={`mt-4 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest animate-in fade-in slide-in-from-top-2 duration-300 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
                         {message.text}
                     </div>
                 )}

@@ -69,24 +69,32 @@ export default function CustomersPage() {
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-end">
+            {/* Page Header - Desktop Only */}
+            <div className="hidden sm:flex justify-between items-end mb-4">
                 <div>
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Customers</h1>
                     <p className="text-slate-500 mt-1 uppercase text-[10px] font-bold tracking-widest">Manage and segment your storefront audience</p>
                 </div>
             </div>
 
-            {/* Customer Highlights */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <HighlightCard label="Total Customers" value={stats?.totalCustomers?.toString() || "0"} icon="👥" description="All buyers in your store" />
-                <HighlightCard label="Avg. Spend Per Order" value={formatCurrency(Number(stats?.avgOrderValue || 0))} icon="🛒" description="How much each order is worth" />
-                <HighlightCard label="Avg. Customer Worth" value={formatCurrency(Number(stats?.customerLTV || 0))} icon="💎" description="How much each customer spends in total" />
-                <HighlightCard label="Repeat Buyers" value={`${stats?.retentionRate || 0}%`} icon="📈" description="Customers who bought more than once" />
+            {/* Page Header - Mobile Only (Subtle) */}
+            <div className="sm:hidden mb-2">
+                <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px]">CUSTOMER RELATIONS</p>
+                <p className="text-slate-900 mt-1 font-black text-xl tracking-tight">Managing <span className="text-emerald-600 font-black">{customers.length} verified buyers</span></p>
             </div>
 
-            {/* Customers Table */}
-            <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 overflow-hidden">
-                <div className="overflow-x-auto">
+            {/* Customer Highlights */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
+                <HighlightCard label="Total Customers" value={stats?.totalCustomers?.toString() || "0"} icon="👥" description="All store buyers" />
+                <HighlightCard label="Avg. Order" value={formatCurrency(Number(stats?.avgOrderValue || 0))} icon="🛒" description="Per sale average" />
+                <HighlightCard label="Total LTV" value={formatCurrency(Number(stats?.customerLTV || 0))} icon="💎" description="Customer worth" />
+                <HighlightCard label="Repeat Rate" value={`${stats?.retentionRate || 0}%`} icon="📈" description="Back for more" />
+            </div>
+
+            {/* Customers List/Table */}
+            <div className="bg-white lg:rounded-[2.5rem] rounded-[2rem] lg:p-10 p-6 shadow-sm border border-slate-100 overflow-hidden">
+                {/* Desktop Table View */}
+                <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full border-separate border-spacing-y-0 text-left">
                         <thead>
                             <tr className="text-[10px] text-slate-400 uppercase tracking-widest border-b border-slate-50">
@@ -107,7 +115,6 @@ export default function CustomersPage() {
                                 customers.map((customer) => (
                                     <Fragment key={customer.id}>
                                         <tr
-                                            key={customer.id}
                                             onClick={() => toggleExpand(customer.id)}
                                             className={`border-b border-slate-50 group hover:bg-slate-50/50 transition-colors cursor-pointer ${expandedId === customer.id ? 'bg-slate-50/80' : ''}`}
                                         >
@@ -135,118 +142,7 @@ export default function CustomersPage() {
                                         {expandedId === customer.id && (
                                             <tr className="bg-slate-50/30">
                                                 <td colSpan={4} className="p-0">
-                                                    <div className="p-8 animate-in slide-in-from-top-2 duration-300">
-                                                        {detailsLoading || !details ? (
-                                                            <div className="flex justify-center py-10">
-                                                                <Loader2 className="w-6 h-6 animate-spin text-slate-300" />
-                                                            </div>
-                                                        ) : (
-                                                            <div className="space-y-8">
-                                                                {/* Stats Grid */}
-                                                                <div className="grid grid-cols-2 gap-4">
-                                                                    <div className="bg-amber-50 rounded-2xl p-5 border border-amber-100/50">
-                                                                        <div className="flex items-center gap-2 mb-2 text-amber-600/60 text-[10px] font-black uppercase tracking-widest">
-                                                                            <Clock className="w-3 h-3" /> Awaiting Payment
-                                                                        </div>
-                                                                        <div className="text-xl font-black text-amber-900">{formatCurrency(details.stats.pending.value)}</div>
-                                                                        <div className="text-xs font-bold text-amber-700/50">{details.stats.pending.count} orders</div>
-                                                                    </div>
-                                                                    <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100/50">
-                                                                        <div className="flex items-center gap-2 mb-2 text-emerald-600/60 text-[10px] font-black uppercase tracking-widest">
-                                                                            <CheckCircle className="w-3 h-3" /> Paid
-                                                                        </div>
-                                                                        <div className="text-xl font-black text-emerald-900">{formatCurrency(details.stats.paid.value)}</div>
-                                                                        <div className="text-xs font-bold text-emerald-700/50">{details.stats.paid.count} orders</div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="grid grid-cols-3 gap-8">
-                                                                    {/* Personal Details */}
-                                                                    <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm col-span-1">
-                                                                        <h3 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-6">Personal Details</h3>
-                                                                        <div className="space-y-4">
-                                                                            {details.profile.email && (
-                                                                                <div className="flex items-start gap-3">
-                                                                                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center shrink-0">
-                                                                                        <Mail className="w-4 h-4 text-slate-400" />
-                                                                                    </div>
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">Email Address</p>
-                                                                                        <p className="text-sm font-bold text-slate-900 break-all">{details.profile.email}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {details.profile.phone && (
-                                                                                <div className="flex items-start gap-3">
-                                                                                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center shrink-0">
-                                                                                        <Phone className="w-4 h-4 text-slate-400" />
-                                                                                    </div>
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">Phone Number</p>
-                                                                                        <p className="text-sm font-bold text-slate-900">{details.profile.phone}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {details.profile.shippingAddress && (
-                                                                                <div className="flex items-start gap-3">
-                                                                                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center shrink-0">
-                                                                                        <MapPin className="w-4 h-4 text-slate-400" />
-                                                                                    </div>
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">Shipping Address</p>
-                                                                                        <p className="text-sm font-bold text-slate-900 leading-relaxed">
-                                                                                            {details.profile.shippingAddress.address || 'N/A'}<br />
-                                                                                            {details.profile.shippingAddress.city}, {details.profile.shippingAddress.state}, {details.profile.shippingAddress.zip}<br />
-                                                                                            {details.profile.shippingAddress.country}
-                                                                                        </p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* Recent Activity / Orders */}
-                                                                    <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm col-span-2">
-                                                                        <h3 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-6">Recent Orders</h3>
-                                                                        <div className="overflow-y-auto max-h-[400px] rounded-xl border border-slate-100 relative custom-scrollbar">
-                                                                            <table className="w-full text-left bg-slate-50/50">
-                                                                                <thead className="sticky top-0 z-10 bg-slate-50 shadow-sm">
-                                                                                    <tr className="text-[9px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100">
-                                                                                        <th className="p-4 bg-slate-50">Order ID</th>
-                                                                                        <th className="p-4 bg-slate-50">Date</th>
-                                                                                        <th className="p-4 bg-slate-50">Status</th>
-                                                                                        <th className="p-4 bg-slate-50 text-right">Amount</th>
-                                                                                    </tr>
-                                                                                </thead>
-                                                                                <tbody className="text-xs bg-white">
-                                                                                    {details.recentOrders.length === 0 ? (
-                                                                                        <tr><td colSpan={4} className="p-4 text-center text-slate-400">No orders found</td></tr>
-                                                                                    ) : (
-                                                                                        details.recentOrders.map((order: any) => (
-                                                                                            <tr key={order.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50">
-                                                                                                <td className="p-4 font-mono text-slate-500">#{order.id.slice(-6)}</td>
-                                                                                                <td className="p-4 font-bold text-slate-700">{new Date(order.createdAt).toLocaleDateString()}</td>
-                                                                                                <td className="p-4">
-                                                                                                    <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${order.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
-                                                                                                        order.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
-                                                                                                            order.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-                                                                                                                'bg-slate-100 text-slate-600'
-                                                                                                        }`}>
-                                                                                                        {order.status === 'PENDING' ? 'Awaiting Payment' : order.status}
-                                                                                                    </span>
-                                                                                                </td>
-                                                                                                <td className="p-4 font-black text-slate-900 text-right">{formatCurrency(Number(order.totalAmount))}</td>
-                                                                                            </tr>
-                                                                                        ))
-                                                                                    )}
-                                                                                </tbody>
-                                                                            </table>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                    <CustomerDetailView details={details} loading={detailsLoading} formatCurrency={formatCurrency} />
                                                 </td>
                                             </tr>
                                         )}
@@ -256,6 +152,161 @@ export default function CustomersPage() {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Mobile Card View */}
+                <div className="lg:hidden space-y-4">
+                    {customers.length === 0 ? (
+                        <div className="py-12 text-center text-slate-400 font-black uppercase text-[10px] tracking-widest">
+                            No customers yet
+                        </div>
+                    ) : (
+                        customers.map((customer) => (
+                            <div key={customer.id} className="border-b border-slate-50 last:border-0 pb-4 last:pb-0">
+                                <div
+                                    onClick={() => toggleExpand(customer.id)}
+                                    className={`flex items-center gap-4 p-2 rounded-2xl transition-all ${expandedId === customer.id ? 'bg-slate-50 shadow-sm' : ''}`}
+                                >
+                                    <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-sm shadow-sm text-slate-900 font-black overflow-hidden shrink-0">
+                                        {customer.image ? (
+                                            <img src={customer.image} alt={customer.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            customer.name.split(' ').map((n: string) => n[0]).join('')
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-black text-slate-900 text-sm truncate">{customer.name}</p>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <span className="text-[10px] text-primary font-black uppercase tracking-tight">{formatCurrency(Number(customer.totalSpent))}</span>
+                                            <span className="text-[10px] text-slate-400 font-bold">• {customer.ordersCount} orders</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {expandedId === customer.id && (
+                                    <div className="mt-4 px-2">
+                                        <CustomerDetailView details={details} loading={detailsLoading} formatCurrency={formatCurrency} />
+                                    </div>
+                                )}
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function CustomerDetailView({ details, loading, formatCurrency }: { details: any; loading: boolean; formatCurrency: any }) {
+    if (loading || !details) {
+        return (
+            <div className="flex justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-slate-300" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="lg:p-8 p-4 animate-in slide-in-from-top-2 duration-300 space-y-6 lg:space-y-8">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:gap-4 gap-3">
+                <div className="bg-amber-50 rounded-2xl p-4 lg:p-5 border border-amber-100/50">
+                    <div className="flex items-center gap-2 mb-2 text-amber-600/60 text-[9px] lg:text-[10px] font-black uppercase tracking-widest">
+                        <Clock className="w-3 h-3" /> Awaiting
+                    </div>
+                    <div className="text-sm lg:text-xl font-black text-amber-900">{formatCurrency(details.stats.pending.value)}</div>
+                    <div className="text-[8px] lg:text-xs font-bold text-amber-700/50 uppercase tracking-tighter">{details.stats.pending.count} orders</div>
+                </div>
+                <div className="bg-emerald-50 rounded-2xl p-4 lg:p-5 border border-emerald-100/50">
+                    <div className="flex items-center gap-2 mb-2 text-emerald-600/60 text-[9px] lg:text-[10px] font-black uppercase tracking-widest">
+                        <CheckCircle className="w-3 h-3" /> Paid
+                    </div>
+                    <div className="text-sm lg:text-xl font-black text-emerald-900">{formatCurrency(details.stats.paid.value)}</div>
+                    <div className="text-[8px] lg:text-xs font-bold text-emerald-700/50 uppercase tracking-tighter">{details.stats.paid.count} orders</div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8 gap-6">
+                {/* Personal Details */}
+                <div className="bg-white rounded-3xl p-5 lg:p-6 border border-slate-100 lg:shadow-sm">
+                    <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4 lg:mb-6">Personal Details</h3>
+                    <div className="space-y-4">
+                        {details.profile.email && (
+                            <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center shrink-0">
+                                    <Mail className="w-4 h-4 text-slate-400" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Email Address</p>
+                                    <p className="text-xs font-bold text-slate-900 break-all">{details.profile.email}</p>
+                                </div>
+                            </div>
+                        )}
+                        {details.profile.phone && (
+                            <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center shrink-0">
+                                    <Phone className="w-4 h-4 text-slate-400" />
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Phone Number</p>
+                                    <p className="text-xs font-bold text-slate-900">{details.profile.phone}</p>
+                                </div>
+                            </div>
+                        )}
+                        {details.profile.shippingAddress && (
+                            <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center shrink-0">
+                                    <MapPin className="w-4 h-4 text-slate-400" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Shipping Address</p>
+                                    <p className="text-[11px] font-bold text-slate-900 leading-relaxed truncate lg:whitespace-normal">
+                                        {details.profile.shippingAddress.address || 'N/A'}<br />
+                                        {details.profile.shippingAddress.city}, {details.profile.shippingAddress.state}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Recent Activity / Orders */}
+                <div className="bg-white rounded-3xl p-5 lg:p-6 border border-slate-100 lg:shadow-sm lg:col-span-2 overflow-hidden">
+                    <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4 lg:mb-6">Recent Activity</h3>
+                    <div className="overflow-x-auto rounded-xl border border-slate-50">
+                        <table className="w-full text-left bg-slate-50/50 border-separate border-spacing-0">
+                            <thead className="bg-slate-50 shadow-sm sticky top-0">
+                                <tr className="text-[8px] lg:text-[9px] uppercase tracking-widest text-slate-400 font-bold">
+                                    <th className="p-3 lg:p-4">ID</th>
+                                    <th className="p-3 lg:p-4">Date</th>
+                                    <th className="p-3 lg:p-4">Status</th>
+                                    <th className="p-3 lg:p-4 text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-[10px] lg:text-xs">
+                                {details.recentOrders.length === 0 ? (
+                                    <tr><td colSpan={4} className="p-6 text-center text-slate-400 font-bold uppercase tracking-widest text-[8px]">No activity recorded</td></tr>
+                                ) : (
+                                    details.recentOrders.map((order: any) => (
+                                        <tr key={order.id} className="border-b border-slate-50 last:border-0 hover:bg-white bg-white/50 transition-colors">
+                                            <td className="p-3 lg:p-4 font-mono text-slate-400">#{order.id.slice(-4)}</td>
+                                            <td className="p-3 lg:p-4 font-bold text-slate-700 whitespace-nowrap">{new Date(order.createdAt).toLocaleDateString()}</td>
+                                            <td className="p-3 lg:p-4">
+                                                <div className="flex items-center">
+                                                    <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider whitespace-nowrap ${order.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
+                                                        order.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
+                                                            'bg-slate-100 text-slate-500'
+                                                        }`}>
+                                                        {order.status === 'PENDING' ? 'AW-PAY' : order.status}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="p-3 lg:p-4 font-black text-slate-900 text-right whitespace-nowrap">{formatCurrency(Number(order.totalAmount))}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     );
@@ -263,15 +314,17 @@ export default function CustomersPage() {
 
 function HighlightCard({ label, value, icon, description }: { label: string; value: string; icon: string; description?: string }) {
     return (
-        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-            <div className="flex justify-between items-start mb-4">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
-                <span className="text-xl grayscale opacity-40">{icon}</span>
+        <div className="bg-white rounded-2xl lg:rounded-3xl p-4 lg:p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
+            <div className="flex justify-between items-start mb-2 lg:mb-4">
+                <span className="text-[8px] lg:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{label}</span>
+                <span className="text-lg lg:text-xl grayscale opacity-30 shrink-0">{icon}</span>
             </div>
-            <p className="text-2xl font-black text-slate-900">{value}</p>
-            {description && (
-                <p className="text-[10px] text-slate-400 font-medium mt-2">{description}</p>
-            )}
+            <div>
+                <p className="text-lg lg:text-2xl font-black text-slate-900 truncate tracking-tight">{value}</p>
+                {description && (
+                    <p className="text-[8px] lg:text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1 opacity-60">{description}</p>
+                )}
+            </div>
         </div>
     );
 }

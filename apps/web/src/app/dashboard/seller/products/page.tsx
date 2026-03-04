@@ -139,7 +139,10 @@ export default function ProductsPage() {
             {/* Mobile Actions Header - Clean, non-overlapping section */}
             <div className="lg:hidden flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Products</h1>
+                    <div>
+                        <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px]">MASTER CATALOG</p>
+                        <p className="text-slate-900 mt-1 font-black text-xl tracking-tight">Managing <span className="text-emerald-600 font-black">{products.length} live items</span></p>
+                    </div>
                     <button
                         onClick={handleExportCSV}
                         className="w-10 h-10 bg-white border border-slate-100 text-slate-600 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-sm"
@@ -185,7 +188,7 @@ export default function ProductsPage() {
                             placeholder="Search catalog..."
                             value={searchQuery || ''}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full h-10 bg-white border border-slate-100 rounded-xl pl-9 pr-4 text-[10px] font-bold uppercase tracking-widest text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all"
+                            className="w-full h-10 bg-white border border-slate-100 rounded-xl pl-9 pr-4 text-base lg:text-[10px] font-bold uppercase tracking-widest text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all"
                         />
                     </div>
                 </div>
@@ -523,8 +526,8 @@ function ProductDetailView({ product, onClose, onUpdate, storeCategories = [] }:
     };
 
     return (
-        <div className="bg-slate-50 rounded-3xl p-8 border border-slate-200 shadow-inner animate-in fade-in slide-in-from-top-4 duration-300 relative z-[600]">
-            <div className="flex flex-col md:flex-row gap-8">
+        <div className="bg-slate-50 rounded-3xl p-5 lg:p-10 border border-slate-200 shadow-inner animate-in fade-in slide-in-from-top-4 duration-300 relative z-[600]">
+            <div className="flex flex-col md:flex-row gap-6 lg:gap-12">
                 {/* Images Preview */}
                 <div className="md:w-1/3">
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Product Gallery</label>
@@ -727,21 +730,21 @@ function ProductDetailView({ product, onClose, onUpdate, storeCategories = [] }:
                         </div>
                     )}
 
-                    <div className="flex justify-between items-center pt-2">
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 lg:gap-0 pt-6 border-t border-slate-100 mt-6">
                         <button
                             type="button"
                             onClick={handleAiAnalyze}
                             disabled={aiLoading || loading}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-600 hover:border-emerald-200 hover:text-emerald-600 transition-all group"
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all group"
                         >
-                            {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 text-emerald-500 group-hover:scale-110 transition-transform" />}
-                            {aiLoading ? 'Analyzing with BigT...' : 'Analyze with BigT Agent'}
+                            {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 group-hover:scale-110 transition-transform" />}
+                            {aiLoading ? 'Generating...' : 'Generate Content'}
                         </button>
-                        <div className="flex gap-3">
+                        <div className="flex items-center gap-8 w-full sm:w-auto justify-center sm:justify-end">
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
+                                className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 transition-colors"
                             >
                                 Cancel
                             </button>
@@ -749,10 +752,10 @@ function ProductDetailView({ product, onClose, onUpdate, storeCategories = [] }:
                                 type="button"
                                 onClick={handleQuickUpdate}
                                 disabled={loading || aiLoading}
-                                className="px-8 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 flex items-center gap-2"
+                                className="px-10 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-black transition-all shadow-xl shadow-slate-200 flex items-center gap-2 active:scale-95"
                             >
                                 {loading && <Loader2 className="w-3 h-3 animate-spin" />}
-                                Update Product
+                                Update
                             </button>
                         </div>
                     </div>
@@ -890,29 +893,30 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId, storeCategories 
     return (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-white rounded-[2.5rem] w-full max-w-6xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] border border-slate-200">
-                <div className="px-10 py-8 flex justify-between items-center bg-white shrink-0">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center">
-                            <Plus className="w-6 h-6 text-primary" />
+                <div className="px-6 py-5 flex justify-between items-center bg-white border-b border-slate-50 shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
+                            <Plus className="w-5 h-5 text-emerald-600" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Add New Product</h2>
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Provide specific details to help your products appear in Google Search results</p>
+                            <h2 className="text-base font-black text-slate-900 tracking-tight uppercase">Add New Product</h2>
+                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-tight hidden sm:block">Fulfill specific details for Google SEO results</p>
+                            <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest leading-tight sm:hidden">SEO optimized product listing</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-3 hover:bg-slate-100 rounded-2xl transition-all group">
-                        <X className="w-6 h-6 text-slate-400 group-hover:text-primary transition-colors" />
+                    <button onClick={onClose} className="p-2 hover:bg-slate-50 rounded-xl transition-all group">
+                        <X className="w-5 h-5 text-slate-400 group-hover:text-rose-500 transition-colors" />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
-                    <div className="flex-1 overflow-y-auto px-10 pb-10">
-                        <div className="flex flex-col lg:flex-row gap-12">
+                    <div className="flex-1 overflow-y-auto px-6 py-6 lg:px-10 lg:py-8">
+                        <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
                             {/* Left Column: Images & Pricing */}
                             <div className="lg:w-72 space-y-8 shrink-0">
                                 <div>
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Product Gallery ({selectedFiles.length}/5)</label>
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Gallery ({selectedFiles.length}/5)</label>
+                                    <div className="grid grid-cols-2 xs:grid-cols-3 lg:grid-cols-2 gap-2">
                                         {imagePreviews.map((preview, index) => (
                                             <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border border-slate-100 group shadow-sm bg-slate-50">
                                                 <img src={preview} alt={`Preview ${index}`} className="w-full h-full object-cover" />
@@ -953,7 +957,7 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId, storeCategories 
                                                 required
                                                 value={formData.price}
                                                 onChange={e => setFormData({ ...formData, price: e.target.value })}
-                                                className="w-full pl-8 pr-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:border-primary transition-all placeholder:text-slate-300 shadow-inner"
+                                                className="w-full pl-8 pr-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-base lg:text-sm font-bold text-slate-900 focus:outline-none focus:border-emerald-500 transition-all placeholder:text-slate-300 shadow-inner"
                                                 placeholder="0.00"
                                             />
                                         </div>
@@ -967,7 +971,7 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId, storeCategories 
                                                 step="0.01"
                                                 value={formData.discountPrice}
                                                 onChange={e => setFormData({ ...formData, discountPrice: e.target.value })}
-                                                className="w-full pl-8 pr-5 py-3.5 bg-emerald-50/50 border border-emerald-100 rounded-2xl text-sm font-black text-primary focus:outline-none focus:border-primary transition-all placeholder:text-emerald-200 shadow-inner"
+                                                className="w-full pl-8 pr-5 py-3.5 bg-emerald-50/50 border border-emerald-100 rounded-2xl text-base lg:text-sm font-black text-emerald-600 focus:outline-none focus:border-emerald-500 transition-all placeholder:text-emerald-200 shadow-inner"
                                                 placeholder="Offer"
                                             />
                                         </div>
@@ -985,7 +989,7 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId, storeCategories 
                                             required
                                             value={formData.name}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-300"
+                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-base lg:text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all placeholder:text-slate-300 shadow-inner"
                                             placeholder="What are you selling?"
                                         />
                                     </div>
@@ -1008,7 +1012,7 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId, storeCategories 
                                                 required
                                                 value={formData.stock}
                                                 onChange={e => setFormData({ ...formData, stock: e.target.value })}
-                                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
+                                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-base lg:text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-inner"
                                                 placeholder="0"
                                             />
                                         </div>
@@ -1023,7 +1027,7 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId, storeCategories 
                                                 type="text"
                                                 value={formData.tags}
                                                 onChange={e => setFormData({ ...formData, tags: e.target.value })}
-                                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-600 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
+                                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-base lg:text-sm font-bold text-slate-600 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-inner"
                                                 placeholder="e.g. Authentic Coral Beads, Edo Bride Attire..."
                                             />
                                         </div>
@@ -1034,7 +1038,7 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId, storeCategories 
                                                     type="text"
                                                     value={formData.colors}
                                                     onChange={e => setFormData({ ...formData, colors: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-500"
+                                                    className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-base lg:text-xs font-bold text-slate-500 shadow-sm"
                                                     placeholder="Red, Blue..."
                                                 />
                                             </div>
@@ -1044,7 +1048,7 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId, storeCategories 
                                                     type="text"
                                                     value={formData.sizes}
                                                     onChange={e => setFormData({ ...formData, sizes: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-500"
+                                                    className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-base lg:text-xs font-bold text-slate-500 shadow-sm"
                                                     placeholder="S, M, L..."
                                                 />
                                             </div>
@@ -1062,15 +1066,15 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId, storeCategories 
                                             className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md shadow-emerald-500/20"
                                         >
                                             {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                                            Analyze with BigT AI
+                                            {aiLoading ? 'Generating...' : 'Generate Content'}
                                         </button>
                                     </div>
                                     <div className="relative">
                                         <textarea
-                                            rows={8}
+                                            rows={5}
                                             value={formData.description}
                                             onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-medium text-slate-600 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all resize-none shadow-inner"
+                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-base lg:text-sm font-medium text-slate-600 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none shadow-inner"
                                             placeholder="Tell your customers about the magic of this product..."
                                         />
                                     </div>
@@ -1081,21 +1085,21 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId, storeCategories 
                         </div>
                     </div>
 
-                    <div className="px-10 py-8 border-t border-slate-50 bg-white flex justify-end gap-4 shrink-0">
+                    <div className="px-6 py-5 lg:px-10 lg:py-8 border-t border-slate-50 bg-white flex flex-col-reverse sm:flex-row justify-end gap-3 shrink-0">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-8 py-4 bg-slate-50 text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all"
+                            className="w-full sm:w-auto px-8 py-3.5 bg-slate-50 text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95"
                         >
-                            Cancel
+                            Cancel Listing
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !formData.name || !formData.price || aiLoading}
-                            className="px-12 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-900/20 disabled:opacity-50 flex items-center gap-3"
+                            className="w-full sm:w-auto px-10 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:bg-black transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
                         >
-                            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                            Launch Product
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />}
+                            {loading ? 'Launching...' : 'Launch'}
                         </button>
                     </div>
                 </form>
