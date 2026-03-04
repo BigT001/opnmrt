@@ -73,11 +73,30 @@ export function VantageFooter({
                     <div className="md:text-right flex flex-col md:items-end space-y-4">
                         <h4 className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-300">Connect</h4>
                         <div className="flex flex-col md:items-end gap-2">
-                            {['Terms & Privacy', 'Shipping Policy', 'Contact Us'].map((item) => (
-                                <Link key={item} href="#" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
-                                    {item}
-                                </Link>
-                            ))}
+                            <Link href="#" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
+                                <EditableText
+                                    value={config.footerTermsLink || 'Terms & Privacy'}
+                                    onSave={val => handleConfigSave({ footerTermsLink: val })}
+                                    isPreview={isPreview}
+                                    label="Terms Link Label"
+                                />
+                            </Link>
+                            <Link href="#" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
+                                <EditableText
+                                    value={config.footerShippingLink || 'Shipping Policy'}
+                                    onSave={val => handleConfigSave({ footerShippingLink: val })}
+                                    isPreview={isPreview}
+                                    label="Shipping Link Label"
+                                />
+                            </Link>
+                            <Link href="#" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
+                                <EditableText
+                                    value={config.footerContactLink || 'Contact Us'}
+                                    onSave={val => handleConfigSave({ footerContactLink: val })}
+                                    isPreview={isPreview}
+                                    label="Contact Link Label"
+                                />
+                            </Link>
                         </div>
                     </div>
                 </div>

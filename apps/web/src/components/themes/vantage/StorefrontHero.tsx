@@ -75,7 +75,14 @@ export function VantageHero({ store, isPreview, onConfigChange }: HeroProps) {
                                         <img src={`https://i.pravatar.cc/80?img=${n}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     </div>
                                 ))}
-                                <div style={{ width: 34, height: 34, borderRadius: '50%', border: '2px solid #fff', background: store.primaryColor || '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 900, marginLeft: -12 }}>+</div>
+                                <div style={{ width: 34, height: 34, borderRadius: '50%', border: '2px solid #fff', background: store.primaryColor || '#000', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 900, marginLeft: -12 }}>
+                                    <EditableText
+                                        value={config.heroAvatarPlus || "+"}
+                                        onSave={val => handleSave('heroAvatarPlus', val)}
+                                        isPreview={isPreview}
+                                        label="Avatar Plus Symbol"
+                                    />
+                                </div>
                             </div>
                             <span className="vantage-metric-hidden-mobile" style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#9ca3af' }}>
                                 <EditableText

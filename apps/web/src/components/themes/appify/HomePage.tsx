@@ -162,7 +162,14 @@ export const AppifyHomePage: React.FC<PageProps> = ({ store, products, subdomain
                     {/* Scroll Indicator */}
                     <div className="relative z-10 pb-12 flex flex-col items-center gap-6 pointer-events-none">
                         <div className="flex flex-col items-center gap-2 group transition-all">
-                            <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.6em] mb-4">Discovery</span>
+                            <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.6em] mb-4">
+                                <EditableText
+                                    value={store.themeConfig?.heroScrollLabel || 'Discovery'}
+                                    onSave={(val) => handleSave('heroScrollLabel', val)}
+                                    isPreview={isPreview}
+                                    label="Scroll Label"
+                                />
+                            </span>
                             <div className="w-[1px] h-16 bg-gradient-to-b from-orange-500 via-orange-500/50 to-transparent" />
                         </div>
                     </div>
@@ -573,6 +580,9 @@ export const AppifyHomePage: React.FC<PageProps> = ({ store, products, subdomain
                                             subdomain={subdomain}
                                             storeId={store.id}
                                             index={i}
+                                            store={store}
+                                            isPreview={isPreview}
+                                            onConfigChange={onConfigChange}
                                         />
                                     ))}
                                 </div>

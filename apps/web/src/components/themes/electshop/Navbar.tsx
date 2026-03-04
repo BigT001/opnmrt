@@ -111,7 +111,7 @@ export function ElectshopNavbar({ storeName, logo, storeId, isPreview, primaryCo
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search for products, brands and more"
+                                    placeholder={config.navSearchPlaceholder || "Search for products, brands and more"}
                                     className="w-full bg-transparent px-4 py-2.5 text-xs font-semibold outline-none text-gray-950 placeholder:text-gray-400"
                                 />
                                 <button
@@ -213,7 +213,14 @@ export function ElectshopNavbar({ storeName, logo, storeId, isPreview, primaryCo
                                 </span>
                             </div>
                             <div className="hidden xl:block text-left leading-none">
-                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">My Cart</p>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                    <EditableText
+                                        value={config.navCartLabel || 'My Cart'}
+                                        onSave={(val: string) => handleConfigSave({ navCartLabel: val })}
+                                        isPreview={isPreview}
+                                        label="Cart Label"
+                                    />
+                                </p>
                                 <p className="text-xs font-black mt-1" style={{ color: effectivePrimaryColor }}>{formatPrice(subtotal)}</p>
                             </div>
                         </button>
@@ -310,7 +317,7 @@ export function ElectshopNavbar({ storeName, logo, storeId, isPreview, primaryCo
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search products..."
+                        placeholder={(config.navSearchPlaceholder || "Search products...").toUpperCase()}
                         className="flex-1 bg-transparent px-4 py-3 text-sm outline-none"
                     />
                     <button
@@ -346,7 +353,14 @@ export function ElectshopNavbar({ storeName, logo, storeId, isPreview, primaryCo
                             </div>
                             <div className="flex-grow overflow-y-auto py-6">
                                 <div className="px-6 mb-8">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Discovery</p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">
+                                        <EditableText
+                                            value={config.navMobileDiscoveryLabel || 'Discovery'}
+                                            onSave={(val: string) => handleConfigSave({ navMobileDiscoveryLabel: val })}
+                                            isPreview={isPreview}
+                                            label="Mobile Discovery Label"
+                                        />
+                                    </p>
                                     <nav className="space-y-4">
                                         {navLinks.map((link: { name: string; href: string; key?: string }) => (
                                             <Link
@@ -371,7 +385,14 @@ export function ElectshopNavbar({ storeName, logo, storeId, isPreview, primaryCo
                                     </nav>
                                 </div>
                                 <div className="px-6 mb-8">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Hot Categories</p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">
+                                        <EditableText
+                                            value={config.navMobileHotCategoriesLabel || 'Hot Categories'}
+                                            onSave={(val: string) => handleConfigSave({ navMobileHotCategoriesLabel: val })}
+                                            isPreview={isPreview}
+                                            label="Mobile Categories Label"
+                                        />
+                                    </p>
                                     <nav className="space-y-4">
                                         {categories.slice(1).map((cat: string) => (
                                             <Link
@@ -393,7 +414,12 @@ export function ElectshopNavbar({ storeName, logo, storeId, isPreview, primaryCo
                                     className="block w-full py-4 text-white text-center rounded-xl font-bold uppercase tracking-widest text-xs"
                                     style={{ backgroundColor: effectivePrimaryColor }}
                                 >
-                                    {user ? 'My Dashboard' : 'Member Portal'}
+                                    <EditableText
+                                        value={user ? (config.navMyDashboardLabel || 'My Dashboard') : (config.navMemberPortalLabel || 'Member Portal')}
+                                        onSave={(val: string) => handleConfigSave({ [user ? 'navMyDashboardLabel' : 'navMemberPortalLabel']: val })}
+                                        isPreview={isPreview}
+                                        label="Mobile Menu Account Button"
+                                    />
                                 </Link>
                             </div>
                         </motion.div>

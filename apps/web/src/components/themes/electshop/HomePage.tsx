@@ -251,7 +251,15 @@ export function ElectshopHomePage({ store, products, subdomain, isPreview, onCon
                     </div>
                     <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
                         {products.slice(0, 10).map((product) => (
-                            <ElectshopProductCard key={product.id} product={product} subdomain={subdomain} storeId={store.id} />
+                            <ElectshopProductCard
+                                key={product.id}
+                                product={product}
+                                subdomain={subdomain}
+                                storeId={store.id}
+                                isPreview={isPreview}
+                                onConfigChange={onConfigChange}
+                                store={store}
+                            />
                         ))}
                     </div>
                 </section>
@@ -418,7 +426,15 @@ export function ElectshopHomePage({ store, products, subdomain, isPreview, onCon
 
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
                                 {(filteredProducts.length > 0 ? filteredProducts : products.slice(0, 8)).map((product) => (
-                                    <ElectshopProductCard key={product.id} product={product} subdomain={subdomain} storeId={store.id} />
+                                    <ElectshopProductCard
+                                        key={product.id}
+                                        product={product}
+                                        subdomain={subdomain}
+                                        storeId={store.id}
+                                        isPreview={isPreview}
+                                        onConfigChange={onConfigChange}
+                                        store={store}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -511,12 +527,28 @@ function BannerItem({ title, price, image, bg, onShop, isPreview, onSaveImage }:
         <div className={`${bg} rounded-[2rem] p-8 flex flex-col justify-center border border-gray-100/30 group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 overflow-hidden relative h-[220px]`}>
             <div className="relative z-10 space-y-3 w-1/2">
                 <h3 className="text-lg font-black text-gray-900 leading-tight uppercase italic tracking-tighter">{title}</h3>
-                <p className="text-brand font-black italic tracking-tighter text-sm">From {price}</p>
+                <p className="text-brand font-black italic tracking-tighter text-sm flex items-center gap-1">
+                    <EditableText
+                        value={isPreview ? 'From ' : ''}
+                        onSave={() => { }} // Just for visual in editor
+                        isPreview={isPreview}
+                        label="From Prefix"
+                    />
+                    {!isPreview && 'From '}
+                    {price}
+                </p>
                 <button
                     onClick={onShop}
                     className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-200 pb-1 group-hover:border-brand group-hover:text-brand transition-all"
                 >
-                    Shop Now <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    <EditableText
+                        value={isPreview ? 'Shop Now' : ''}
+                        onSave={() => { }}
+                        isPreview={isPreview}
+                        label="Shop Now Label"
+                    />
+                    {!isPreview && 'Shop Now'}
+                    <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                 </button>
             </div>
             <div className="absolute -right-6 top-1/2 -translate-y-1/2 w-3/5 h-[80%]">
@@ -550,7 +582,16 @@ function PromoBanner({ title, subtitle, price, image, bgColor, onBuyNow, brandCo
                 {subtitle && <span className="text-[10px] lg:text-[12px] font-black uppercase tracking-[0.3em] text-gray-400">{subtitle}</span>}
                 <h3 className="text-3xl lg:text-4xl font-black text-gray-900 leading-[0.95] uppercase italic tracking-tighter">{title}</h3>
                 <div className="flex items-center gap-4 pt-4">
-                    <span className="text-xl lg:text-3xl font-black italic tracking-tighter" style={{ color: brandColor }}>Only {price}</span>
+                    <span className="text-xl lg:text-3xl font-black italic tracking-tighter flex items-center gap-1" style={{ color: brandColor }}>
+                        <EditableText
+                            value={isPreview ? 'Only ' : ''}
+                            onSave={() => { }}
+                            isPreview={isPreview}
+                            label="Only Prefix"
+                        />
+                        {!isPreview && 'Only '}
+                        {price}
+                    </span>
                     <button
                         onClick={onBuyNow}
                         className="w-12 h-12 bg-white text-gray-900 rounded-full flex items-center justify-center shadow-lg hover:bg-brand hover:text-white transition-all transform hover:scale-110"

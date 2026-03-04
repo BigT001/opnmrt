@@ -92,8 +92,22 @@ export function AppifyFooter({
                     {/* Links & Copyright */}
                     <div className="flex items-center gap-6">
                         <div className="flex gap-5 text-[10px] font-bold text-white/30 uppercase tracking-[0.1em]">
-                            <a href="#" className="hover:text-white transition-colors">Privacy</a>
-                            <a href="#" className="hover:text-white transition-colors">Terms</a>
+                            <a href="#" className="hover:text-white transition-colors">
+                                <EditableText
+                                    value={config.footerPrivacyLink || 'Privacy'}
+                                    onSave={(val) => handleSave('footerPrivacyLink', val)}
+                                    isPreview={isPreview}
+                                    label="Privacy Link"
+                                />
+                            </a>
+                            <a href="#" className="hover:text-white transition-colors">
+                                <EditableText
+                                    value={config.footerTermsLink || 'Terms'}
+                                    onSave={(val) => handleSave('footerTermsLink', val)}
+                                    isPreview={isPreview}
+                                    label="Terms Link"
+                                />
+                            </a>
                         </div>
                         <div className="h-4 w-px bg-white/10" />
                         <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.1em]">

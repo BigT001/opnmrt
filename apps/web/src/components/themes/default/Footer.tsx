@@ -50,28 +50,38 @@ function TiktokIcon() {
     );
 }
 
+import { EditableText } from '../EditableContent';
+
 export function DefaultFooter({
     storeName,
     subdomain,
     instagram,
     twitter,
     facebook,
-    tiktok
+    tiktok,
+    isPreview,
+    onConfigChange,
+    themeConfig
 }: FooterProps) {
     const base = subdomain ? `/store/${subdomain}` : '#';
     const year = new Date().getFullYear();
+    const config = themeConfig || {};
+
+    const handleSave = (key: string, value: string) => {
+        onConfigChange?.({ [key]: value });
+    };
 
     const navLinks = [
-        { label: 'Shop', href: `${base}/shop` },
-        { label: 'About', href: `${base}/about` },
-        { label: 'Privacy', href: `${base}/privacy` },
-        { label: 'Terms', href: `${base}/terms` },
+        { label: config.footerShopText || 'Shop', href: `${base}/shop`, key: 'footerShopText' },
+        { label: config.footerAboutText || 'About', href: `${base}/about`, key: 'footerAboutText' },
+        { label: config.footerPrivacyText || 'Privacy', href: `${base}/privacy`, key: 'footerPrivacyText' },
+        { label: config.footerTermsText || 'Terms', href: `${base}/terms`, key: 'footerTermsText' },
     ];
 
     const socials = [
         { label: 'Instagram', name: 'instagram', handle: instagram, icon: <InstagramIcon /> },
         { label: 'X (Twitter)', name: 'twitter', handle: twitter, icon: <XIcon /> },
-        { label: 'Facebook', name: 'facebook', handle: facebook, icon: <LinkedinIcon /> }, // Using LinkedinIcon box as a placeholder for FB or keep it simple
+        { label: 'Facebook', name: 'facebook', handle: facebook, icon: <LinkedinIcon /> },
         { label: 'TikTok', name: 'tiktok', handle: tiktok, icon: <TiktokIcon /> },
     ].filter(s => s.handle);
 
@@ -103,14 +113,18 @@ export function DefaultFooter({
 
                     {/* Right — Nav links */}
                     <nav className="flex flex-wrap justify-center gap-x-8 gap-y-2">
-                        {navLinks.map(({ label, href }) => (
-                            <Link
-                                key={label}
-                                href={href}
+                        {navLinks.map(({ label, href, key }) => (
+                            <div
+                                key={key}
                                 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] hover:text-gray-900 transition-colors"
                             >
-                                {label}
-                            </Link>
+                                <EditableText
+                                    value={label}
+                                    onSave={val => handleSave(key, val)}
+                                    isPreview={isPreview}
+                                    label={`${label} Label`}
+                                />
+                            </div>
                         ))}
                     </nav>
                 </div>
@@ -118,10 +132,20 @@ export function DefaultFooter({
                 {/* Bottom bar */}
                 <div className="mt-6 pt-5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2">
                     <p className="text-[9px] font-black text-gray-300 uppercase tracking-[0.25em]">
-                        © {year} {storeName} · All Rights Reserved
+                        <EditableText
+                            value={config.footerCopyrightText || `© ${year} ${storeName} · All Rights Reserved`}
+                            onSave={val => handleSave('footerCopyrightText', val)}
+                            isPreview={isPreview}
+                            label="Copyright Text"
+                        />
                     </p>
                     <p className="text-[9px] font-black text-gray-300 uppercase tracking-[0.25em]">
-                        Powered by <span className="text-gray-400">OPNMRT</span>
+                        <EditableText
+                            value={config.footerPoweredByText || "Powered by OPNMRT"}
+                            onSave={val => handleSave('footerPoweredByText', val)}
+                            isPreview={isPreview}
+                            label="Powered By Text"
+                        />
                     </p>
                 </div>
             </div>

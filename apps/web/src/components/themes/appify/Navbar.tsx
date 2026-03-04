@@ -27,7 +27,7 @@ export function AppifyNavbar({ storeName, logo, storeId, isPreview, onConfigChan
     };
 
     const activeCategory = searchParams?.get('category') || 'All';
-    const categories = ['All', "Men's", "Women's", 'Kids', 'New In', 'Collection'];
+    const categories = ['All', ...(themeConfig?.categories && Array.isArray(themeConfig.categories) && themeConfig.categories.length > 0 ? themeConfig.categories : ["Men's", "Women's", 'Kids', 'New In', 'Collection'])];
 
     const handleCategoryClick = (cat: string) => {
         const urlParams = new URLSearchParams(searchParams?.toString());
@@ -117,7 +117,14 @@ export function AppifyNavbar({ storeName, logo, storeId, isPreview, onConfigChan
                 >
                     <ChevronLeft className="w-5 h-5" />
                 </Link>
-                <h1 className="text-[14px] font-black tracking-tighter uppercase italic text-gray-900">Details</h1>
+                <h1 className="text-[14px] font-black tracking-tighter uppercase italic text-gray-900">
+                    <EditableText
+                        value={themeConfig?.navDetailsLabel || 'Details'}
+                        onSave={val => handleConfigSave({ navDetailsLabel: val })}
+                        isPreview={isPreview}
+                        label="Page Title"
+                    />
+                </h1>
                 {renderIcons(true)}
             </div>
         );
@@ -238,7 +245,7 @@ export function AppifyNavbar({ storeName, logo, storeId, isPreview, onConfigChan
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search products"
+                                    placeholder={themeConfig?.navSearchPlaceholder || "Search products"}
                                     className="w-full h-full pl-11 pr-12 bg-gray-50 border border-gray-100 rounded-2xl text-[13px] text-gray-900 placeholder:text-gray-400 outline-none focus:bg-white focus:border-gray-200 focus:shadow-sm transition-all font-bold"
                                 />
                                 <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 bg-white rounded-lg flex items-center justify-center hover:bg-gray-50 border border-gray-100 transition-all shadow-sm">
@@ -308,12 +315,12 @@ export function AppifyNavbar({ storeName, logo, storeId, isPreview, onConfigChan
                         </div>
                     </div>
 
-                    {/* Secondary Desktop Discovery Layer - Collection Context - Hidden on MD+ because we have the sidebar now */}
+                    {/* Secondary Desktop Discovery Layer - Collection Context */}
                     {type === 'shop' && !isScrolled && (
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="hidden pt-2 border-t border-white/5"
+                            className="pt-2 border-t border-gray-100"
                         >
                             {renderCategoryRow()}
                         </motion.div>
@@ -399,7 +406,14 @@ export function AppifyNavbar({ storeName, logo, storeId, isPreview, onConfigChan
                                             <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
                                                 <User className="w-4 h-4" />
                                             </div>
-                                            <span className="text-[11px] font-extrabold text-gray-700 uppercase tracking-widest leading-none">Sign In</span>
+                                            <span className="text-[11px] font-extrabold text-gray-700 uppercase tracking-widest leading-none">
+                                                <EditableText
+                                                    value={themeConfig?.navSignIn || 'Sign In'}
+                                                    onSave={(val) => handleConfigSave({ navSignIn: val })}
+                                                    isPreview={isPreview}
+                                                    label="Sign In Label"
+                                                />
+                                            </span>
                                         </Link>
                                     )}
                                 </>

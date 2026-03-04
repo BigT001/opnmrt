@@ -42,7 +42,12 @@ export function DefaultHero({ store, isPreview, onConfigChange }: HeroProps) {
                             <div className="flex items-center justify-center lg:justify-start gap-4">
                                 <span className="bg-primary w-10 h-[2px]" />
                                 <span className="text-[10px] md:text-[11px] font-black text-primary uppercase tracking-[0.5em]">
-                                    Signature Collection
+                                    <EditableText
+                                        value={store.themeConfig?.heroBadge || "Signature Collection"}
+                                        onSave={val => handleSave('heroBadge', val)}
+                                        isPreview={isPreview}
+                                        label="Badge"
+                                    />
                                 </span>
                             </div>
 
@@ -83,8 +88,22 @@ export function DefaultHero({ store, isPreview, onConfigChange }: HeroProps) {
                             </button>
 
                             <div className="flex flex-col border-l border-gray-100 pl-6 md:pl-8 text-left">
-                                <span className="text-[9px] md:text-[10px] font-black text-gray-300 uppercase tracking-[0.4em] mb-1">Index Volume</span>
-                                <span className="text-[13px] md:text-[15px] font-black text-gray-900 uppercase tracking-tighter italic">№ 2024.01</span>
+                                <span className="text-[9px] md:text-[10px] font-black text-gray-300 uppercase tracking-[0.4em] mb-1">
+                                    <EditableText
+                                        value={store.themeConfig?.heroExtraLabel || "Index Volume"}
+                                        onSave={val => handleSave('heroExtraLabel', val)}
+                                        isPreview={isPreview}
+                                        label="Extra Label"
+                                    />
+                                </span>
+                                <span className="text-[13px] md:text-[15px] font-black text-gray-900 uppercase tracking-tighter italic">
+                                    <EditableText
+                                        value={store.themeConfig?.heroExtraValue || "№ 2024.01"}
+                                        onSave={val => handleSave('heroExtraValue', val)}
+                                        isPreview={isPreview}
+                                        label="Extra Value"
+                                    />
+                                </span>
                             </div>
                         </motion.div>
 
@@ -95,13 +114,27 @@ export function DefaultHero({ store, isPreview, onConfigChange }: HeroProps) {
                             transition={{ delay: 0.8 }}
                             className="flex justify-center lg:justify-start gap-8 md:gap-10 pt-4"
                         >
-                            <div className="flex items-center gap-2 md:gap-3 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all cursor-default">
+                            <div className="flex items-center gap-2 md:gap-3 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all cursor-default text-left">
                                 <Globe className="w-4 h-4" />
-                                <span className="text-[9px] font-black uppercase tracking-widest">Global Ops</span>
+                                <span className="text-[9px] font-black uppercase tracking-widest shrink-0 w-max">
+                                    <EditableText
+                                        value={store.themeConfig?.heroTrust1 || "Global Ops"}
+                                        onSave={val => handleSave('heroTrust1', val)}
+                                        isPreview={isPreview}
+                                        label="Trust Badge 1"
+                                    />
+                                </span>
                             </div>
-                            <div className="flex items-center gap-2 md:gap-3 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all cursor-default">
+                            <div className="flex items-center gap-2 md:gap-3 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all cursor-default text-left">
                                 <ShieldCheck className="w-4 h-4" />
-                                <span className="text-[9px] font-black uppercase tracking-widest">Secure Drop</span>
+                                <span className="text-[9px] font-black uppercase tracking-widest shrink-0 w-max">
+                                    <EditableText
+                                        value={store.themeConfig?.heroTrust2 || "Secure Drop"}
+                                        onSave={val => handleSave('heroTrust2', val)}
+                                        isPreview={isPreview}
+                                        label="Trust Badge 2"
+                                    />
+                                </span>
                             </div>
                         </motion.div>
                     </div>
@@ -139,11 +172,32 @@ export function DefaultHero({ store, isPreview, onConfigChange }: HeroProps) {
                                         <ShoppingCart className="w-4 h-4 md:w-5 h-5" />
                                     </div>
                                     <div className="space-y-1 text-left">
-                                        <h4 className="text-[11px] md:text-[15px] font-black text-gray-900 uppercase italic tracking-tighter leading-none">New Release</h4>
-                                        <p className="text-[8px] md:text-[10px] font-bold text-gray-300 uppercase tracking-widest">Handmade Excellence</p>
+                                        <h4 className="text-[11px] md:text-[15px] font-black text-gray-900 uppercase italic tracking-tighter leading-none">
+                                            <EditableText
+                                                value={store.themeConfig?.heroFloatTitle || "New Release"}
+                                                onSave={val => handleSave('heroFloatTitle', val)}
+                                                isPreview={isPreview}
+                                                label="Floating Title"
+                                            />
+                                        </h4>
+                                        <p className="text-[8px] md:text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+                                            <EditableText
+                                                value={store.themeConfig?.heroFloatSubtitle || "Handmade Excellence"}
+                                                onSave={val => handleSave('heroFloatSubtitle', val)}
+                                                isPreview={isPreview}
+                                                label="Floating Subtitle"
+                                            />
+                                        </p>
                                     </div>
                                     <div className="flex justify-between items-center pt-2 border-t border-gray-50">
-                                        <span className="text-[8px] md:text-[10px] font-black text-primary uppercase italic tracking-widest animate-pulse">Live Now</span>
+                                        <span className="text-[8px] md:text-[10px] font-black text-primary uppercase italic tracking-widest animate-pulse">
+                                            <EditableText
+                                                value={store.themeConfig?.heroFloatStatus || "Live Now"}
+                                                onSave={val => handleSave('heroFloatStatus', val)}
+                                                isPreview={isPreview}
+                                                label="Floating Status"
+                                            />
+                                        </span>
                                         <ArrowRight className="w-3 h-3 text-gray-200" />
                                     </div>
                                 </div>
@@ -162,7 +216,12 @@ export function DefaultHero({ store, isPreview, onConfigChange }: HeroProps) {
             >
                 <div className="w-px h-20 bg-gradient-to-b from-gray-200 to-transparent group-hover:from-primary transition-colors duration-500" />
                 <span className="[writing-mode:vertical-lr] text-[9px] font-black text-gray-300 group-hover:text-gray-900 uppercase tracking-[0.4em] transition-colors duration-500">
-                    Scroll Down
+                    <EditableText
+                        value={store.themeConfig?.heroScrollText || "Scroll Down"}
+                        onSave={val => handleSave('heroScrollText', val)}
+                        isPreview={isPreview}
+                        label="Scroll Text"
+                    />
                 </span>
             </motion.div>
         </section>

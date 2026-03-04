@@ -4,10 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { getThemeComponents, themeMetadata } from '@/components/themes/registry';
+import { getThemeMeta } from '@/components/themes/metadata';
 import { ThemeEditor } from '@/components/themes/ThemeEditor';
 import { ThemeConfig } from '@/components/themes/types';
 import api from '@/lib/api';
-import { Loader2, ArrowLeft, Eye, Layout as LayoutIcon, Zap, PanelRight, Home, LayoutGrid, Type, Columns } from 'lucide-react';
+import { Loader2, ArrowLeft, Eye, Layout as LayoutIcon, Zap, PanelRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ThemePreviewPage() {
@@ -18,6 +19,15 @@ export default function ThemePreviewPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [showEditor, setShowEditor] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     const [previewPath, setPreviewPath] = useState('index');
     const [tempConfig, setTempConfig] = useState<ThemeConfig>({
         headerVariant: 'Header1',
@@ -33,30 +43,10 @@ export default function ThemePreviewPage() {
     const [themeComponents, setThemeComponents] = useState<any>(null);
     const themeName = params.themeId?.toUpperCase() || 'DEFAULT';
 
-    const themePages = React.useMemo(() => {
-        if (themeName === 'ELECTSHOP') {
-            return [
-                { id: 'index', name: 'Home Page', desc: 'Main Storefront', icon: Home },
-                { id: 'shop', name: 'Shop / Collections', desc: 'Product Listing', icon: LayoutGrid },
-                { id: 'shop/electronics', name: 'Electronics', desc: 'Category View', icon: LayoutGrid },
-                { id: 'shop/smartphones', name: 'Smartphones', desc: 'Category View', icon: LayoutGrid },
-                { id: 'blog', name: 'Our Blog', desc: 'Content & News', icon: Type },
-                { id: 'contact', name: 'Contact Us', desc: 'Stay Connected', icon: Columns }
-            ];
-        }
-        if (themeName === 'VANTAGE') {
-            return [
-                { id: 'index', name: 'Home Page', desc: 'Main Storefront', icon: Home },
-                { id: 'shop', name: 'Collections', desc: 'Style Listing', icon: LayoutGrid },
-                { id: 'about', name: 'Our Story', desc: 'Brand Narrative', icon: Type }
-            ];
-        }
-        return [
-            { id: 'index', name: 'Home Page', desc: 'Main Storefront', icon: Home },
-            { id: 'shop', name: 'Shop / Collections', desc: 'Product Listing', icon: LayoutGrid },
-            { id: 'about', name: 'About / Story', desc: 'Brand Narrative', icon: Type }
-        ];
-    }, [themeName]);
+    // Derive pages and defaultCategories directly from the theme registry—
+    // no hardcoded per-theme ifs needed here anymore.
+    const themeMeta = React.useMemo(() => getThemeMeta(themeName), [themeName]);
+    const themePages = themeMeta.pages;
 
 
     const filteredProducts = React.useMemo(() => {
@@ -69,6 +59,15 @@ export default function ThemePreviewPage() {
             p.type?.toLowerCase() === category.toLowerCase()
         );
     }, [products, previewPath]);
+
+    // Intelligently extract all categories from the products list for this theme
+    const dynamicCategories = React.useMemo(() => {
+        const unique = new Set<string>();
+        products.forEach((p: any) => {
+            if (p.category) unique.add(p.category);
+        });
+        return Array.from(unique);
+    }, [products]);
 
     useEffect(() => {
         const loadComponents = async () => {
@@ -266,11 +265,11 @@ export default function ThemePreviewPage() {
                 <AnimatePresence mode="wait">
                     {showEditor && (
                         <motion.div
-                            initial={{ width: 0, opacity: 0 }}
-                            animate={{ width: 350, opacity: 1 }}
-                            exit={{ width: 0, opacity: 0 }}
+                            initial={isMobile ? { x: '100%', opacity: 0 } : { width: 0, opacity: 0 }}
+                            animate={isMobile ? { x: 0, opacity: 1, width: '100.001%' } : { width: 350, opacity: 1 }}
+                            exit={isMobile ? { x: '100%', opacity: 0 } : { width: 0, opacity: 0 }}
                             transition={{ type: 'spring', damping: 30, stiffness: 250 }}
-                            className="h-full overflow-hidden shrink-0 border-l border-slate-100"
+                            className={`h-full overflow-hidden shrink-0 ${isMobile ? 'fixed inset-0 z-[2000]' : 'border-l border-slate-100'}`}
                         >
                             <ThemeEditor
                                 config={tempConfig}
@@ -282,6 +281,8 @@ export default function ThemePreviewPage() {
                                 currentPath={previewPath}
                                 onPathChange={setPreviewPath}
                                 pages={themePages}
+                                defaultCategories={dynamicCategories.length > 0 ? dynamicCategories : themeMeta.defaultCategories}
+                                isMobile={isMobile}
                             />
                         </motion.div>
                     )}

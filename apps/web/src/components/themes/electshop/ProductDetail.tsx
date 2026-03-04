@@ -8,13 +8,19 @@ import { useStoreCart } from '@/store/useStoreCart';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { EditableText } from '../EditableContent';
 
-export function ElectshopProductDetail({ product, store, subdomain }: ProductDetailProps) {
+export function ElectshopProductDetail({ product, store, subdomain, isPreview, onConfigChange }: ProductDetailProps) {
     const [quantity, setQuantity] = useState(1);
     const { addItem } = useStoreCart(store.id);
+    const config = store.themeConfig || {};
+
+    const handleSave = (key: string, value: string) => {
+        onConfigChange?.({ [key]: value });
+    };
 
     // Fetch primary color from store
-    const effectivePrimaryColor = store.themeConfig?.primaryColor || store.primaryColor || '#2874f0';
+    const effectivePrimaryColor = config.primaryColor || store.primaryColor || '#2874f0';
 
     // Image handling with fallbacks
     const images = product.images?.length ? product.images : [product.image].filter(Boolean) as string[];
@@ -26,7 +32,7 @@ export function ElectshopProductDetail({ product, store, subdomain }: ProductDet
     };
 
     return (
-        <section className="bg-white min-h-screen theme-preview-scope">
+        <section className="bg-white min-h-screen theme-preview-scope text-left">
             {/* Immersive Background Decor */}
             <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full blur-[120px] -z-10" style={{ backgroundColor: `${effectivePrimaryColor}0D` }} />
 
@@ -39,7 +45,12 @@ export function ElectshopProductDetail({ product, store, subdomain }: ProductDet
                         style={{ hover: { color: effectivePrimaryColor } } as any}
                     >
                         <ChevronRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" />
-                        Back to Collection
+                        <EditableText
+                            value={config.pdBackLabel || 'Back to Collection'}
+                            onSave={(val: string) => handleSave('pdBackLabel', val)}
+                            isPreview={isPreview}
+                            label="Back Label"
+                        />
                     </Link>
                 </div>
 
@@ -91,10 +102,24 @@ export function ElectshopProductDetail({ product, store, subdomain }: ProductDet
                                     animate={{ opacity: 1, x: 0 }}
                                     className="flex items-center gap-3"
                                 >
-                                    <span className="px-3 py-1 bg-gray-900 text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-full">Official Series</span>
+                                    <span className="px-3 py-1 bg-gray-900 text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-full">
+                                        <EditableText
+                                            value={config.pdBadge || 'Official Series'}
+                                            onSave={(val: string) => handleSave('pdBadge', val)}
+                                            isPreview={isPreview}
+                                            label="Badge"
+                                        />
+                                    </span>
                                     <div className="flex items-center gap-1 text-yellow-500">
                                         <Star className="w-3 h-3 fill-current" />
-                                        <span className="text-[10px] font-black text-gray-900 ml-1">4.9 / 5.0</span>
+                                        <span className="text-[10px] font-black text-gray-900 ml-1">
+                                            <EditableText
+                                                value={config.pdRating || '4.9 / 5.0'}
+                                                onSave={(val: string) => handleSave('pdRating', val)}
+                                                isPreview={isPreview}
+                                                label="Rating"
+                                            />
+                                        </span>
                                     </div>
                                 </motion.div>
 
@@ -105,12 +130,26 @@ export function ElectshopProductDetail({ product, store, subdomain }: ProductDet
 
                             <div className="flex items-end gap-6">
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Standard Price</span>
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                                        <EditableText
+                                            value={config.pdPriceLabel || 'Standard Price'}
+                                            onSave={(val: string) => handleSave('pdPriceLabel', val)}
+                                            isPreview={isPreview}
+                                            label="Price Label"
+                                        />
+                                    </span>
                                     <p className="text-5xl font-black italic tracking-tighter" style={{ color: effectivePrimaryColor }}>{formatPrice(product.price)}</p>
                                 </div>
                                 <div className="flex flex-col pb-1">
                                     <span className="text-xl text-gray-300 line-through font-bold tracking-tight">{formatPrice(product.price * 1.4)}</span>
-                                    <span className="text-[10px] text-emerald-500 font-extrabold uppercase tracking-widest">Save 40% Today</span>
+                                    <span className="text-[10px] text-emerald-500 font-extrabold uppercase tracking-widest">
+                                        <EditableText
+                                            value={config.pdSaveLabel || 'Save 40% Today'}
+                                            onSave={(val: string) => handleSave('pdSaveLabel', val)}
+                                            isPreview={isPreview}
+                                            label="Save Label"
+                                        />
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -118,10 +157,25 @@ export function ElectshopProductDetail({ product, store, subdomain }: ProductDet
                         {/* Inventory Pulse */}
                         <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100 mb-10">
                             <div className="flex items-center justify-between mb-4">
-                                <span className="text-[11px] font-black uppercase tracking-widest text-gray-900">Inventory Status</span>
+                                <span className="text-[11px] font-black uppercase tracking-widest text-gray-900">
+                                    <EditableText
+                                        value={config.pdStockLabel || 'Inventory Status'}
+                                        onSave={(val: string) => handleSave('pdStockLabel', val)}
+                                        isPreview={isPreview}
+                                        label="Stock Label"
+                                    />
+                                </span>
                                 <div className="flex items-center gap-2">
                                     <span className={`w-2 h-2 rounded-full ${product.stock > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
-                                    <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: effectivePrimaryColor }}>{product.stock} Units Available</span>
+                                    <span className="text-[11px] font-black uppercase tracking-widest flex items-center gap-1" style={{ color: effectivePrimaryColor }}>
+                                        {product.stock}
+                                        <EditableText
+                                            value={config.pdStockSuffix || 'Units Available'}
+                                            onSave={(val: string) => handleSave('pdStockSuffix', val)}
+                                            isPreview={isPreview}
+                                            label="Stock Suffix"
+                                        />
+                                    </span>
                                 </div>
                             </div>
                             <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
@@ -161,27 +215,45 @@ export function ElectshopProductDetail({ product, store, subdomain }: ProductDet
                                     }}
                                 >
                                     <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                    Add To Cart
+                                    <EditableText
+                                        value={config.pdAddCartLabel || 'Add To Cart'}
+                                        onSave={(val: string) => handleSave('pdAddCartLabel', val)}
+                                        isPreview={isPreview}
+                                        label="Cart Button"
+                                    />
                                 </button>
                             </div>
                             <button className="w-full h-16 bg-gray-950 text-white rounded-[1.25rem] font-black uppercase tracking-[0.2em] text-[11px] hover:bg-black transition-all flex items-center justify-center gap-2 group shadow-xl">
-                                Purchase Instantly <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                <EditableText
+                                    value={config.pdBuyNowLabel || 'Purchase Instantly'}
+                                    onSave={(val: string) => handleSave('pdBuyNowLabel', val)}
+                                    isPreview={isPreview}
+                                    label="Buy Button"
+                                />
+                                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>
 
                         {/* Trust & Features */}
                         <div className="grid grid-cols-2 gap-4 py-8 border-t border-gray-100">
                             {[
-                                { icon: Truck, text: "Global Delivery" },
-                                { icon: ShieldCheck, text: "Official Warrantee" },
-                                { icon: RotateCcw, text: "30-Day Policy" },
-                                { icon: Star, text: "Premium Quality" }
+                                { key: 'pdFeat1', icon: Truck, text: "Global Delivery" },
+                                { key: 'pdFeat2', icon: ShieldCheck, text: "Official Warrantee" },
+                                { key: 'pdFeat3', icon: RotateCcw, text: "30-Day Policy" },
+                                { key: 'pdFeat4', icon: Star, text: "Premium Quality" }
                             ].map((feature, i) => (
                                 <div key={i} className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${effectivePrimaryColor}0D` }}>
                                         <feature.icon className="w-4 h-4" style={{ color: effectivePrimaryColor }} />
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-600">{feature.text}</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-600">
+                                        <EditableText
+                                            value={config[feature.key] || feature.text}
+                                            onSave={(val: string) => handleSave(feature.key, val)}
+                                            isPreview={isPreview}
+                                            label="Feature"
+                                        />
+                                    </span>
                                 </div>
                             ))}
                         </div>
@@ -190,11 +262,18 @@ export function ElectshopProductDetail({ product, store, subdomain }: ProductDet
 
                 {/* Detailed Spec / Description Section */}
                 <div className="mt-24 pt-24 border-t border-gray-100 max-w-4xl">
-                    <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter italic mb-8 underline decoration-4 underline-offset-8" style={{ textDecorationColor: effectivePrimaryColor }}>Product Narrative</h2>
+                    <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter italic mb-8 underline decoration-4 underline-offset-8" style={{ textDecorationColor: effectivePrimaryColor }}>
+                        <EditableText
+                            value={config.pdDescTitle || 'Product Narrative'}
+                            onSave={(val: string) => handleSave('pdDescTitle', val)}
+                            isPreview={isPreview}
+                            label="Desc Title"
+                        />
+                    </h2>
                     <div className="prose prose-lg prose-slate max-w-none">
-                        <p className="text-gray-500 leading-relaxed font-medium text-lg italic">
+                        <div className="text-gray-500 leading-relaxed font-medium text-lg italic">
                             {product.description || `The high-performance ${product.name} is designed for users who demand excellence in every interaction. Featuring state-of-the-art technology and premium aesthetics, this piece redefines what is possible in modern technology.`}
-                        </p>
+                        </div>
                     </div>
                 </div>
             </div>

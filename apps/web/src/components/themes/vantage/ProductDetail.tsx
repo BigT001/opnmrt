@@ -7,12 +7,18 @@ import { formatPrice } from '@/lib/utils';
 import { ArrowLeft, Star, Heart, Share2, Plus, Minus, ArrowRight, Truck, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { EditableText } from '../EditableContent';
 
-export function VantageProductDetail({ product, store, subdomain }: ProductDetailProps) {
+export function VantageProductDetail({ product, store, subdomain, isPreview, onConfigChange }: ProductDetailProps) {
     const { addItem, toggleCart } = useStoreCart(store.id);
     const [quantity, setQuantity] = React.useState(1);
     const [selectedImage, setSelectedImage] = React.useState(product.image || product.images?.[0] || 'https://via.placeholder.com/800');
     const [selectedSize, setSelectedSize] = React.useState(product.sizes?.[0] || '');
+    const config = store.themeConfig || {};
+
+    const handleSave = (key: string, value: string) => {
+        onConfigChange?.({ [key]: value });
+    };
 
     const isOutOfStock = (product.stock || 0) <= 0;
     const allImages = React.useMemo(() => {
@@ -36,12 +42,19 @@ export function VantageProductDetail({ product, store, subdomain }: ProductDetai
     };
 
     return (
-        <div className="bg-white min-h-screen pt-32 pb-20">
+        <div className="bg-white min-h-screen pt-32 pb-20 text-left">
             <div className="max-w-[1400px] mx-auto px-6">
                 {/* Back Link */}
                 <Link href={`/store/${subdomain}/shop`} className="inline-flex items-center gap-2 group mb-12">
                     <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 group-hover:text-black transition-colors">Return to Catalogue</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 group-hover:text-black transition-colors">
+                        <EditableText
+                            value={config.pdBackLabel || 'Return to Catalogue'}
+                            onSave={(val: string) => handleSave('pdBackLabel', val)}
+                            isPreview={isPreview}
+                            label="Back Label"
+                        />
+                    </span>
                 </Link>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
@@ -83,30 +96,51 @@ export function VantageProductDetail({ product, store, subdomain }: ProductDetai
                     </div>
 
                     {/* Info */}
-                    <div className="lg:col-span-5 pt-4">
+                    <div className="lg:col-span-5 pt-4 text-left">
                         <div className="space-y-12">
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em]">{product.category || 'Premium Collection'}</span>
+                                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em]">
+                                        <EditableText
+                                            value={product.category || config.pdCategoryDefault || 'Premium Collection'}
+                                            onSave={(val: string) => handleSave('pdCategoryDefault', val)}
+                                            isPreview={isPreview}
+                                            label="Category"
+                                        />
+                                    </span>
                                     <div className="flex items-center gap-1">
                                         {[1, 2, 3, 4, 5].map(s => <Star key={s} className={`w-3 h-3 ${s <= 4 ? 'fill-black text-black' : 'text-gray-200'}`} />)}
-                                        <span className="text-[10px] font-black ml-2 text-gray-400">4.8 / 5.0</span>
+                                        <span className="text-[10px] font-black ml-2 text-gray-400">
+                                            <EditableText
+                                                value={config.pdRating || '4.8 / 5.0'}
+                                                onSave={(val: string) => handleSave('pdRating', val)}
+                                                isPreview={isPreview}
+                                                label="Rating"
+                                            />
+                                        </span>
                                     </div>
                                 </div>
-                                <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tighter uppercase leading-[0.9]">
+                                <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tighter uppercase leading-[0.9] text-left">
                                     {product.name}
                                 </h1>
-                                <p className="text-3xl font-bold text-black tracking-tight">{formatPrice(product.price)}</p>
+                                <p className="text-3xl font-bold text-black tracking-tight text-left">{formatPrice(product.price)}</p>
                             </div>
 
-                            <div className="space-y-8">
-                                <p className="text-gray-500 font-medium leading-relaxed text-lg italic">
+                            <div className="space-y-8 text-left">
+                                <div className="text-gray-500 font-medium leading-relaxed text-lg italic">
                                     "{product.description || 'A masterpiece of contemporary design, blending bold aesthetics with unparalleled comfort.'}"
-                                </p>
+                                </div>
 
                                 {product.sizes && product.sizes.length > 0 && (
-                                    <div className="space-y-4">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Select Your Fit</p>
+                                    <div className="space-y-4 text-left">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                            <EditableText
+                                                value={config.pdSizeLabel || 'Select Your Fit'}
+                                                onSave={(val: string) => handleSave('pdSizeLabel', val)}
+                                                isPreview={isPreview}
+                                                label="Size Label"
+                                            />
+                                        </p>
                                         <div className="flex flex-wrap gap-3">
                                             {product.sizes.map(size => (
                                                 <button
@@ -137,29 +171,63 @@ export function VantageProductDetail({ product, store, subdomain }: ProductDetai
                                                 onClick={handleAdd}
                                                 className="flex-1 bg-black text-white py-6 rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4 group"
                                             >
-                                                Add to Bag <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                                <EditableText
+                                                    value={config.pdAddBagLabel || 'Add to Bag'}
+                                                    onSave={(val: string) => handleSave('pdAddBagLabel', val)}
+                                                    isPreview={isPreview}
+                                                    label="Bag Button"
+                                                />
+                                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                             </button>
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-8 pt-10 border-t border-gray-100">
+                                <div className="grid grid-cols-2 gap-8 pt-10 border-t border-gray-100 text-left">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center">
+                                        <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0">
                                             <Truck className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-black uppercase tracking-widest">Free Express</p>
-                                            <p className="text-[10px] text-gray-400">Delivery in 2-3 days</p>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-left">
+                                                <EditableText
+                                                    value={config.pdFeat1Label || 'Free Express'}
+                                                    onSave={(val: string) => handleSave('pdFeat1Label', val)}
+                                                    isPreview={isPreview}
+                                                    label="Feat 1 Title"
+                                                />
+                                            </p>
+                                            <p className="text-[10px] text-gray-400 text-left">
+                                                <EditableText
+                                                    value={config.pdFeat1Desc || 'Delivery in 2-3 days'}
+                                                    onSave={(val: string) => handleSave('pdFeat1Desc', val)}
+                                                    isPreview={isPreview}
+                                                    label="Feat 1 Desc"
+                                                />
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center">
+                                        <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0">
                                             <RotateCcw className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-black uppercase tracking-widest">30 Day Returns</p>
-                                            <p className="text-[10px] text-gray-400">Hassle free policy</p>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-left">
+                                                <EditableText
+                                                    value={config.pdFeat2Label || '30 Day Returns'}
+                                                    onSave={(val: string) => handleSave('pdFeat2Label', val)}
+                                                    isPreview={isPreview}
+                                                    label="Feat 2 Title"
+                                                />
+                                            </p>
+                                            <p className="text-[10px] text-gray-400 text-left">
+                                                <EditableText
+                                                    value={config.pdFeat2Desc || 'Hassle free policy'}
+                                                    onSave={(val: string) => handleSave('pdFeat2Desc', val)}
+                                                    isPreview={isPreview}
+                                                    label="Feat 2 Desc"
+                                                />
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

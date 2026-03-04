@@ -13,20 +13,20 @@ export function LandingFooter() {
                         {/* Added SEO-friendly attributes to the Logo link */}
                         <Link
                             href="/"
-                            aria-label="OPNMRT (OpenMart) - Multi-Tenant AI Commerce Engine homepage"
-                            title="OPNMRT (OpenMart) - Home"
+                            aria-label="OPNMRT - Multi-Tenant AI Commerce Engine homepage"
+                            title="OPNMRT - Home"
                             className="flex items-center space-x-2.5 group cursor-pointer"
                         >
                             <Logo size="md" />
                         </Link>
                     </div>
                     <p className="text-muted-foreground font-medium max-w-sm mb-10 leading-relaxed uppercase text-xs tracking-wide">
-                        OPNMRT (OpenMart) - Empowering the next generation of digital merchants with independent, sovereign stores and AI-powered intelligence. The leading commerce engine for scaling African brands globally.
+                        OPNMRT - Empowering the next generation of digital merchants with independent, sovereign stores and AI-powered intelligence. The leading commerce engine for scaling African brands globally.
                     </p>
                     {/* Added SEO-friendly attributes to the social links container */}
                     <div
-                        aria-label="OPNMRT (OpenMart) social media links"
-                        title="Connect with OPNMRT (OpenMart)"
+                        aria-label="OPNMRT social media links"
+                        title="Connect with OPNMRT"
                         className="flex space-x-6 text-muted-foreground"
                     >
                         <Link href="#" className="hover:text-emerald-500 transition-colors uppercase font-black text-[10px] tracking-widest">Twitter</Link>

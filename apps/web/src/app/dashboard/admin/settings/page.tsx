@@ -10,7 +10,7 @@ export default function AdminSettings() {
                 <div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] p-10 shadow-2xl">
                     <h3 className="text-lg font-black text-white tracking-tight mb-8">General Configuration</h3>
                     <div className="space-y-6">
-                        <SettingsField label="Platform Name" value="Open Mart" />
+                        <SettingsField label="Platform Name" value="OPNMRT" />
                         <SettingsField label="Support Email" value="support@opnmrt.com" />
                         <SettingsField label="Base Domain" value="opnmrt.com" />
                         <div className="pt-4 flex items-center justify-between">

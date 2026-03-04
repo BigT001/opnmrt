@@ -190,7 +190,7 @@ export const useCartStore = create<CartState>()(
             setItems: (items) => set({ items }),
         }),
         {
-            name: 'opnmart-cart-v3', // Bumped version to ensure fresh start with stock fixes
+            name: 'opnmrt-cart-v3', // Bumped version to ensure fresh start with stock fixes
             storage: createJSONStorage(() => localStorage),
         }
     )

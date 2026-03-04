@@ -42,29 +42,42 @@ interface ThemeEditorProps {
     currentPath?: string;
     onPathChange?: (path: string) => void;
     pages?: Array<{ id: string, name: string, desc: string, icon: any }>;
+    /** Built-in categories for the active theme. Empty array = theme has no category nav. */
+    defaultCategories?: string[];
+    isMobile?: boolean;
 }
 
 const SectionHeader = ({ id, icon: Icon, title, active, onClick }: { id: string, icon: any, title: string, active: boolean, onClick: () => void }) => (
     <button
         onClick={onClick}
-        className="w-full flex items-center justify-between p-1 group"
+        className="w-full flex items-center justify-between py-1 group"
     >
         <div className="flex items-center gap-2">
-            <Icon className={`w-4 h-4 ${active ? 'text-primary' : 'text-slate-400'}`} />
-            <h3 className={`text-[11px] font-black uppercase tracking-wider transition-colors ${active ? 'text-slate-800' : 'text-slate-500 group-hover:text-slate-700'}`}>{title}</h3>
+            <Icon className={`w-3.5 h-3.5 ${active ? 'text-emerald-600' : 'text-slate-400'}`} />
+            <h3 className={`text-[10px] font-black uppercase tracking-[0.15em] transition-colors ${active ? 'text-slate-900' : 'text-slate-400 group-hover:text-slate-600'}`}>{title}</h3>
         </div>
-        <ChevronRight className={`w-3 h-3 text-slate-300 transition-transform duration-300 ${active ? 'rotate-90' : ''}`} />
+        <ChevronRight className={`w-3 h-3 text-slate-300 transition-transform duration-200 ${active ? 'rotate-90 text-emerald-500' : ''}`} />
     </button>
 );
 
-export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdomain, currentPath = 'index', onPathChange, pages }: ThemeEditorProps) {
+export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdomain, currentPath = 'index', onPathChange, pages = [], defaultCategories = [], isMobile }: ThemeEditorProps) {
     const [isUploading, setIsUploading] = React.useState(false);
-    const defaultPages = [
-        { id: 'index', name: 'Home Page', desc: 'Main Storefront', icon: Home },
-        { id: 'shop', name: 'Shop / Collections', desc: 'Product Listing', icon: LayoutGrid },
-        { id: 'about', name: 'About / Story', desc: 'Brand Narrative', icon: Type }
-    ];
-    const displayPages = pages || defaultPages;
+
+    // Pages come entirely from the registry via props — no internal fallback.
+    const displayPages = pages;
+
+    // Categories: prefer any user-edited version saved in config, otherwise use
+    // the theme's built-in defaults. Never invent phantom data.
+    const resolvedCategories: string[] = React.useMemo(() => {
+        if (config.categories && Array.isArray(config.categories) && config.categories.length > 0) {
+            return config.categories as string[];
+        }
+        return defaultCategories;
+    }, [config.categories, defaultCategories]);
+
+    const hasCategories = resolvedCategories.length > 0;
+    // hasCategoryFeature: true only if the theme registry said this theme has categories
+    const hasCategoryFeature = defaultCategories.length > 0;
 
     const [openSection, setOpenSection] = React.useState<string | null>('navigation');
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -104,16 +117,12 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
         setOpenSection(openSection === section ? null : section);
     };
 
-    const updateArray = (key: 'primaryNav' | 'categories', index: number, value: any, action: 'edit' | 'add' | 'remove') => {
-        const currentArr = Array.isArray(config[key]) ? [...(config[key] as any[])] : (key === 'primaryNav' ? [
-            { name: config.navHome || 'Home', href: `/store/${subdomain}`, key: 'navHome' },
-            { name: config.navBlog || 'Blog', href: `/store/${subdomain}/blog`, key: 'navBlog' },
-            { name: config.navContact || 'Contact', href: `/store/${subdomain}/contact`, key: 'navContact' },
-        ] : [
+    const updateArray = (key: 'categories', index: number, value: any, action: 'edit' | 'add' | 'remove') => {
+        const currentArr = Array.isArray(config[key]) ? [...(config[key] as any[])] : [
             'All Categories',
             'Electronics',
             'Smartphones'
-        ]);
+        ];
 
         if (action === 'edit') {
             currentArr[index] = value;
@@ -148,7 +157,7 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
     };
 
     return (
-        <div className="w-[350px] bg-white border-l border-slate-100 flex flex-col h-full shadow-2xl relative z-[100]">
+        <div className="w-full md:w-[350px] bg-white md:border-l border-slate-100 flex flex-col h-full shadow-2xl relative z-[100]">
             <style jsx>{`
                 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@800&family=Crimson+Pro:wght@800&family=JetBrains+Mono:wght@800&family=Outfit:wght@900&display=swap');
                 .font-sans { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -156,31 +165,31 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                 .font-mono { font-family: 'JetBrains Mono', monospace; }
                 .font-display { font-family: 'Outfit', sans-serif; }
             `}</style>
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-200">
-                        <Zap className="w-4 h-4 text-white" />
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-white">
+                <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 bg-emerald-500 rounded-lg flex items-center justify-center shadow-sm shadow-emerald-200">
+                        <Zap className="w-3.5 h-3.5 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-widest leading-none mb-1">Brand Studio</h2>
-                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest italic">OpenMart Engine</p>
+                        <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.15em] leading-none mb-0.5">Brand Studio</h2>
+                        <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">OPNMRT Engine</p>
                     </div>
                 </div>
 
                 {onClose && (
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-100"
+                        className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-slate-700 transition-all"
                         title="Collapse Sidebar"
                     >
-                        <PanelRight className="w-5 h-5" />
+                        <PanelRight className="w-4 h-4" />
                     </button>
                 )}
             </div>
 
-            <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-10 pt-8">
+            <div className="flex-1 overflow-y-auto no-scrollbar px-5 py-6 space-y-6">
                 {/* Store Navigation Section */}
-                <section className="space-y-4">
+                <section className="space-y-2">
                     <SectionHeader id="navigation" icon={Layout} title="Store Navigation" active={openSection === 'navigation'} onClick={() => toggleSection('navigation')} />
 
                     <AnimatePresence>
@@ -189,50 +198,61 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
-                                className="overflow-hidden space-y-3"
+                                transition={{ duration: 0.18 }}
+                                className="overflow-hidden"
                             >
-                                {displayPages.map((page) => (
-                                    <button
-                                        key={page.id}
-                                        onClick={() => onPathChange?.(page.id)}
-                                        className={`w-full p-4 rounded-3xl border text-left transition-all relative group/page ${currentPath === page.id
-                                            ? 'border-indigo-600 bg-indigo-50/30 shadow-md translate-y-[-2px]'
-                                            : 'border-slate-100 text-slate-500 hover:border-slate-200 hover:bg-slate-50'}`}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center transition-transform group-hover/page:scale-110 shadow-sm`}>
-                                                    <page.icon className={`w-5 h-5 ${currentPath === page.id ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                <div className="mt-1 border border-slate-100 rounded-xl overflow-hidden divide-y divide-slate-50">
+                                    {displayPages.map((page) => {
+                                        const isActive = currentPath === page.id;
+                                        return (
+                                            <button
+                                                key={page.id}
+                                                onClick={() => onPathChange?.(page.id)}
+                                                className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-colors ${isActive
+                                                    ? 'bg-emerald-50 text-emerald-700'
+                                                    : 'bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-2.5 w-full">
+                                                    <page.icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-emerald-500' : 'text-slate-300'}`} />
+                                                    <div className="flex-1">
+                                                        {(page as any).configKey ? (
+                                                            <input
+                                                                value={config[(page as any).configKey] || page.name}
+                                                                onChange={(e) => handleChange((page as any).configKey, e.target.value)}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                title="Edit navigation menu label"
+                                                                className={`bg-transparent outline-none w-full text-[10px] font-black uppercase tracking-wider block leading-none placeholder:text-slate-300 ${isActive ? 'text-emerald-800' : 'text-slate-700 focus:text-emerald-600 focus:bg-emerald-50/50 rounded-sm'}`}
+                                                            />
+                                                        ) : (
+                                                            <span className={`text-[10px] font-black uppercase tracking-wider block leading-none ${isActive ? 'text-emerald-800' : 'text-slate-700'}`}>
+                                                                {page.name}
+                                                            </span>
+                                                        )}
+                                                        <span className="text-[8px] font-medium text-slate-400 uppercase tracking-widest mt-0.5 block">{page.desc}</span>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <span className={`text-[11px] font-black uppercase tracking-widest block ${currentPath === page.id ? 'text-slate-900' : 'text-slate-500'}`}>{page.name}</span>
-                                                    <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{page.desc}</div>
-                                                </div>
-                                            </div>
-                                            {currentPath === page.id && (
-                                                <div className="flex items-center gap-1.5 px-2 py-1 bg-indigo-100 text-indigo-600 rounded-lg text-[7px] font-black uppercase tracking-tighter">
-                                                    <Eye className="w-2.5 h-2.5" />
-                                                    <span>Active</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </button>
-                                ))}
-
-                                <div className="mt-4 p-4 rounded-2xl bg-amber-50 border border-amber-100 flex gap-3 items-start">
-                                    <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                                    <p className="text-[8px] font-bold text-amber-700 uppercase tracking-wider leading-relaxed">
-                                        Pro Tip: You can also click links directly in the preview to switch pages!
-                                    </p>
+                                                {isActive && (
+                                                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                        <span className="text-[7px] font-black text-emerald-600 uppercase tracking-wider">Live</span>
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
+                                <p className="mt-2 text-[8px] font-medium text-slate-400 px-1">
+                                    💡 Click links in the preview to switch pages too.
+                                </p>
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </section>
 
-                {/* Navigation & Menus Section */}
-                <section className="space-y-4">
-                    <SectionHeader id="menus" icon={MenuIcon} title="Navigation & Menus" active={openSection === 'menus'} onClick={() => toggleSection('menus')} />
+                {/* Categories Section */}
+                <section className="space-y-2">
+                    <SectionHeader id="menus" icon={MenuIcon} title="Categories" active={openSection === 'menus'} onClick={() => toggleSection('menus')} />
 
                     <AnimatePresence>
                         {openSection === 'menus' && (
@@ -242,85 +262,72 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                                 exit={{ height: 0, opacity: 0 }}
                                 className="overflow-hidden space-y-6 pb-2"
                             >
-                                {/* Categories Manager */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between px-1">
-                                        <label className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none">Browse Categories</label>
-                                        <button
-                                            onClick={() => updateArray('categories', 0, 'New Category', 'add')}
-                                            className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all"
-                                        >
-                                            <Plus className="w-3 h-3" />
-                                        </button>
-                                    </div>
-                                    <div className="space-y-2">
-                                        {(config.categories || ['All Categories', 'Electronics', 'Smartphones']).map((cat: string, idx: number) => (
-                                            <div key={idx} className="flex gap-2 group/item">
-                                                <input
-                                                    value={cat}
-                                                    onChange={(e) => updateArray('categories', idx, e.target.value, 'edit')}
-                                                    className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-[10px] font-bold text-slate-700 outline-none focus:border-indigo-600/30 focus:bg-white transition-all"
-                                                />
-                                                <button
-                                                    onClick={() => updateArray('categories', idx, null, 'remove')}
-                                                    className="p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100"
-                                                >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Primary Nav Manager */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between px-1">
-                                        <label className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none">Primary Navbar Links</label>
-                                        <button
-                                            onClick={() => updateArray('primaryNav', 0, { name: 'New Link', href: '#' }, 'add')}
-                                            className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all"
-                                        >
-                                            <Plus className="w-3 h-3" />
-                                        </button>
-                                    </div>
+                                {/* ── Categories ─────────────────────────────── */}
+                                {hasCategoryFeature ? (
                                     <div className="space-y-3">
-                                        {(config.primaryNav || [
-                                            { name: 'Home', href: `/store/${subdomain}` },
-                                            { name: 'Shop', href: `/store/${subdomain}/shop` }
-                                        ]).map((link: any, idx: number) => (
-                                            <div key={idx} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl space-y-2 group/item relative">
-                                                <input
-                                                    placeholder="Label (e.g. Laptops)"
-                                                    value={link.name}
-                                                    onChange={(e) => updateArray('primaryNav', idx, { ...link, name: e.target.value }, 'edit')}
-                                                    className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-900 outline-none focus:border-indigo-600/30 transition-all"
-                                                />
-                                                <div className="bg-white border border-slate-100 rounded-xl px-3 py-2 flex items-center gap-2">
-                                                    <Settings className="w-3 h-3 text-slate-300 shrink-0" />
-                                                    <input
-                                                        placeholder="Path (e.g. /store/myshop/shop)"
-                                                        value={link.href}
-                                                        onChange={(e) => updateArray('primaryNav', idx, { ...link, href: e.target.value }, 'edit')}
-                                                        className="flex-1 bg-transparent text-[9px] font-bold text-slate-500 outline-none"
-                                                    />
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider leading-none">Browse Categories</label>
+                                            <button
+                                                onClick={() => updateArray('categories', 0, 'New Category', 'add')}
+                                                className="p-1 bg-emerald-50 text-emerald-600 rounded-md hover:bg-emerald-500 hover:text-white transition-all"
+                                                title="Add category"
+                                            >
+                                                <Plus className="w-3 h-3" />
+                                            </button>
+                                        </div>
+
+                                        {hasCategories ? (
+                                            <div className="space-y-2">
+                                                {resolvedCategories.map((cat: string, idx: number) => (
+                                                    <div key={idx} className="flex gap-2 group/item">
+                                                        <input
+                                                            value={cat}
+                                                            onChange={(e) => updateArray('categories', idx, e.target.value, 'edit')}
+                                                            className="flex-1 bg-slate-50 border border-slate-100 rounded-lg px-3 py-1.5 text-[10px] font-medium text-slate-700 outline-none focus:border-emerald-400/50 focus:bg-white transition-all"
+                                                        />
+                                                        <button
+                                                            onClick={() => updateArray('categories', idx, null, 'remove')}
+                                                            className="p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-6 flex flex-col items-center gap-2 text-center">
+                                                <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center">
+                                                    <MenuIcon className="w-4 h-4 text-slate-300" />
                                                 </div>
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">No categories yet</p>
                                                 <button
-                                                    onClick={() => updateArray('primaryNav', idx, null, 'remove')}
-                                                    className="absolute -top-2 -right-2 w-6 h-6 bg-white shadow-md border border-slate-100 rounded-full flex items-center justify-center text-slate-300 hover:text-red-500 transition-all opacity-0 group-hover/item:opacity-100 scale-75 group-hover/item:scale-100"
+                                                    onClick={() => updateArray('categories', 0, 'New Category', 'add')}
+                                                    className="mt-1 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-md text-[9px] font-black uppercase tracking-wider hover:bg-emerald-500 hover:text-white transition-all"
                                                 >
-                                                    <Trash2 className="w-3 h-3" />
+                                                    + Add Category
                                                 </button>
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
-                                </div>
+                                ) : (
+                                    /* This theme has no category navigation — show neutral info state */
+                                    <div className="py-6 flex flex-col items-center gap-2 text-center px-2">
+                                        <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center">
+                                            <MenuIcon className="w-4 h-4 text-slate-200" />
+                                        </div>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+                                            This theme does not use<br />a category menu
+                                        </p>
+                                    </div>
+                                )}
+
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </section>
 
                 {/* Visual Identity Section */}
-                <section className="space-y-4">
+                <section className="space-y-2">
                     <SectionHeader id="identity" icon={Crown} title="Visual Identity" active={openSection === 'identity'} onClick={() => toggleSection('identity')} />
 
                     <AnimatePresence>
@@ -335,8 +342,8 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                                     <div className="flex items-center justify-between px-1">
                                         <label className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none">Brand Mark</label>
                                         <div className="flex gap-1">
-                                            <div className="w-1 h-1 rounded-full bg-indigo-400" />
-                                            <div className="w-1 h-1 rounded-full bg-indigo-200" />
+                                            <div className="w-1 h-1 rounded-full bg-emerald-400" />
+                                            <div className="w-1 h-1 rounded-full bg-emerald-200" />
                                         </div>
                                     </div>
                                     <input
@@ -348,26 +355,26 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                                     />
                                     <div
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="w-full aspect-[2/1] bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem] flex flex-col items-center justify-center gap-3 group cursor-pointer hover:border-indigo-600/30 hover:bg-indigo-50/30 transition-all overflow-hidden relative"
+                                        className="w-full aspect-[2/1] bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center gap-3 group cursor-pointer hover:border-emerald-400/40 hover:bg-emerald-50/20 transition-all overflow-hidden relative"
                                     >
                                         {isUploading ? (
                                             <div className="flex flex-col items-center gap-2">
-                                                <RefreshCcw className="w-6 h-6 text-indigo-600 animate-spin" />
-                                                <span className="text-[8px] font-black text-indigo-600 uppercase tracking-widest">Processing...</span>
+                                                <RefreshCcw className="w-5 h-5 text-emerald-500 animate-spin" />
+                                                <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Processing...</span>
                                             </div>
                                         ) : config.logo ? (
                                             <>
                                                 <img src={config.logo} className="w-full h-full object-contain p-6 drop-shadow-sm" alt="Store Logo" />
-                                                <div className="absolute inset-0 bg-indigo-600/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all backdrop-blur-[2px]">
-                                                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-xl">
-                                                        <RefreshCcw className="w-4 h-4 text-indigo-600" />
+                                                <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all backdrop-blur-[2px]">
+                                                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                                        <RefreshCcw className="w-3.5 h-3.5 text-emerald-600" />
                                                     </div>
                                                 </div>
                                             </>
                                         ) : (
                                             <>
-                                                <div className="w-12 h-12 bg-white rounded-3xl flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:shadow-md transition-all duration-500">
-                                                    <ImageIcon className="w-5 h-5 text-slate-400 group-hover:text-indigo-600" />
+                                                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-all duration-300">
+                                                    <ImageIcon className="w-4 h-4 text-slate-400 group-hover:text-emerald-500" />
                                                 </div>
                                                 <div className="text-center">
                                                     <span className="text-[9px] font-black text-slate-800 uppercase tracking-widest block mb-0.5">Upload Mark</span>
@@ -397,7 +404,7 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                 </section>
 
                 {/* Brand Colors Section */}
-                <section className="space-y-4">
+                <section className="space-y-2">
                     <SectionHeader id="colors" icon={Palette} title="Brand Colors" active={openSection === 'colors'} onClick={() => toggleSection('colors')} />
 
                     <AnimatePresence>
@@ -443,7 +450,7 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between px-1">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                                                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                                 <h4 className="text-[9px] font-black text-slate-800 uppercase tracking-widest">Recently Used</h4>
                                             </div>
                                             <button
@@ -461,7 +468,7 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                                                 <button
                                                     key={color}
                                                     onClick={() => handleChange('primaryColor', color)}
-                                                    className={`w-8 h-8 rounded-xl border-2 transition-all relative group ${config.primaryColor === color ? 'border-indigo-600 scale-110 shadow-lg' : 'border-white hover:scale-105 shadow-sm'}`}
+                                                    className={`w-8 h-8 rounded-lg border-2 transition-all relative group ${config.primaryColor === color ? 'border-emerald-500 scale-110 shadow-md' : 'border-white hover:scale-105 shadow-sm'}`}
                                                     style={{ backgroundColor: color }}
                                                 >
                                                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 rounded-xl transition-all" />
@@ -615,7 +622,7 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                 </section>
 
                 {/* Typography Section */}
-                <section className="space-y-4">
+                <section className="space-y-2">
                     <SectionHeader id="typography" icon={TypeIcon} title="Typography" active={openSection === 'typography'} onClick={() => toggleSection('typography')} />
 
                     <AnimatePresence>
@@ -636,9 +643,10 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                                     <button
                                         key={font.id}
                                         onClick={() => handleChange('primaryFont', font.id)}
-                                        className={`w-full p-4 rounded-3xl border text-left transition-all relative group/font ${config.primaryFont === font.id
-                                            ? 'border-indigo-600 bg-indigo-50/30'
-                                            : 'border-slate-100 text-slate-500 hover:border-slate-200 hover:bg-slate-50'}`}
+                                        className={`w-full px-3 py-3 rounded-xl border text-left transition-all ${config.primaryFont === font.id
+                                            ? 'border-emerald-400 bg-emerald-50/50'
+                                            : 'border-slate-100 text-slate-500 hover:border-slate-200 hover:bg-slate-50'
+                                            }`}
                                     >
                                         <div className="flex items-center justify-between mb-1.5">
                                             <div className="flex items-center gap-3">
@@ -651,7 +659,7 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                                                 </div>
                                             </div>
                                             {config.primaryFont === font.id && (
-                                                <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center shadow-lg shadow-indigo-200">
+                                                <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-sm">
                                                     <Zap className="w-3 h-3 text-white fill-white" />
                                                 </div>
                                             )}
@@ -664,7 +672,7 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                 </section>
 
                 {/* Surface & Shape Section */}
-                <section className="space-y-4">
+                <section className="space-y-2">
                     <SectionHeader id="surface" icon={LayoutGrid} title="Surface & Shape" active={openSection === 'surface'} onClick={() => toggleSection('surface')} />
 
                     <AnimatePresence>
@@ -678,7 +686,7 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between px-1">
                                         <label className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none">Corner Radius</label>
-                                        <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full uppercase">{config.borderRadius || '2.5rem'}</span>
+                                        <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md uppercase">{config.borderRadius || '2.5rem'}</span>
                                     </div>
                                     <div className="grid grid-cols-4 gap-2">
                                         {[
@@ -690,7 +698,7 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                                             <button
                                                 key={radius.id}
                                                 onClick={() => handleChange('borderRadius', radius.id)}
-                                                className={`aspect-square rounded-2xl border-2 flex flex-col items-center justify-center group transition-all ${config.borderRadius === radius.id ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-100 hover:border-slate-200 text-slate-400'}`}
+                                                className={`aspect-square rounded-xl border-2 flex flex-col items-center justify-center group transition-all ${config.borderRadius === radius.id ? 'border-emerald-500 bg-emerald-50 text-emerald-600' : 'border-slate-100 hover:border-slate-200 text-slate-400'}`}
                                             >
                                                 <div
                                                     className="w-6 h-6 border-2 border-current mb-1.5"
@@ -702,11 +710,11 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                                     </div>
                                 </div>
 
-                                <div className="p-5 rounded-[2.5rem] bg-indigo-600 text-white space-y-3 shadow-xl shadow-indigo-200 relative overflow-hidden">
-                                    <div className="absolute -right-4 -top-4 w-16 h-16 bg-white/10 rounded-full blur-xl" />
-                                    <h5 className="text-[10px] font-black uppercase tracking-widest leading-none">Aura Design Engine</h5>
-                                    <p className="text-[8px] font-bold text-white/70 uppercase tracking-widest leading-relaxed">Let AI optimize your layout density and visual hierarchy.</p>
-                                    <button className="w-full py-2.5 bg-white text-indigo-600 rounded-xl text-[8px] font-black uppercase tracking-widest transition-transform active:scale-95 shadow-lg">
+                                <div className="p-4 rounded-xl bg-emerald-600 text-white space-y-2 shadow-lg shadow-emerald-200/50 relative overflow-hidden">
+                                    <div className="absolute -right-4 -top-4 w-14 h-14 bg-white/10 rounded-full blur-xl" />
+                                    <h5 className="text-[9px] font-black uppercase tracking-widest leading-none">Aura Design Engine</h5>
+                                    <p className="text-[8px] font-medium text-white/70 uppercase tracking-widest leading-relaxed">Let AI optimize your layout and visual hierarchy.</p>
+                                    <button className="w-full py-2 bg-white text-emerald-700 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all active:scale-95 hover:bg-emerald-50">
                                         Fast Optimize
                                     </button>
                                 </div>
@@ -716,28 +724,28 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
                 </section>
             </div>
 
-            <div className="p-6 border-t border-slate-100 bg-white flex gap-3">
+            <div className="px-5 py-4 border-t border-slate-100 bg-white flex gap-2">
                 <button
-                    onClick={() => window.open(`https://${subdomain}.opnmrt.com`, '_blank')}
-                    className="flex-1 h-14 bg-white border border-slate-100 text-slate-600 hover:text-slate-900 rounded-2xl transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2 group"
+                    onClick={() => isMobile ? onClose?.() : window.open(`https://${subdomain}.opnmrt.com`, '_blank')}
+                    className="flex-1 h-11 bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300 rounded-xl transition-all flex items-center justify-center gap-2 group"
                 >
-                    <Eye className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 transition-colors" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">View</span>
+                    <Eye className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">{isMobile ? 'Preview' : 'View'}</span>
                 </button>
 
                 <button
                     onClick={onSave}
                     disabled={isSaving}
-                    className="group flex-[2] h-14 bg-slate-900 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-2xl hover:bg-black transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                    className="group flex-[2] h-11 bg-emerald-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                 >
                     {isSaving ? (
                         <>
-                            <RefreshCcw className="w-3.5 h-3.5 animate-spin text-primary" />
-                            <span>...</span>
+                            <RefreshCcw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Saving...</span>
                         </>
                     ) : (
                         <>
-                            <Zap className="w-3.5 h-3.5 text-orange-400 fill-orange-400 group-hover:scale-110 transition-transform" />
+                            <Zap className="w-3.5 h-3.5 fill-white group-hover:scale-110 transition-transform" />
                             <span>Publish</span>
                         </>
                     )}

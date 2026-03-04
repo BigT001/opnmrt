@@ -7,7 +7,7 @@ export function TrackSession({ storeId }: { storeId: string }) {
     useEffect(() => {
         if (!storeId) return;
 
-        const sessionKey = `opnmart_session_${storeId}`;
+        const sessionKey = `opnmrt_session_${storeId}`;
         const hasTracked = sessionStorage.getItem(sessionKey);
 
         if (!hasTracked) {

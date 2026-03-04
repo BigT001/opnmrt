@@ -7,8 +7,25 @@ import { useCartStore } from '@/store/useCartStore';
 import { ShoppingCart, Star } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 
-export function DefaultProductGrid({ products, subdomain, storeId, hideHeader, hideControls }: ProductGridProps & { hideControls?: boolean }) {
+import { EditableText } from '../EditableContent';
+import { useWishlistStore } from '@/store/useWishlistStore';
+
+export function DefaultProductGrid({
+    products,
+    subdomain,
+    storeId,
+    hideHeader,
+    hideControls,
+    store,
+    isPreview,
+    onConfigChange
+}: ProductGridProps & { hideControls?: boolean }) {
     const { addItem } = useCartStore();
+    const config = store?.themeConfig || {};
+
+    const handleSave = (key: string, value: string) => {
+        onConfigChange?.({ [key]: value });
+    };
 
     const handleAddToCart = (product: ProductData) => {
         addItem({
@@ -28,17 +45,44 @@ export function DefaultProductGrid({ products, subdomain, storeId, hideHeader, h
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-10">
                         <div className="space-y-4 max-w-2xl">
                             <div className="w-12 h-1 bg-black" />
-                            <h2 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em]">The Selection</h2>
+                            <h2 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em]">
+                                <EditableText
+                                    value={config.gridBadge || "The Selection"}
+                                    onSave={val => handleSave('gridBadge', val)}
+                                    isPreview={isPreview}
+                                    label="Grid Badge"
+                                />
+                            </h2>
                             <h3 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tighter uppercase italic leading-[0.9]">
-                                Signature <br />Collections
+                                <EditableText
+                                    value={config.gridTitle || "Signature Collections"}
+                                    onSave={val => handleSave('gridTitle', val)}
+                                    isPreview={isPreview}
+                                    multiline
+                                    label="Grid Title"
+                                />
                             </h3>
                         </div>
                         <div className="flex flex-col gap-4 text-right">
                             <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest">Showing {products.length} Products</p>
                             {!hideControls && (
                                 <div className="flex gap-3 justify-end">
-                                    <button className="px-8 py-3 bg-white border border-gray-100 text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-gray-50 transition-all shadow-sm">Filter</button>
-                                    <button className="px-8 py-3 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-xl shadow-gray-200 hover:bg-black transition-all">All Items</button>
+                                    <button className="px-8 py-3 bg-white border border-gray-100 text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-gray-50 transition-all shadow-sm">
+                                        <EditableText
+                                            value={config.gridFilterText || "Filter"}
+                                            onSave={val => handleSave('gridFilterText', val)}
+                                            isPreview={isPreview}
+                                            label="Filter Label"
+                                        />
+                                    </button>
+                                    <button className="px-8 py-3 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-xl shadow-gray-200 hover:bg-black transition-all">
+                                        <EditableText
+                                            value={config.gridAllItemsText || "All Items"}
+                                            onSave={val => handleSave('gridAllItemsText', val)}
+                                            isPreview={isPreview}
+                                            label="All Items Label"
+                                        />
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -47,7 +91,14 @@ export function DefaultProductGrid({ products, subdomain, storeId, hideHeader, h
 
                 {products.length === 0 ? (
                     <div className="text-center py-40 bg-white rounded-[3rem] border border-gray-100 shadow-sm">
-                        <p className="text-gray-300 font-black tracking-[0.2em] uppercase text-xs">Curating the next drop...</p>
+                        <p className="text-gray-300 font-black tracking-[0.2em] uppercase text-xs">
+                            <EditableText
+                                value={config.gridEmptyText || "Curating the next drop..."}
+                                onSave={val => handleSave('gridEmptyText', val)}
+                                isPreview={isPreview}
+                                label="Empty State Text"
+                            />
+                        </p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 sm:gap-x-10 gap-y-12 sm:gap-y-20">
@@ -67,7 +118,12 @@ export function DefaultProductGrid({ products, subdomain, storeId, hideHeader, h
                                         </div>
                                         <div className="absolute bottom-6 sm:bottom-10 left-0 right-0 px-4 sm:px-8 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
                                             <div className="w-full py-3 sm:py-4 bg-white/95 backdrop-blur-xl text-[9px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-center text-gray-900 rounded-xl sm:rounded-2xl shadow-2xl">
-                                                Quick View
+                                                <EditableText
+                                                    value={config.gridQuickViewText || "Quick View"}
+                                                    onSave={val => handleSave('gridQuickViewText', val)}
+                                                    isPreview={isPreview}
+                                                    label="Quick View Label"
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -98,7 +154,14 @@ export function DefaultProductGrid({ products, subdomain, storeId, hideHeader, h
                                     <div className="relative py-3 sm:py-4 bg-gray-900 rounded-xl sm:rounded-2xl text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-white overflow-hidden flex items-center justify-center gap-2 sm:gap-3 shadow-xl shadow-gray-200 transition-all duration-500 hover:bg-black hover:shadow-2xl hover:-translate-y-1">
                                         <div className="absolute inset-0 bg-indigo-600 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500" />
                                         <ShoppingCart className="w-3.5 h-3.5 sm:w-4 h-4 relative z-10" />
-                                        <span className="relative z-10">Add To Bag</span>
+                                        <span className="relative z-10">
+                                            <EditableText
+                                                value={config.gridAddToCartText || "Add To Bag"}
+                                                onSave={val => handleSave('gridAddToCartText', val)}
+                                                isPreview={isPreview}
+                                                label="Add To Cart Label"
+                                            />
+                                        </span>
                                     </div>
                                 </button>
                             </div>

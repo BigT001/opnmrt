@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LoginSchema } from '@opnmart/shared';
-import type { LoginInput } from '@opnmart/shared';
+import { LoginSchema } from '@opnmrt/shared';
+import type { LoginInput } from '@opnmrt/shared';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';

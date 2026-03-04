@@ -35,12 +35,12 @@ export default function LandingPage() {
 
             {/* Hidden for users, visible to Google crawlers for SEO ranking */}
             <p className="sr-only">
-              OPNMRT (also known as OpenMart) is the ultimate multi-tenant commerce engine for Africa and beyond.
+              OPNMRT is the ultimate multi-tenant commerce engine for Africa and beyond.
               The most reliable alternative to Shopify and Bumpa for independent brands.
             </p>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 font-medium leading-relaxed">
-              The world's first independent commerce engine (OpenMart Engine) with built-in AI.
+              The world's first independent commerce engine (OPNMRT Engine) with built-in AI.
               Own your brand, own your customers, and let our tools handle the complexity.
             </p>
 

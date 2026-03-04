@@ -223,7 +223,7 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
                                             type="text"
                                             value={globalSearch}
                                             onChange={(e) => setGlobalSearch(e.target.value)}
-                                            placeholder="SEARCH THE STORE..."
+                                            placeholder={(config.navSearchPlaceholder || "SEARCH THE STORE...").toUpperCase()}
                                             className="w-full bg-gray-50/50 backdrop-blur-md border-none rounded-full px-6 py-2.5 text-[9px] font-black uppercase tracking-widest focus:ring-0"
                                         />
                                     </motion.form>
@@ -340,13 +340,42 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
 
                         {/* Secondary Section: Discovery - Vertical Layout for 'Complete Expression' */}
                         <div className="mt-12 pt-12 border-t border-gray-100 flex flex-col gap-10">
-                            <div className="space-y-3">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">Need Help?</p>
-                                <p className="text-sm font-black text-black uppercase tracking-tight">support@vantage.shop</p>
+                            <div className="space-y-3 text-left">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">
+                                    <EditableText
+                                        value={config.navMenuHelpTitle || "Need Help?"}
+                                        onSave={val => handleConfigSave({ navMenuHelpTitle: val })}
+                                        isPreview={isPreview}
+                                        label="Help Section Title"
+                                    />
+                                </p>
+                                <p className="text-sm font-black text-black uppercase tracking-tight">
+                                    <EditableText
+                                        value={config.navMenuHelpEmail || "support@vantage.shop"}
+                                        onSave={val => handleConfigSave({ navMenuHelpEmail: val })}
+                                        isPreview={isPreview}
+                                        label="Help Email"
+                                    />
+                                </p>
                             </div>
-                            <div className="space-y-3">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">Address</p>
-                                <p className="text-sm font-black text-black uppercase tracking-tight leading-snug">Oxford St, London <br /> W1D 1BS, UK</p>
+                            <div className="space-y-3 text-left">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">
+                                    <EditableText
+                                        value={config.navMenuAddressTitle || "Address"}
+                                        onSave={val => handleConfigSave({ navMenuAddressTitle: val })}
+                                        isPreview={isPreview}
+                                        label="Address Section Title"
+                                    />
+                                </p>
+                                <p className="text-sm font-black text-black uppercase tracking-tight leading-snug">
+                                    <EditableText
+                                        value={config.navMenuAddressContent || "Oxford St, London \n W1D 1BS, UK"}
+                                        onSave={val => handleConfigSave({ navMenuAddressContent: val })}
+                                        isPreview={isPreview}
+                                        multiline
+                                        label="Address Content"
+                                    />
+                                </p>
                             </div>
                         </div>
 
@@ -357,7 +386,12 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
                                 onClick={() => setIsMenuOpen(false)}
                                 className="block w-full py-6 bg-black text-white text-center rounded-3xl font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl shadow-black/20 transform active:scale-95 transition-all"
                             >
-                                {user ? 'My Account Dashboard' : 'Member Sign In'}
+                                <EditableText
+                                    value={user ? (config.navMenuAccountDashboard || 'My Account Dashboard') : (config.navMenuMemberSignIn || 'Member Sign In')}
+                                    onSave={val => handleConfigSave({ [user ? 'navMenuAccountDashboard' : 'navMenuMemberSignIn']: val })}
+                                    isPreview={isPreview}
+                                    label="Mobile Menu Account Button"
+                                />
                             </Link>
 
                             <div className="flex items-center justify-between">
@@ -376,7 +410,14 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
                                         </Link>
                                     ))}
                                 </div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">©2024 VANTAGE</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                    <EditableText
+                                        value={config.navMenuCopyright || `©${new Date().getFullYear()} ${storeName.toUpperCase()}`}
+                                        onSave={val => handleConfigSave({ navMenuCopyright: val })}
+                                        isPreview={isPreview}
+                                        label="Mobile Menu Copyright"
+                                    />
+                                </p>
                             </div>
                         </div>
                     </motion.div>
@@ -425,8 +466,8 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
             <VantageBottomSheet
                 isOpen={isFavoritesOpen}
                 onClose={() => setIsFavoritesOpen(false)}
-                title="Your Wishlist"
-                subtitle="Items you've liked"
+                title={config.navWishlistTitle || "Your Wishlist"}
+                subtitle={config.navWishlistSubtitle || "Items you've liked"}
                 storeId={storeId || ''}
             >
                 <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">

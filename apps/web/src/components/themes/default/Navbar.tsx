@@ -11,8 +11,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { EditableText, EditableColor } from '../EditableContent';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
-export function DefaultNavbar({ storeName, logo, storeId, isPreview, onConfigChange }: NavbarProps) {
+export function DefaultNavbar({ storeName, logo, storeId, isPreview, onConfigChange, themeConfig }: NavbarProps) {
     const { toggleCart, totalCount: itemCount } = useStoreCart(storeId);
+    const config = themeConfig || {};
+
+    const handleSave = (key: string, value: string) => {
+        onConfigChange?.({ [key]: value });
+    };
     const { user } = useAuthStore();
     const { subdomain } = useParams<{ subdomain: string }>();
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -40,11 +45,30 @@ export function DefaultNavbar({ storeName, logo, storeId, isPreview, onConfigCha
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-[9px] sm:text-[11px] font-black text-white uppercase tracking-[0.2em]">
                     <span className="flex items-center gap-2">
                         <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
-                        Standard Edition Active
+                        <EditableText
+                            value={config.navStatusText || "Standard Edition Active"}
+                            onSave={val => handleSave('navStatusText', val)}
+                            isPreview={isPreview}
+                            label="Status Bar Text"
+                        />
                     </span>
                     <div className="hidden sm:flex gap-6">
-                        <Link href={`/store/${subdomain}/customer/orders`} className="hover:text-yellow-400 transition-colors">Track Order</Link>
-                        <Link href="#" className="hover:text-yellow-400 transition-colors">Help Center</Link>
+                        <Link href={`/store/${subdomain}/customer/orders`} className="hover:text-yellow-400 transition-colors">
+                            <EditableText
+                                value={config.navTrackOrderText || "Track Order"}
+                                onSave={val => handleSave('navTrackOrderText', val)}
+                                isPreview={isPreview}
+                                label="Track Order Label"
+                            />
+                        </Link>
+                        <Link href="#" className="hover:text-yellow-400 transition-colors">
+                            <EditableText
+                                value={config.navHelpCenterText || "Help Center"}
+                                onSave={val => handleSave('navHelpCenterText', val)}
+                                isPreview={isPreview}
+                                label="Help Center Label"
+                            />
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -60,15 +84,43 @@ export function DefaultNavbar({ storeName, logo, storeId, isPreview, onConfigCha
                                 <span className="font-black text-xl sm:text-2xl tracking-tighter text-gray-900 dark:text-white group-hover:text-black dark:group-hover:text-gray-300 transition-colors">
                                     {storeName}
                                 </span>
-                                <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-widest -mt-1">Official Store</span>
+                                <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-widest -mt-1">
+                                    <EditableText
+                                        value={config.navOfficialBadge || "Official Store"}
+                                        onSave={val => handleSave('navOfficialBadge', val)}
+                                        isPreview={isPreview}
+                                        label="Official Badge"
+                                    />
+                                </span>
                             </div>
                         )}
                     </Link>
 
                     <div className="hidden lg:flex items-center gap-8 text-[12px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-                        <Link href={`/store/${subdomain}`} className="hover:text-black dark:hover:text-white transition-colors py-2 border-b-2 border-transparent hover:border-black dark:hover:border-white">Home</Link>
-                        <Link href={`/store/${subdomain}/shop`} className="hover:text-black dark:hover:text-white transition-colors py-2 border-b-2 border-transparent hover:border-black dark:hover:border-white">Shop</Link>
-                        <Link href={`/store/${subdomain}/about`} className="hover:text-black dark:hover:text-white transition-colors py-2 border-b-2 border-transparent hover:border-black dark:hover:border-white">About</Link>
+                        <Link href={`/store/${subdomain}`} className="hover:text-black dark:hover:text-white transition-colors py-2 border-b-2 border-transparent hover:border-black dark:hover:border-white">
+                            <EditableText
+                                value={config.navHomeText || "Home"}
+                                onSave={val => handleSave('navHomeText', val)}
+                                isPreview={isPreview}
+                                label="Home Label"
+                            />
+                        </Link>
+                        <Link href={`/store/${subdomain}/shop`} className="hover:text-black dark:hover:text-white transition-colors py-2 border-b-2 border-transparent hover:border-black dark:hover:border-white">
+                            <EditableText
+                                value={config.navShopText || "Shop"}
+                                onSave={val => handleSave('navShopText', val)}
+                                isPreview={isPreview}
+                                label="Shop Label"
+                            />
+                        </Link>
+                        <Link href={`/store/${subdomain}/about`} className="hover:text-black dark:hover:text-white transition-colors py-2 border-b-2 border-transparent hover:border-black dark:hover:border-white">
+                            <EditableText
+                                value={config.navAboutText || "About"}
+                                onSave={val => handleSave('navAboutText', val)}
+                                isPreview={isPreview}
+                                label="About Label"
+                            />
+                        </Link>
                     </div>
                 </div>
 
@@ -157,8 +209,22 @@ export function DefaultNavbar({ storeName, logo, storeId, isPreview, onConfigCha
                                             <User className="w-6 h-6" />
                                         </div>
                                         <div className="flex flex-col text-left">
-                                            <span className="text-[13px] font-black">{user ? 'My Account' : 'Login / Register'}</span>
-                                            <span className="text-[8px] font-bold opacity-40 lowercase tracking-widest">{user ? user.email : 'Join the community'}</span>
+                                            <span className="text-[13px] font-black">
+                                                <EditableText
+                                                    value={user ? (config.navAccountText || 'My Account') : (config.navLoginText || 'Login / Register')}
+                                                    onSave={val => handleSave(user ? 'navAccountText' : 'navLoginText', val)}
+                                                    isPreview={isPreview}
+                                                    label="Account Label"
+                                                />
+                                            </span>
+                                            <span className="text-[8px] font-bold opacity-40 lowercase tracking-widest">
+                                                <EditableText
+                                                    value={user ? user.email || '' : (config.navCommunityText || 'Join the community')}
+                                                    onSave={val => handleSave('navCommunityText', val)}
+                                                    isPreview={isPreview}
+                                                    label="Community Label"
+                                                />
+                                            </span>
                                         </div>
                                     </Link>
                                 </div>

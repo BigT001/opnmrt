@@ -299,7 +299,7 @@ export function ElectshopChatDrawer() {
                                 </div>
                             </form>
                             <p className="text-center text-[9px] font-black text-gray-400 uppercase tracking-widest mt-6 opacity-40">
-                                Powered by OPNMART Live Chat
+                                Powered by OPNMRT Live Chat
                             </p>
                         </div>
                     </motion.div>

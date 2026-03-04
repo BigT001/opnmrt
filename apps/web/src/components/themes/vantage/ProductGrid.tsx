@@ -126,7 +126,12 @@ export function VantageProductGrid({ products, subdomain, storeId, hideHeader, h
                                         className="w-full text-white py-4 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 transition-transform"
                                         style={{ backgroundColor: primaryColor }}
                                     >
-                                        Quick Add
+                                        <EditableText
+                                            value={config.gridQuickAddText || "Quick Add"}
+                                            onSave={val => handleSave('gridQuickAddText', val)}
+                                            isPreview={isPreview}
+                                            label="Quick Add Label"
+                                        />
                                         <div className="w-4 h-[1px] bg-white/20" />
                                         <ShoppingBag className="w-3 h-3" />
                                     </button>
@@ -151,7 +156,13 @@ export function VantageProductGrid({ products, subdomain, storeId, hideHeader, h
                                     className="w-full text-white py-4 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 transition-transform"
                                     style={{ backgroundColor: primaryColor }}
                                 >
-                                    Add To Cart <ShoppingBag className="w-3.5 h-3.5" />
+                                    <EditableText
+                                        value={config.gridAddToCartText || "Add To Cart"}
+                                        onSave={val => handleSave('gridAddToCartText', val)}
+                                        isPreview={isPreview}
+                                        label="Add To Cart Label"
+                                    />
+                                    <ShoppingBag className="w-3.5 h-3.5" />
                                 </button>
                             </div>
                         </Link>

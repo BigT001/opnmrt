@@ -51,7 +51,7 @@ export function ElectshopFooter({
                         <form className="relative group">
                             <input
                                 type="email"
-                                placeholder="Your Email Address"
+                                placeholder={config.footerNewsletterPlaceholder || "Your Email Address"}
                                 className="w-full h-14 pl-6 pr-16 bg-[#f8f9fa] border border-gray-100 rounded-xl text-xs font-bold outline-none transition-all focus:border-current"
                                 style={{ focusWithin: { borderColor: effectivePrimaryColor } } as any}
                             />
@@ -75,11 +75,46 @@ export function ElectshopFooter({
                             />
                         </h4>
                         <ul className="space-y-4 text-xs font-bold text-gray-500 uppercase tracking-widest">
-                            <li><Link href="#" className="transition-colors hover:text-black" style={{ '--hover-color': effectivePrimaryColor } as React.CSSProperties}>Our Story</Link></li>
-                            <li><Link href="#" className="transition-colors hover:text-black">Shop All</Link></li>
-                            <li><Link href="#" className="transition-colors hover:text-black">Today's Deals</Link></li>
-                            <li><Link href="#" className="transition-colors hover:text-black">Track Order</Link></li>
-                            <li><Link href="#" className="transition-colors hover:text-black">Contact Us</Link></li>
+                            <li><Link href="#" className="transition-colors hover:text-black" style={{ '--hover-color': effectivePrimaryColor } as React.CSSProperties}>
+                                <EditableText
+                                    value={config.footerLinkStory || 'Our Story'}
+                                    onSave={(val: string) => handleConfigSave({ footerLinkStory: val })}
+                                    isPreview={isPreview}
+                                    label="Story Link"
+                                />
+                            </Link></li>
+                            <li><Link href="#" className="transition-colors hover:text-black">
+                                <EditableText
+                                    value={config.footerLinkShopAll || 'Shop All'}
+                                    onSave={(val: string) => handleConfigSave({ footerLinkShopAll: val })}
+                                    isPreview={isPreview}
+                                    label="Shop All Link"
+                                />
+                            </Link></li>
+                            <li><Link href="#" className="transition-colors hover:text-black">
+                                <EditableText
+                                    value={config.footerLinkDeals || "Today's Deals"}
+                                    onSave={(val: string) => handleConfigSave({ footerLinkDeals: val })}
+                                    isPreview={isPreview}
+                                    label="Deals Link"
+                                />
+                            </Link></li>
+                            <li><Link href="#" className="transition-colors hover:text-black">
+                                <EditableText
+                                    value={config.footerLinkTrack || 'Track Order'}
+                                    onSave={(val: string) => handleConfigSave({ footerLinkTrack: val })}
+                                    isPreview={isPreview}
+                                    label="Track Link"
+                                />
+                            </Link></li>
+                            <li><Link href="#" className="transition-colors hover:text-black">
+                                <EditableText
+                                    value={config.footerLinkContact || 'Contact Us'}
+                                    onSave={(val: string) => handleConfigSave({ footerLinkContact: val })}
+                                    isPreview={isPreview}
+                                    label="Contact Link"
+                                />
+                            </Link></li>
                         </ul>
                     </div>
 
@@ -94,11 +129,46 @@ export function ElectshopFooter({
                             />
                         </h4>
                         <ul className="space-y-4 text-xs font-bold text-gray-500 uppercase tracking-widest">
-                            <li><Link href="#" className="transition-colors hover:text-black">Privacy Policy</Link></li>
-                            <li><Link href="#" className="transition-colors hover:text-black">Terms & Conditions</Link></li>
-                            <li><Link href="#" className="transition-colors hover:text-black">Refund Policy</Link></li>
-                            <li><Link href="#" className="transition-colors hover:text-black">Shipping Guide</Link></li>
-                            <li><Link href="#" className="transition-colors hover:text-black">Help Center</Link></li>
+                            <li><Link href="#" className="transition-colors hover:text-black">
+                                <EditableText
+                                    value={config.footerLinkPrivacy || 'Privacy Policy'}
+                                    onSave={(val: string) => handleConfigSave({ footerLinkPrivacy: val })}
+                                    isPreview={isPreview}
+                                    label="Privacy link"
+                                />
+                            </Link></li>
+                            <li><Link href="#" className="transition-colors hover:text-black">
+                                <EditableText
+                                    value={config.footerLinkTerms || 'Terms & Conditions'}
+                                    onSave={(val: string) => handleConfigSave({ footerLinkTerms: val })}
+                                    isPreview={isPreview}
+                                    label="Terms Link"
+                                />
+                            </Link></li>
+                            <li><Link href="#" className="transition-colors hover:text-black">
+                                <EditableText
+                                    value={config.footerLinkRefund || 'Refund Policy'}
+                                    onSave={(val: string) => handleConfigSave({ footerLinkRefund: val })}
+                                    isPreview={isPreview}
+                                    label="Refund Link"
+                                />
+                            </Link></li>
+                            <li><Link href="#" className="transition-colors hover:text-black">
+                                <EditableText
+                                    value={config.footerLinkShipping || 'Shipping Guide'}
+                                    onSave={(val: string) => handleConfigSave({ footerLinkShipping: val })}
+                                    isPreview={isPreview}
+                                    label="Shipping Link"
+                                />
+                            </Link></li>
+                            <li><Link href="#" className="transition-colors hover:text-black">
+                                <EditableText
+                                    value={config.footerLinkHelp || 'Help Center'}
+                                    onSave={(val: string) => handleConfigSave({ footerLinkHelp: val })}
+                                    isPreview={isPreview}
+                                    label="Help link"
+                                />
+                            </Link></li>
                         </ul>
                     </div>
 

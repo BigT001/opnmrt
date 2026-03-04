@@ -41,12 +41,33 @@ export function ElectshopProductGrid({ products, subdomain, storeId, hideHeader,
                     <div className="flex items-center gap-4">
                         <div className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-100 rounded-xl shadow-sm cursor-pointer hover:border-brand transition-colors">
                             <SlidersHorizontal className="w-4 h-4 text-gray-400" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Filter By</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest">
+                                <EditableText
+                                    value={config.filterLabel || 'Filter By'}
+                                    onSave={(val) => handleSave('filterLabel', val)}
+                                    isPreview={isPreview}
+                                    label="Filter Label"
+                                />
+                            </span>
                             <ChevronDown className="w-4 h-4 text-gray-400" />
                         </div>
                         <div className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-100 rounded-xl shadow-sm cursor-pointer hover:border-brand transition-colors">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Sort By:</span>
-                            <span className="text-[10px] font-black uppercase tracking-widest">Featured</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                <EditableText
+                                    value={config.sortByLabel || 'Sort By:'}
+                                    onSave={(val) => handleSave('sortByLabel', val)}
+                                    isPreview={isPreview}
+                                    label="Sort By Label"
+                                />
+                            </span>
+                            <span className="text-[10px] font-black uppercase tracking-widest">
+                                <EditableText
+                                    value={config.featuredLabel || 'Featured'}
+                                    onSave={(val) => handleSave('featuredLabel', val)}
+                                    isPreview={isPreview}
+                                    label="Featured Label"
+                                />
+                            </span>
                             <ChevronDown className="w-4 h-4 text-gray-400" />
                         </div>
                     </div>
@@ -59,8 +80,23 @@ export function ElectshopProductGrid({ products, subdomain, storeId, hideHeader,
                         <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                             <ShoppingCart className="w-10 h-10 text-gray-200" />
                         </div>
-                        <h3 className="text-lg font-black text-gray-900 uppercase tracking-widest">No products found</h3>
-                        <p className="text-xs font-bold text-gray-400 mt-2 uppercase tracking-widest">Try adjusting your filters or search query.</p>
+                        <h3 className="text-lg font-black text-gray-900 uppercase tracking-widest">
+                            <EditableText
+                                value={config.emptyGridTitle || 'No products found'}
+                                onSave={(val) => handleSave('emptyGridTitle', val)}
+                                isPreview={isPreview}
+                                label="Empty Title"
+                            />
+                        </h3>
+                        <p className="text-xs font-bold text-gray-400 mt-2 uppercase tracking-widest">
+                            <EditableText
+                                value={config.emptyGridSubtitle || 'Try adjusting your filters or search query.'}
+                                onSave={(val) => handleSave('emptyGridSubtitle', val)}
+                                isPreview={isPreview}
+                                label="Empty Subtitle"
+                                multiline
+                            />
+                        </p>
                     </div>
                 ) : (
                     products.map((product) => (
@@ -69,6 +105,9 @@ export function ElectshopProductGrid({ products, subdomain, storeId, hideHeader,
                             product={product}
                             subdomain={subdomain}
                             storeId={storeId}
+                            isPreview={isPreview}
+                            onConfigChange={onConfigChange}
+                            store={store}
                         />
                     ))
                 )}

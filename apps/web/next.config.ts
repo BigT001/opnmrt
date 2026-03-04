@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@opnmart/shared'],
+  transpilePackages: ['@opnmrt/shared'],
   images: {
     remotePatterns: [
       {

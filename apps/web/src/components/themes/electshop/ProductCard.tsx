@@ -7,17 +7,25 @@ import { formatPrice } from '@/lib/utils';
 import { useStoreCart } from '@/store/useStoreCart';
 import { useWishlistStore } from '@/store/useWishlistStore';
 import toast from 'react-hot-toast';
+import { EditableText } from '../EditableContent';
 
 interface ElectshopProductCardProps {
     product: any;
     subdomain: string;
     storeId: string;
+    isPreview?: boolean;
+    onConfigChange?: (cfg: any) => void;
+    store?: any;
 }
 
-export function ElectshopProductCard({ product, subdomain, storeId }: ElectshopProductCardProps) {
+export function ElectshopProductCard({ product, subdomain, storeId, isPreview, onConfigChange, store }: ElectshopProductCardProps) {
+    const config = store?.themeConfig || {};
+    const handleSave = (key: string, value: string) => {
+        onConfigChange?.({ [key]: value });
+    };
+
     const { addItem } = useStoreCart(storeId);
     const { items: wishlistItems, addItem: addToWishlist, removeItem: removeFromWishlist } = useWishlistStore();
-
 
     const isInWishlist = wishlistItems.some(item => String(item.id) === String(product.id));
 
@@ -74,7 +82,12 @@ export function ElectshopProductCard({ product, subdomain, storeId }: ElectshopP
                         </div>
                     ) : (
                         <span className="px-2.5 py-1.5 bg-gray-950/80 backdrop-blur-md text-white text-[8px] lg:text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
-                            Sold Out
+                            <EditableText
+                                value={config.soldOutLabel || 'Sold Out'}
+                                onSave={(val) => handleSave('soldOutLabel', val)}
+                                isPreview={isPreview}
+                                label="Sold Out Label"
+                            />
                         </span>
                     )}
                 </div>
@@ -138,7 +151,13 @@ export function ElectshopProductCard({ product, subdomain, storeId }: ElectshopP
                         disabled={product.stock === 0}
                         className="lg:hidden w-full h-12 bg-brand text-white rounded-[1.2rem] font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 active:scale-95 transition-all shadow-xl shadow-brand/10 disabled:opacity-50"
                     >
-                        <ShoppingCart className="w-4 h-4" /> Add To Cart
+                        <ShoppingCart className="w-4 h-4" />
+                        <EditableText
+                            value={config.addToCartLabel || 'Add To Cart'}
+                            onSave={(val) => handleSave('addToCartLabel', val)}
+                            isPreview={isPreview}
+                            label="Cart Button"
+                        />
                     </button>
                 </div>
             </div>

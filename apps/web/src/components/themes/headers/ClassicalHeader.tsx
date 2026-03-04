@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { EditableText, EditableImage } from '../EditableContent';
 
 export function ClassicalHeader({
-    storeName = 'opnmart',
+    storeName = 'OPNMRT',
     logo,
     subdomain: propSubdomain,
     storeId,

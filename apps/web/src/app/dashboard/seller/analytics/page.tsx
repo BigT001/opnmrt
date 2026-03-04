@@ -246,19 +246,29 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-0.5">
+                <div className="flex items-center gap-2">
                     <button
                         onClick={() => { setActiveDrawerTab('advice'); setIsHistoryOpen(true); }}
                         className="p-2 text-slate-400 active:scale-90 transition-all"
                     >
                         <Zap size={18} />
                     </button>
-                    <button
-                        onClick={() => { setActiveDrawerTab('history'); setIsHistoryOpen(true); }}
-                        className="p-2 text-slate-400 active:scale-90 transition-all"
+
+                    {/* Merchant Avatar to Storefront */}
+                    <a
+                        href={`/store/${store?.subdomain}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 shadow-sm overflow-hidden active:scale-90 transition-all ml-1"
                     >
-                        <Clock size={18} />
-                    </button>
+                        {store?.logo ? (
+                            <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-emerald-600 text-white text-[10px] font-black">
+                                {store?.name?.charAt(0) || 'O'}
+                            </div>
+                        )}
+                    </a>
                 </div>
             </div>
 
@@ -428,10 +438,10 @@ export default function AnalyticsPage() {
 
                             <div className="max-w-xl mx-auto mb-12 space-y-4 px-4">
                                 <p className="text-sm lg:text-base font-bold text-slate-800 leading-relaxed">
-                                    I analyze every transaction, view, and stock movement to maximize your profitability.
+                                    I am your all-in-one store architect. Beyond tracking transactions, I generate professional marketing copy, provide data-driven strategic advice, and perform deep-dive financial and inventory audits to scale your business.
                                 </p>
                                 <p className="text-[11px] lg:text-sm text-slate-500 font-medium leading-relaxed opacity-60">
-                                    Ask me for a stock audit, traffic growth strategies, or profit predictions.
+                                    Ask me for a stock audit, traffic growth strategies, or localized profit predictions.
                                 </p>
                             </div>
 

@@ -1,5 +1,5 @@
 {
-  "name": "@opnmart/shared",
+  "name": "@opnmrt/shared",
   "version": "1.0.0",
   "description": "Shared types and schemas for OPNMRT",
   "main": "./dist/index.js",

@@ -39,7 +39,7 @@ export default function ThemesPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="space-y-1">
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                        OPN MART <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] uppercase tracking-widest rounded-full">STUDIO</span>
+                        OPNMRT <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] uppercase tracking-widest rounded-full">STUDIO</span>
                     </h1>
                     <p className="text-slate-500 text-sm font-medium">Select a meticulously crafted theme to transform your storefront.</p>
                 </div>
@@ -50,15 +50,19 @@ export default function ThemesPage() {
                 )}
             </div>
 
-            {/* Quick Tip for Themes */}
-            <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm flex items-start gap-4">
-                <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 shrink-0">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                </div>
-                <div>
-                    <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-1">Guide: Dressing Your Store</p>
-                    <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-                        Your theme is like your storefront's window display. Pick a style that matches your products. Each theme is fully mobile-responsive and optimized for high-speed shopping. You can preview any theme with your actual products before activating it!
+            {/* Quick Tip for Themes (Inline Version) */}
+            <div className="bg-emerald-50/50 rounded-[1.5rem] p-5 border border-emerald-100 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100/30 rounded-full blur-3xl -mr-16 -mt-16" />
+                <div className="relative z-10 flex flex-col gap-1">
+                    <div className="flex items-center gap-2 mb-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Studio Guide: Dressing Your Store</p>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed font-bold">
+                        Your theme is your storefront's window display. Pick a style that matches your brand personality. Each OPNMRT theme is fully mobile-responsive and optimized for high-speed conversions.
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-medium mt-1">
+                        Pro Tip: You can preview any theme with your actual products before activating it!
                     </p>
                 </div>
             </div>
@@ -132,15 +136,15 @@ function ThemeCard({ theme, isActive, isUpdating, onActivate, store, featured }:
             {/* Content Section */}
             <div className="p-6 flex flex-col flex-1">
                 <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-[13px] font-black text-slate-900 tracking-tight">{theme.name}</h3>
+                    <h3 className="text-[14px] font-black text-slate-900 tracking-tight">{theme.name}</h3>
                     {isActive && (
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 rounded-full">
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 rounded-full">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Active</span>
+                            <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest leading-none">Active</span>
                         </div>
                     )}
                 </div>
-                <p className="text-[10px] font-bold text-slate-400 leading-relaxed line-clamp-2 mb-6">{theme.description}</p>
+                <p className="text-[10px] font-bold text-slate-500 leading-relaxed line-clamp-2 mb-6 opacity-70">{theme.description}</p>
 
                 <div className="mt-auto flex items-center gap-3">
                     {!isActive ? (

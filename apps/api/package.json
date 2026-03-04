@@ -33,7 +33,7 @@
     "@nestjs/platform-socket.io": "^11.1.13",
     "@nestjs/schedule": "^5.0.1",
     "@nestjs/websockets": "^11.0.1",
-    "@opnmart/shared": "workspace:*",
+    "@opnmrt/shared": "workspace:*",
     "@prisma/client": "6.2.1",
     "@supabase/supabase-js": "^2.95.3",
     "@types/streamifier": "^0.1.2",

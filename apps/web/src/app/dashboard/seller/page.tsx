@@ -287,7 +287,7 @@ export default function SellerDashboardPage() {
                 {/* OpenMart News / Updates */}
                 <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-md font-bold text-slate-900">OpenMart News</h3>
+                        <h3 className="text-md font-bold text-slate-900">OPNMRT News</h3>
                         <button className="text-slate-400 font-bold tracking-widest">•••</button>
                     </div>
                     <div className="bg-primary/5 rounded-2xl p-4 flex items-center justify-center h-32 relative overflow-hidden">

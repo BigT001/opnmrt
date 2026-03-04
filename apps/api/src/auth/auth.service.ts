@@ -10,7 +10,7 @@ import * as bcrypt from 'bcryptjs';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { Resend } from 'resend';
-import type { RegisterInput, LoginInput } from '@opnmart/shared';
+import type { RegisterInput, LoginInput } from '@opnmrt/shared';
 
 @Injectable()
 export class AuthService {

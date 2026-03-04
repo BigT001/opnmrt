@@ -182,7 +182,7 @@ export default function SellerLayout({
                                             O
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-sm font-black tracking-tight leading-none uppercase">OpenMart</span>
+                                            <span className="text-sm font-black tracking-tight leading-none uppercase">OPNMRT</span>
                                             <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">
                                                 Merchant Console
                                             </span>
@@ -302,10 +302,23 @@ export default function SellerLayout({
                             </h2>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button onClick={() => setIsNotificationsOpen(true)} className="w-10 h-10 bg-white border border-slate-100 flex items-center justify-center rounded-xl relative shadow-sm">
+                            <button onClick={() => setIsNotificationsOpen(true)} className="w-10 h-10 bg-white border border-slate-100 flex items-center justify-center rounded-xl relative shadow-sm group">
                                 <span className="text-base">🔔</span>
-                                {notifications.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white" />}
+                                {notifications.length > 0 && <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white" />}
                             </button>
+
+                            {/* Mobile Merchant Profile Navigation */}
+                            <Link
+                                href={`/store/${store?.subdomain}`}
+                                target="_blank"
+                                className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-lg overflow-hidden border border-slate-100 active:scale-95 transition-all"
+                            >
+                                {store?.logo ? (
+                                    <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="text-xs font-black">{(store?.name?.[0] || 'O').toUpperCase()}</span>
+                                )}
+                            </Link>
                         </div>
                     </header>
                 )}

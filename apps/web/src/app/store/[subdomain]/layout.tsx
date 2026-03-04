@@ -29,13 +29,13 @@ export async function generateMetadata({ params }: { params: Promise<{ subdomain
     }
 
     return {
-        title: `${store.name} | OPNMRT (OpenMart)`,
-        description: store.biography || `Shop amazing products at ${store.name}, powered by OPNMRT (OpenMart).`,
+        title: `${store.name} | OPNMRT`,
+        description: store.biography || `Shop amazing products at ${store.name}, powered by OPNMRT.`,
         openGraph: {
             title: `${store.name} | OPNMRT`,
             description: store.biography,
             url: `https://${subdomain}.${APP_BASE_DOMAIN}`,
-            siteName: 'OPNMRT (OpenMart)',
+            siteName: 'OPNMRT',
         },
     };
 }

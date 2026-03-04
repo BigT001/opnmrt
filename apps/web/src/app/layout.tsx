@@ -18,11 +18,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
     template: '%s | OPNMRT',
-    default: 'OPNMRT (OpenMart) | The Sovereign AI Commerce Engine',
+    default: 'OPNMRT | The Sovereign AI Commerce Engine',
   },
-  description: "OPNMRT (OpenMart) - The world's first independent commerce engine with built-in AI. Build, scale, and own your digital brand with sovereign storefronts and global scale.",
+  description: "OPNMRT - The world's first independent commerce engine with built-in AI. Build, scale, and own your digital brand with sovereign storefronts and global scale.",
   keywords: [
-    'OPNMRT', 'OpenMart', 'Open Mart', 'Sovereign Commerce', 'AI Ecommerce',
+    'OPNMRT', 'Sovereign Commerce', 'AI Ecommerce',
     'Independent Storefronts', 'Global Ecommerce Engine', 'Start Online Store Nigeria',
     'Multi-tenant Ecommerce Platform', 'Sell Online with AI', 'Commerce Intelligence'
   ],
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     url: APP_URL,
     siteName: 'OPNMRT',
     title: 'OPNMRT | The Sovereign AI Commerce Engine',
-    description: 'Independent storefronts, global scale. Deploy sovereign commerce with AI-powered intelligence using OPNMRT (OpenMart).',
+    description: 'Independent storefronts, global scale. Deploy sovereign commerce with AI-powered intelligence using OPNMRT.',
     images: [
       {
         url: '/og-image.png',
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'OPNMRT | The Sovereign AI Commerce Engine',
-    description: 'Build, scale, and own your brand with OPNMRT (OpenMart).',
+    description: 'Build, scale, and own your brand with OPNMRT.',
     images: ['/og-image.png'],
     creator: '@opnmrt',
   },

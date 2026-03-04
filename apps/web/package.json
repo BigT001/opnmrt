@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@opnmart/shared": "workspace:*",
+    "@opnmrt/shared": "workspace:*",
     "@tanstack/react-query": "^5.90.20",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",

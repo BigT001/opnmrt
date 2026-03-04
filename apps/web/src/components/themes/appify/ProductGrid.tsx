@@ -12,7 +12,11 @@ import { EditableText } from '../EditableContent';
 
 // ─── Product Card ─────────────────────────────────────────────────────────────
 
-const ProductCardComponent = ({ product, subdomain, storeId, index = 0 }: { product: ProductData; subdomain: string; storeId: string; index?: number }) => {
+const ProductCardComponent = ({ product, subdomain, storeId, index = 0, store, isPreview, onConfigChange }: { product: ProductData; subdomain: string; storeId: string; index?: number; store?: any; isPreview?: boolean; onConfigChange?: (cfg: any) => void }) => {
+    const config = store?.themeConfig || {};
+    const handleSave = (key: string, value: string) => {
+        onConfigChange?.({ [key]: value });
+    };
     const { addItem } = useCartStore();
     const { toggleItem, isInWishlist } = useWishlistStore();
     const [mounted, setMounted] = React.useState(false);
@@ -111,7 +115,13 @@ const ProductCardComponent = ({ product, subdomain, storeId, index = 0 }: { prod
                             exit={{ opacity: 0, scale: 0.9 }}
                             className="w-full h-12 rounded-2xl bg-green-500 flex items-center justify-center gap-3 text-white text-[11px] font-black uppercase tracking-[0.3em] shadow-lg shadow-green-500/20"
                         >
-                            <Check className="w-4 h-4" /> Added!
+                            <Check className="w-4 h-4" />
+                            <EditableText
+                                value={config.gridAddedText || "Added!"}
+                                onSave={val => handleSave('gridAddedText', val)}
+                                isPreview={isPreview}
+                                label="Added Label"
+                            />
                         </motion.div>
                     ) : (
                         <motion.button
@@ -124,7 +134,12 @@ const ProductCardComponent = ({ product, subdomain, storeId, index = 0 }: { prod
                             className="w-full h-12 rounded-2xl bg-white/15 backdrop-blur-xl border border-white/20 text-white text-[11px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-orange-500 hover:border-orange-500 transition-all duration-300 shadow-lg group/btn"
                         >
                             <ShoppingBag className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-                            Add to Cart
+                            <EditableText
+                                value={config.gridAddToCartText || "Add to Cart"}
+                                onSave={val => handleSave('gridAddToCartText', val)}
+                                isPreview={isPreview}
+                                label="Add to Cart Label"
+                            />
                         </motion.button>
                     )}
                 </AnimatePresence>
@@ -190,7 +205,15 @@ export function AppifyProductGrid({ products, subdomain, storeId, hideHeader, st
                         viewport={{ once: true }}
                         transition={{ duration: 0.6, delay: (index % 4) * 0.08, ease: [0.23, 1, 0.32, 1] }}
                     >
-                        <ProductCard product={product} subdomain={subdomain} storeId={storeId} index={index} />
+                        <ProductCard
+                            product={product}
+                            subdomain={subdomain}
+                            storeId={storeId}
+                            index={index}
+                            store={store}
+                            isPreview={isPreview}
+                            onConfigChange={onConfigChange}
+                        />
                     </motion.div>
                 ))}
             </motion.div>

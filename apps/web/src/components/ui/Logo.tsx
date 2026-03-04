@@ -26,8 +26,8 @@ export function Logo({ className = '', showText = true, size = 'md' }: LogoProps
 
     return (
         <div
-            aria-label="OPNMRT (OpenMart) - Multi-Tenant AI Commerce Engine"
-            title="OPNMRT (OpenMart)"
+            aria-label="OPNMRT - Multi-Tenant AI Commerce Engine"
+            title="OPNMRT"
             className={`flex items-center space-x-2.5 group cursor-pointer ${className}`}
         >
             <div className={`relative ${iconSizes[size]} flex items-center justify-center`}>
