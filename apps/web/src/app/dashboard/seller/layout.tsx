@@ -11,6 +11,7 @@ import { SearchModal } from '@/components/dashboard/SearchModal';
 import { NotificationDropdown } from '@/components/dashboard/NotificationDropdown';
 import { UserMenu } from '@/components/dashboard/UserMenu';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { useUIStore } from '@/store/useUIStore';
 
 export default function SellerLayout({
     children,
@@ -20,7 +21,7 @@ export default function SellerLayout({
     const router = useRouter();
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = React.useState(false);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+    const { isMobileMenuOpen, setMobileMenuOpen } = useUIStore();
     const { user, store, setUser, setStore, setLoading, isLoading } = useAuthStore();
     const [unreadCount, setUnreadCount] = React.useState(0);
     const socket = useSocket(user?.id);
@@ -164,7 +165,7 @@ export default function SellerLayout({
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setIsMobileMenuOpen(false)}
+                            onClick={() => setMobileMenuOpen(false)}
                             className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[200] lg:hidden"
                         />
                         <motion.aside
@@ -188,7 +189,7 @@ export default function SellerLayout({
                                         </div>
                                     </div>
                                     <button
-                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        onClick={() => setMobileMenuOpen(false)}
                                         className="p-2 hover:bg-slate-50 rounded-lg transition-colors text-slate-400"
                                     >
                                         <span className="text-xl">✕</span>
@@ -196,7 +197,7 @@ export default function SellerLayout({
                                 </div>
                             </div>
                             <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar">
-                                <SidebarNav pathname={pathname} unreadCount={unreadCount} setIsMobileMenuOpen={setIsMobileMenuOpen} />
+                                <SidebarNav pathname={pathname} unreadCount={unreadCount} setIsMobileMenuOpen={setMobileMenuOpen} />
                             </div>
 
                             <div className="mt-auto border-t border-slate-50 p-4 space-y-4 bg-slate-50/50">
@@ -204,7 +205,7 @@ export default function SellerLayout({
                                 <button
                                     onClick={() => {
                                         handleLogout();
-                                        setIsMobileMenuOpen(false);
+                                        setMobileMenuOpen(false);
                                     }}
                                     className="w-full flex items-center gap-3 p-3 rounded-2xl text-rose-500 bg-rose-50 hover:bg-rose-100 transition-all font-bold text-sm"
                                 >
@@ -280,7 +281,7 @@ export default function SellerLayout({
                         store={store}
                         user={user}
                         notificationsCount={notifications.length}
-                        onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
+                        onMobileMenuToggle={() => setMobileMenuOpen(true)}
                         onNotificationsClick={() => setIsNotificationsOpen(true)}
                         onSearchClick={() => setIsSearchOpen(true)}
                     />
@@ -289,7 +290,7 @@ export default function SellerLayout({
                     <header className="lg:hidden h-16 bg-white/80 backdrop-blur-md border-b border-slate-50 flex items-center justify-between px-6 sticky top-0 z-[100]">
                         <div className="flex items-center gap-3">
                             <button
-                                onClick={() => setIsMobileMenuOpen(true)}
+                                onClick={() => setMobileMenuOpen(true)}
                                 className="w-10 h-10 bg-slate-50 flex items-center justify-center rounded-xl text-slate-600 transition-all border border-slate-100 active:scale-95"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -182,7 +182,7 @@ export default function CustomersPage() {
                                     </div>
                                 </div>
                                 {expandedId === customer.id && (
-                                    <div className="mt-4 px-2">
+                                    <div className="mt-1 px-0">
                                         <CustomerDetailView details={details} loading={detailsLoading} formatCurrency={formatCurrency} />
                                     </div>
                                 )}
@@ -205,17 +205,17 @@ function CustomerDetailView({ details, loading, formatCurrency }: { details: any
     }
 
     return (
-        <div className="lg:p-8 p-4 animate-in slide-in-from-top-2 duration-300 space-y-6 lg:space-y-8">
+        <div className="lg:p-8 p-1 py-4 animate-in slide-in-from-top-2 duration-300 space-y-4 lg:space-y-8">
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:gap-4 gap-3">
-                <div className="bg-amber-50 rounded-2xl p-4 lg:p-5 border border-amber-100/50">
+            <div className="grid grid-cols-2 lg:gap-4 gap-2">
+                <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100/50">
                     <div className="flex items-center gap-2 mb-2 text-amber-600/60 text-[9px] lg:text-[10px] font-black uppercase tracking-widest">
                         <Clock className="w-3 h-3" /> Awaiting
                     </div>
                     <div className="text-sm lg:text-xl font-black text-amber-900">{formatCurrency(details.stats.pending.value)}</div>
                     <div className="text-[8px] lg:text-xs font-bold text-amber-700/50 uppercase tracking-tighter">{details.stats.pending.count} orders</div>
                 </div>
-                <div className="bg-emerald-50 rounded-2xl p-4 lg:p-5 border border-emerald-100/50">
+                <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100/50">
                     <div className="flex items-center gap-2 mb-2 text-emerald-600/60 text-[9px] lg:text-[10px] font-black uppercase tracking-widest">
                         <CheckCircle className="w-3 h-3" /> Paid
                     </div>
@@ -224,9 +224,9 @@ function CustomerDetailView({ details, loading, formatCurrency }: { details: any
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8 gap-4">
                 {/* Personal Details */}
-                <div className="bg-white rounded-3xl p-5 lg:p-6 border border-slate-100 lg:shadow-sm">
+                <div className="bg-white rounded-[2rem] p-5 lg:p-6 border border-slate-100 lg:shadow-sm">
                     <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4 lg:mb-6">Personal Details</h3>
                     <div className="space-y-4">
                         {details.profile.email && (
@@ -269,7 +269,7 @@ function CustomerDetailView({ details, loading, formatCurrency }: { details: any
                 </div>
 
                 {/* Recent Activity / Orders */}
-                <div className="bg-white rounded-3xl p-5 lg:p-6 border border-slate-100 lg:shadow-sm lg:col-span-2 overflow-hidden">
+                <div className="bg-white rounded-[2rem] p-5 lg:p-6 border border-slate-100 lg:shadow-sm lg:col-span-2 overflow-hidden">
                     <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4 lg:mb-6">Recent Activity</h3>
                     <div className="overflow-x-auto rounded-xl border border-slate-50">
                         <table className="w-full text-left bg-slate-50/50 border-separate border-spacing-0">
