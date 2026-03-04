@@ -142,6 +142,8 @@ export interface ProductDetailProps {
     product: ProductData;
     store: StoreData;
     subdomain: string;
+    isPreview?: boolean;
+    onConfigChange?: (config: any) => void;
 }
 
 export interface CartDrawerProps {
