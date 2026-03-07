@@ -7,7 +7,7 @@ import { Logo } from '@/components/ui/Logo';
 export function LandingFooter() {
     return (
         <footer className="border-t border-border py-20 px-6 bg-background relative z-10 transition-colors duration-500">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-20">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-20">
                 <div className="md:col-span-2">
                     <div className="mb-8">
                         {/* Added SEO-friendly attributes to the Logo link */}
@@ -50,6 +50,15 @@ export function LandingFooter() {
                         <li><Link href="#" className="hover:text-emerald-500 transition-colors">Privacy Policy</Link></li>
                         <li><Link href="#" className="hover:text-emerald-500 transition-colors">Terms of Service</Link></li>
                         <li><Link href="#" className="hover:text-emerald-500 transition-colors">Cookie Policy</Link></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 className="text-foreground font-black uppercase tracking-widest text-xs mb-8 underline decoration-emerald-500 decoration-2 underline-offset-4">Partners</h4>
+                    <ul className="space-y-4 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                        <li><Link href="/riders" className="hover:text-emerald-500 transition-colors">Become a Rider</Link></li>
+                        <li><Link href="/register/rider" className="hover:text-emerald-500 transition-colors">Partnership API</Link></li>
+                        <li><Link href="/login/rider" className="hover:text-emerald-500 transition-colors">Rider Support</Link></li>
                     </ul>
                 </div>
             </div>

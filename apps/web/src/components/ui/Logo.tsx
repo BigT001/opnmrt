@@ -63,11 +63,6 @@ export function Logo({ className = '', showText = true, size = 'md' }: LogoProps
                         OPN
                         <span className="text-emerald-500 italic ml-0.5">MRT</span>
                     </span>
-                    {size === 'lg' || size === 'xl' ? (
-                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/60 -mt-0.5">
-                            Digital Commerce Engine
-                        </span>
-                    ) : null}
                 </div>
             )}
         </div>

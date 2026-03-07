@@ -3,7 +3,7 @@ import api from './api';
 export const trackEvent = async (storeId: string, eventType: string, payload?: any) => {
     try {
         // Fire and forget to not block UI
-        api.post('/analytics/track', {
+        api.post('analytics/track', {
             storeId,
             eventType,
             payload

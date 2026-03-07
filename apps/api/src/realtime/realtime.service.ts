@@ -15,4 +15,8 @@ export class RealtimeService {
             refresh: true
         });
     }
+
+    emit(event: string, data: any) {
+        this.gateway.server.emit(event, data);
+    }
 }

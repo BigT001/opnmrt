@@ -36,7 +36,7 @@ export default function CustomerProfilePage() {
     useEffect(() => {
         async function fetchProfile() {
             try {
-                const res = await api.get('/users/profile');
+                const res = await api.get('users/profile');
                 setProfile({
                     ...res.data,
                     phone: res.data.phone || '', // Ensure phone is never null
@@ -92,7 +92,7 @@ export default function CustomerProfilePage() {
         }
 
         try {
-            const res = await api.patch('/users/profile', formData, {
+            const res = await api.patch('users/profile', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
@@ -132,7 +132,7 @@ export default function CustomerProfilePage() {
         setChangingPassword(true);
         setMessage(null);
         try {
-            await api.patch('/users/change-password', passwordData);
+            await api.patch('users/change-password', passwordData);
             setMessage({ type: 'success', text: 'Password updated successfully!' });
             setPasswordData({ currentPassword: '', newPassword: '' });
         } catch (error: any) {

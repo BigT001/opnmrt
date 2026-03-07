@@ -17,7 +17,7 @@ export const CartSync = () => {
         const performInitialSync = async () => {
             try {
                 // Sync local with backend (Merge mode enables Union of states)
-                const syncRes = await api.post('/users/cart/sync', {
+                const syncRes = await api.post('users/cart/sync', {
                     items: localItems,
                     merge: true
                 });

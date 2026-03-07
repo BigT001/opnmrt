@@ -96,11 +96,22 @@ export class AuthService {
       address?: string;
       state?: string;
       lga?: string;
+      country?: string;
+      companyName?: string;
+      vehicleTypes?: string[];
+      isInterstate?: boolean;
+      interstateCoverage?: string[];
+      utilityBill?: string;
+      cacDocument?: string;
+      cacNumber?: string;
+      vehicleType?: string; // fallback for old data if any
     },
   ) {
     try {
       const normalizedEmail = input.email.toLowerCase();
       console.log('[REGISTER] Starting registration for:', normalizedEmail);
+
+      // ... (existing checks)
 
       // Check if verified
       // SELLERS always verify on the global scope because their subdomain is new
@@ -170,7 +181,7 @@ export class AuthService {
 
       console.log('[REGISTER] Starting transaction...');
       // Use a transaction to ensure both user and store are created
-      const { user, store } = await this.prisma.$transaction(async (tx) => {
+      const { user, store, dispatchProfile } = await this.prisma.$transaction(async (tx) => {
         let userStoreId: string | undefined;
         let tenantId: string | undefined;
 
@@ -235,7 +246,31 @@ export class AuthService {
           console.log('[REGISTER] Store created:', newStore.id);
         }
 
-        return { user: newUser, store: newStore };
+        let newDispatchProfile: any = null;
+        if (input.role === 'DISPATCH' && input.companyName) {
+          console.log('[REGISTER] Creating dispatch profile...');
+          newDispatchProfile = await tx.dispatchProfile.create({
+            data: {
+              companyName: input.companyName,
+              phone: input.phone || '',
+              userId: newUser.id,
+              baseRates: {}, // Initializing with empty object
+              vehicleTypes: input.vehicleTypes || [input.vehicleType || 'BIKE'],
+              isInterstate: input.isInterstate || false,
+              coverageAreas: input.interstateCoverage || [], // Using this for inter-state cities/states
+              address: input.address,
+              state: input.state,
+              lga: input.lga,
+              country: input.country || 'Nigeria',
+              utilityBill: input.utilityBill,
+              cacDocument: input.cacDocument,
+              cacNumber: input.cacNumber,
+            }
+          });
+          console.log('[REGISTER] Dispatch profile created:', newDispatchProfile.id);
+        }
+
+        return { user: newUser, store: newStore, dispatchProfile: newDispatchProfile };
       });
 
       console.log('[REGISTER] Transaction completed successfully');
@@ -271,6 +306,7 @@ export class AuthService {
             paystackWebhookSecret: store.paystackWebhookSecret ? '********' : null,
           }
           : null,
+        dispatchProfile: dispatchProfile || null,
         ...tokens,
       };
     } catch (error) {
@@ -294,7 +330,7 @@ export class AuthService {
       // 1. Find user by email globally first to see if they exist at all
       const user = await this.prisma.user.findFirst({
         where: { email: { equals: normalizedEmail, mode: 'insensitive' } as any },
-        include: { managedStore: true },
+        include: { managedStore: true, dispatchProfile: true },
       });
 
       console.log(`[AUTH_DEBUG] Global User found: ${!!user}, Role: ${user?.role}, storeId: ${user?.storeId}`);
@@ -386,6 +422,7 @@ export class AuthService {
             paystackWebhookSecret: user.managedStore.paystackWebhookSecret ? '********' : null,
           }
           : null,
+        dispatchProfile: user.dispatchProfile || null,
         ...tokens,
       };
     } catch (error) {
@@ -397,7 +434,7 @@ export class AuthService {
   async getMe(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { managedStore: true },
+      include: { managedStore: true, dispatchProfile: true },
     });
 
     if (!user) {
@@ -412,6 +449,7 @@ export class AuthService {
         image: user.image,
         phone: user.phone,
         role: user.role,
+        dispatchProfile: user.dispatchProfile,
       },
       store: user.managedStore
         ? {

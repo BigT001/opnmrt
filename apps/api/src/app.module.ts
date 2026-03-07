@@ -22,6 +22,7 @@ import { RealtimeModule } from './realtime/realtime.module';
 import { ThemesModule } from './themes/themes.module';
 import { ThemesController } from './themes/themes.controller';
 import { ThemesService } from './themes/themes.service';
+import { DispatchModule } from './dispatch/dispatch.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { ThemesService } from './themes/themes.service';
     ReviewsModule,
     RealtimeModule,
     ThemesModule,
+    DispatchModule,
   ],
   controllers: [AppController, ThemesController],
   providers: [AppService, ThemesService],

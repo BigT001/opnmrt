@@ -38,11 +38,11 @@ export default function CustomerDashboardLayout({
 
         async function fetchUser() {
             try {
-                const res = await api.get('/auth/me');
+                const res = await api.get('auth/me');
                 setUser(res.data.user);
 
                 // Fetch unread count
-                const unreadRes = await api.get('/chat/unread-count');
+                const unreadRes = await api.get('chat/unread-count');
                 setUnreadCount(unreadRes.data.count);
             } catch (error: any) {
                 console.error("Failed to fetch user:", error);

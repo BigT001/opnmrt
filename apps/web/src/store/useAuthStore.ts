@@ -8,6 +8,7 @@ interface User {
     role: string;
     phone?: string | null;
     image?: string | null;
+    dispatchProfile?: any;
 }
 
 interface Store {
@@ -39,6 +40,9 @@ interface Store {
     aiInventory?: boolean;
     aiStrategy?: boolean;
     aiFinancials?: boolean;
+    plan?: string;
+    vatEnabled?: boolean;
+    vatRate?: number;
 }
 
 interface AuthState {

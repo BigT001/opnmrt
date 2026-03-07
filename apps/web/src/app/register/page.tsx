@@ -112,7 +112,7 @@ export default function RegisterPage() {
         setSendingOtp(true);
         try {
             const { email, phone } = getValues();
-            await api.post('/auth/send-otp', { email, phone });
+            await api.post('auth/send-otp', { email, phone });
             setOtpSent(true);
             setError(null);
         } catch (err: any) {
@@ -127,7 +127,7 @@ export default function RegisterPage() {
         setVerifyingOtp(true);
         try {
             const { email, phone } = getValues();
-            await api.post('/auth/verify-otp', { email, otp, phone });
+            await api.post('auth/verify-otp', { email, otp, phone });
             setStep(3);
             setError(null);
         } catch (err: any) {
@@ -159,11 +159,11 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="h-screen grid grid-cols-1 lg:grid-cols-2 bg-[#030712] relative overflow-hidden">
+        <div className="h-screen grid grid-cols-1 lg:grid-cols-2 bg-background relative overflow-hidden transition-colors duration-500">
             <LandingBackground />
 
             {/* Left Side: Illustration/Branding */}
-            <div className="hidden lg:flex flex-col justify-center bg-slate-950 p-12 text-white overflow-hidden relative border-r border-white/5 h-full">
+            <div className="hidden lg:flex flex-col justify-center bg-muted/10 p-12 text-foreground overflow-hidden relative border-r border-border h-full">
                 <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse" />
 
@@ -172,10 +172,10 @@ export default function RegisterPage() {
                         <Logo size="lg" />
                     </Link>
 
-                    <h1 className="text-5xl font-black leading-[0.9] text-white mb-8 tracking-tighter">
+                    <h1 className="text-5xl font-black leading-[0.9] text-foreground mb-8 tracking-tighter">
                         The ultimate engine for <span className="text-emerald-500 italic">modern commerce.</span>
                     </h1>
-                    <p className="text-xl text-slate-400 mb-12 font-medium leading-relaxed">
+                    <p className="text-xl text-muted-foreground mb-12 font-medium leading-relaxed">
                         Join thousands of visionary merchants scaling independent brands with AI-powered agility.
                     </p>
 
@@ -191,10 +191,10 @@ export default function RegisterPage() {
             <div className="flex items-center justify-center p-4 lg:p-8 relative overflow-y-auto no-scrollbar h-full">
                 <div className="max-w-md w-full">
                     <div className="mb-6 text-center lg:text-left">
-                        <h2 className="text-3xl font-black text-white mb-1 tracking-tighter">
+                        <h2 className="text-3xl font-black text-foreground mb-1 tracking-tighter">
                             {step === 1 ? 'Founder Details' : step === 2 ? 'Security Shield' : 'Live Activation'}
                         </h2>
-                        <p className="text-slate-500 font-bold uppercase tracking-widest text-[9px]">
+                        <p className="text-muted-foreground font-bold uppercase tracking-widest text-[9px]">
                             Step {step} of 3 &bull; {step === 1 ? 'Merchant Identity' : step === 2 ? 'Contact Verification' : 'Store Configuration'}
                         </p>
                     </div>
@@ -212,8 +212,8 @@ export default function RegisterPage() {
                                     <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 mb-2">
                                         <div className="flex items-center gap-2 mb-1">
                                             <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                                            <p className="text-[10px] text-emerald-100/70 font-medium leading-normal italic">
-                                                Please use your <strong className="text-white">Legal Full Name</strong> as it appears on your NIN or BVN.
+                                            <p className="text-[10px] text-emerald-500/80 font-medium leading-normal italic">
+                                                Please use your <strong className="text-foreground">Legal Full Name</strong> as it appears on your NIN or BVN.
                                             </p>
                                         </div>
                                     </div>
@@ -240,9 +240,9 @@ export default function RegisterPage() {
                                         options={countries}
                                     />
                                     <div className="relative">
-                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Phone Number</label>
+                                        <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-3 ml-1">Phone Number</label>
                                         <div className="flex gap-2">
-                                            <div className="w-20 h-14 flex items-center justify-center bg-slate-900 border border-slate-800 rounded-2xl text-white font-black text-sm">
+                                            <div className="w-20 h-14 flex items-center justify-center bg-muted/30 border border-border rounded-2xl text-foreground font-black text-sm">
                                                 {selectedCountry === 'Nigeria' ? '+234' :
                                                     selectedCountry === 'Ghana' ? '+233' :
                                                         selectedCountry === 'Kenya' ? '+254' :
@@ -255,7 +255,7 @@ export default function RegisterPage() {
                                                     maxLength={selectedCountry === 'Nigeria' ? 11 : 10}
                                                     onInput={(e: any) => e.target.value = e.target.value.replace(/\D/g, '')}
                                                     placeholder={selectedCountry === 'Nigeria' ? "803 000 0000" : "20 000 0000"}
-                                                    className="w-full h-14 px-5 bg-slate-900 border border-slate-800 rounded-2xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-white font-bold transition-all outline-none placeholder:text-slate-700"
+                                                    className="w-full h-14 px-5 bg-muted/30 border border-border rounded-2xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-foreground font-bold transition-all outline-none placeholder:text-muted-foreground/30"
                                                 />
                                             </div>
                                         </div>
@@ -280,9 +280,9 @@ export default function RegisterPage() {
                                     </div>
 
                                     {password.length > 0 && (
-                                        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-3 space-y-2">
+                                        <div className="bg-muted/20 border border-border rounded-xl p-3 space-y-2">
                                             <div className="flex justify-between items-center px-1">
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Strength Indicator</p>
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Strength Indicator</p>
                                                 <p className={`text-[9px] font-black uppercase tracking-widest ${passwordScore === 4 ? 'text-emerald-500' : 'text-amber-500'}`}>
                                                     {passwordScore <= 1 ? 'Weak' : passwordScore <= 2 ? 'Medium' : passwordScore <= 3 ? 'Strong' : 'Fortress'}
                                                 </p>
@@ -291,7 +291,7 @@ export default function RegisterPage() {
                                                 {[1, 2, 3, 4].map((i) => (
                                                     <div
                                                         key={i}
-                                                        className={`flex-1 rounded-full transition-all duration-500 ${passwordScore >= i ? (passwordScore === 4 ? 'bg-emerald-500' : 'bg-amber-500') : 'bg-slate-800'}`}
+                                                        className={`flex-1 rounded-full transition-all duration-500 ${passwordScore >= i ? (passwordScore === 4 ? 'bg-emerald-500' : 'bg-amber-500') : 'bg-muted'}`}
                                                     />
                                                 ))}
                                             </div>
@@ -444,15 +444,15 @@ export default function RegisterPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 ml-1">Website Address</label>
-                                        <div className="flex items-center bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/50 focus-within:border-emerald-500/50 transition-all">
+                                        <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2 ml-1">Website Address</label>
+                                        <div className="flex items-center bg-muted/30 border border-border rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/50 focus-within:border-emerald-500/50 transition-all">
                                             <input
                                                 {...register('subdomain')}
                                                 type="text"
                                                 placeholder="samstorez"
-                                                className="flex-1 h-12 px-4 bg-transparent outline-none text-white font-bold text-sm"
+                                                className="flex-1 h-12 px-4 bg-transparent outline-none text-foreground font-bold text-sm"
                                             />
-                                            <span className="px-4 text-slate-500 font-black text-[9px] uppercase tracking-widest bg-slate-800/50 h-12 flex items-center">.{APP_BASE_DOMAIN}</span>
+                                            <span className="px-4 text-muted-foreground font-black text-[9px] uppercase tracking-widest bg-muted/50 h-12 flex items-center">.{APP_BASE_DOMAIN}</span>
                                         </div>
                                         {errors.subdomain && <p className="text-[10px] text-rose-500 mt-1 font-bold uppercase ml-1">{errors.subdomain.message}</p>}
                                     </div>
@@ -461,14 +461,14 @@ export default function RegisterPage() {
                                         <button
                                             type="button"
                                             onClick={() => setStep(1)}
-                                            className="flex-1 h-12 bg-slate-900 border border-slate-800 text-slate-400 font-bold rounded-2xl hover:bg-slate-800 hover:text-white transition-all uppercase tracking-widest text-[10px]"
+                                            className="flex-1 h-12 bg-muted border border-border text-muted-foreground font-bold rounded-2xl hover:bg-muted/80 hover:text-foreground transition-all uppercase tracking-widest text-[10px]"
                                         >
                                             Reset
                                         </button>
                                         <button
                                             type="submit"
                                             disabled={isSubmitting}
-                                            className="flex-[2] h-12 bg-emerald-500 hover:brightness-110 text-[#030712] font-black rounded-2xl shadow-xl shadow-emerald-500/20 transition-all disabled:opacity-50 uppercase tracking-widest text-xs"
+                                            className="flex-[2] h-12 bg-emerald-500 hover:brightness-110 text-white font-black rounded-2xl shadow-xl shadow-emerald-500/20 transition-all disabled:opacity-50 uppercase tracking-widest text-xs"
                                         >
                                             {isSubmitting ? 'Igniting Engine...' : 'Launch Station'}
                                         </button>
@@ -478,7 +478,7 @@ export default function RegisterPage() {
                         </AnimatePresence>
                     </form>
 
-                    <p className="mt-6 text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    <p className="mt-6 text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                         Resident merchant? <Link href="/login" className="text-emerald-500 hover:brightness-110 transition-colors ml-1">Login Control</Link>
                     </p>
                 </div>
@@ -492,8 +492,8 @@ function FeaturePoint({ title, desc }: { title: string; desc: string }) {
         <div className="flex items-start space-x-4">
             <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
             <div>
-                <h3 className="text-sm font-black text-white uppercase tracking-tight">{title}</h3>
-                <p className="text-xs text-slate-500 font-bold italic">{desc}</p>
+                <h3 className="text-sm font-black text-foreground uppercase tracking-tight">{title}</h3>
+                <p className="text-xs text-muted-foreground font-bold italic">{desc}</p>
             </div>
         </div>
     );
@@ -502,8 +502,8 @@ function FeaturePoint({ title, desc }: { title: string; desc: string }) {
 function StrengthReq({ met, label }: { met: boolean; label: string }) {
     return (
         <div className="flex items-center gap-1.5">
-            <div className={`w-1 h-1 rounded-full ${met ? 'bg-emerald-500' : 'bg-slate-700'}`} />
-            <p className={`text-[8px] font-bold uppercase tracking-tighter ${met ? 'text-emerald-100/70' : 'text-slate-600'}`}>{label}</p>
+            <div className={`w-1 h-1 rounded-full ${met ? 'bg-emerald-500' : 'bg-muted'}`} />
+            <p className={`text-[8px] font-bold uppercase tracking-tighter ${met ? 'text-emerald-500/80' : 'text-muted-foreground/60'}`}>{label}</p>
         </div>
     );
 }
@@ -511,12 +511,12 @@ function StrengthReq({ met, label }: { met: boolean; label: string }) {
 function Input({ label, register, error, type = 'text', placeholder }: any) {
     return (
         <div>
-            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">{label}</label>
+            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-3 ml-1">{label}</label>
             <input
                 {...register}
                 type={type}
                 placeholder={placeholder}
-                className="w-full h-14 px-5 bg-slate-900 border border-slate-800 rounded-2xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-white font-bold transition-all outline-none placeholder:text-slate-700"
+                className="w-full h-14 px-5 bg-muted/30 border border-border rounded-2xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-foreground font-bold transition-all outline-none placeholder:text-muted-foreground/30"
             />
             {error && <p className="text-[10px] text-rose-500 mt-2 font-bold uppercase ml-1">{error}</p>}
         </div>
@@ -526,12 +526,12 @@ function Input({ label, register, error, type = 'text', placeholder }: any) {
 function TextArea({ label, register, error, placeholder, rows = 3 }: any) {
     return (
         <div>
-            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">{label}</label>
+            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-3 ml-1">{label}</label>
             <textarea
                 {...register}
                 placeholder={placeholder}
                 rows={rows}
-                className="w-full p-5 bg-slate-900 border border-slate-800 rounded-2xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-white font-bold transition-all outline-none placeholder:text-slate-700 resize-none"
+                className="w-full p-5 bg-muted/30 border border-border rounded-2xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-foreground font-bold transition-all outline-none placeholder:text-muted-foreground/30 resize-none"
             />
             {error && <p className="text-[10px] text-rose-500 mt-2 font-bold uppercase ml-1">{error}</p>}
         </div>
@@ -545,15 +545,15 @@ function Select({ label, name, error, options, placeholder, disabled, setValue, 
 
     return (
         <div className="relative">
-            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">{label}</label>
+            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-3 ml-1">{label}</label>
             <div
                 onClick={() => !disabled && setIsOpen(!isOpen)}
-                className={`w-full h-14 px-5 bg-slate-900 border ${isOpen ? 'border-emerald-500/50 ring-2 ring-emerald-500/20' : 'border-slate-800'} rounded-2xl flex items-center justify-between cursor-pointer transition-all ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-slate-700'}`}
+                className={`w-full h-14 px-5 bg-muted/30 border ${isOpen ? 'border-emerald-500/50 ring-2 ring-emerald-500/20' : 'border-border'} rounded-2xl flex items-center justify-between cursor-pointer transition-all ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-border/80'}`}
             >
-                <span className={`font-bold ${selectedValue ? 'text-white' : 'text-slate-500'}`}>
+                <span className={`font-bold ${selectedValue ? 'text-foreground' : 'text-muted-foreground/40'}`}>
                     {selectedLabel}
                 </span>
-                <div className={`w-2 h-2 border-r-2 border-b-2 border-slate-500 transform transition-transform ${isOpen ? '-rotate-135 mt-1' : 'rotate-45 -mt-1'}`} />
+                <div className={`w-2 h-2 border-r-2 border-b-2 border-muted-foreground transform transition-transform ${isOpen ? '-rotate-135 mt-1' : 'rotate-45 -mt-1'}`} />
             </div>
 
             <AnimatePresence>
@@ -564,7 +564,7 @@ function Select({ label, name, error, options, placeholder, disabled, setValue, 
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 5 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute z-50 w-full mt-2 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto no-scrollbar"
+                            className="absolute z-50 w-full mt-2 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto no-scrollbar"
                         >
                             {options.map((opt: any) => (
                                 <div
@@ -573,7 +573,7 @@ function Select({ label, name, error, options, placeholder, disabled, setValue, 
                                         setValue(name, opt.value);
                                         setIsOpen(false);
                                     }}
-                                    className={`px-5 py-3 text-sm font-bold cursor-pointer transition-colors ${selectedValue === opt.value ? 'bg-emerald-500 text-[#030712]' : 'text-white hover:bg-emerald-500/10'}`}
+                                    className={`px-5 py-3 text-sm font-bold cursor-pointer transition-colors ${selectedValue === opt.value ? 'bg-emerald-500 text-white' : 'text-foreground hover:bg-emerald-500/10'}`}
                                 >
                                     {opt.label}
                                 </div>

@@ -31,7 +31,7 @@ export default function BackendPaystack({
         setLoading(true);
         try {
             // 1. Initialize via backend
-            const res = await api.post('/payments/initialize', {
+            const res = await api.post('payments/initialize', {
                 email,
                 amount: Math.round(amount * 100), // convert to kobo
                 orderId,

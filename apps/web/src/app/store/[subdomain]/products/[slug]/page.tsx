@@ -3,6 +3,7 @@ import { getThemeComponents } from '@/components/themes/registry';
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { APP_BASE_DOMAIN, APP_URL } from '@/lib/config';
 
 async function getProduct(id: string) {
     try {
@@ -61,7 +62,7 @@ export async function generateMetadata({ params }: { params: Promise<{ subdomain
         };
     }
 
-    const shareUrl = `https://${subdomain}.opnmrt.com/products/${slug}`;
+    const shareUrl = `${APP_URL.replace('localhost:3000', `${subdomain}.localhost:3000`)}/${subdomain !== 'localhost' ? '' : ''}products/${slug}`.replace('//', '/');
     const productImg = product.images?.[0] || 'https://via.placeholder.com/1200x630';
 
     return {
@@ -120,7 +121,7 @@ export default async function ProductPage({
         },
         offers: {
             '@type': 'Offer',
-            url: `https://${subdomain}.opnmrt.com/products/${slug}`,
+            url: `${process.env.NODE_ENV === 'development' ? 'http' : 'https'}://${subdomain}.${APP_BASE_DOMAIN}/products/${slug}`,
             priceCurrency: 'NGN',
             price: product.price,
             availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',

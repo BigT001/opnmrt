@@ -28,7 +28,7 @@ export default function SellerMessagesPage() {
         if (!store) return;
         async function fetchConversations() {
             try {
-                const res = await api.get(`/chat/conversations?storeId=${store!.id}`);
+                const res = await api.get(`chat/conversations?storeId=${store!.id}`);
                 setConversations(res.data);
             } catch (error) {
                 console.error("Failed to fetch conversations:", error);
@@ -48,7 +48,7 @@ export default function SellerMessagesPage() {
             if (isFromSelected) {
                 setMessages(prev => [...prev, message]);
                 if (message.senderRole === 'BUYER') {
-                    api.post('/chat/read', { otherUserId: message.senderId, storeId: store?.id });
+                    api.post('chat/read', { otherUserId: message.senderId, storeId: store?.id });
                 }
             }
 
@@ -91,11 +91,11 @@ export default function SellerMessagesPage() {
         async function fetchMessages() {
             setMsgLoading(true);
             try {
-                const res = await api.get(`/chat/messages?storeId=${store!.id}&otherUserId=${selectedUserId}`);
+                const res = await api.get(`chat/messages?storeId=${store!.id}&otherUserId=${selectedUserId}`);
                 setMessages(res.data);
 
                 // Mark as read
-                await api.post('/chat/read', { otherUserId: selectedUserId, storeId: store!.id });
+                await api.post('chat/read', { otherUserId: selectedUserId, storeId: store!.id });
 
                 // Update local conversation list to remove unread badge
                 setConversations(prev => prev.map(c => c.userId === selectedUserId ? { ...c, unreadCount: 0 } : c));
@@ -126,7 +126,7 @@ export default function SellerMessagesPage() {
         const newState = !aiEnabled;
         setAiEnabled(newState);
         try {
-            const res = await api.post('/chat/toggle-ai', { storeId: store.id, enabled: newState });
+            const res = await api.post('chat/toggle-ai', { storeId: store.id, enabled: newState });
             // Update global store
             useAuthStore.getState().setStore({ ...store, chatAiEnabled: res.data.chatAiEnabled });
         } catch (error) {
@@ -139,7 +139,7 @@ export default function SellerMessagesPage() {
         if (!selectedUserId || !store) return;
         setAiSuggesting(true);
         try {
-            const res = await api.post('/chat/ai-suggestion', {
+            const res = await api.post('chat/ai-suggestion', {
                 storeId: store.id,
                 otherUserId: selectedUserId,
                 currentMessage: messages[messages.length - 1]?.content || ''
@@ -158,7 +158,7 @@ export default function SellerMessagesPage() {
 
         setSending(true);
         try {
-            const res = await api.post('/chat/send', {
+            const res = await api.post('chat/send', {
                 content: newMessage,
                 storeId: store!.id,
                 recipientId: selectedUserId,

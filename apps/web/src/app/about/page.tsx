@@ -9,7 +9,7 @@ import { Globe, Heart, Shield, Cpu } from 'lucide-react';
 
 export default function AboutPage() {
     return (
-        <div className="min-h-screen bg-[#020617] text-slate-200 overflow-x-hidden relative">
+        <div className="min-h-screen bg-background text-foreground transition-colors duration-500 overflow-x-hidden relative">
             <LandingBackground />
             <LandingNavbar />
 
@@ -20,10 +20,10 @@ export default function AboutPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="max-w-4xl mx-auto"
                     >
-                        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-8 uppercase">
+                        <h1 className="text-5xl md:text-7xl font-black text-foreground tracking-tighter mb-8 uppercase">
                             The <span className="text-emerald-500 italic">Ecosystem</span> of Choice.
                         </h1>
-                        <p className="text-xl text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed">
+                        <p className="text-xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed">
                             We believe commerce should be decentralized, intelligent, and sovereign. OPNMRT was built to give the power back to the creators.
                         </p>
                     </motion.div>
@@ -55,8 +55,8 @@ export default function AboutPage() {
 
                 {/* The Team / Story (Simplified) */}
                 <section className="max-w-5xl mx-auto px-6 py-40 text-center">
-                    <h2 className="text-3xl font-black text-white mb-12 uppercase tracking-tighter italic">Born from Frustration</h2>
-                    <p className="text-lg text-slate-400 leading-relaxed font-medium mb-12">
+                    <h2 className="text-3xl font-black text-foreground mb-12 uppercase tracking-tighter italic">Born from Frustration</h2>
+                    <p className="text-lg text-muted-foreground leading-relaxed font-medium mb-12">
                         OPNMRT was founded in 2026 by a collective of retail veterans and AI researchers who were tired of the "platform tax."
                         We saw world-class merchants being throttled by outdated monolithic platforms and decided to build the engine we always wanted.
                     </p>
@@ -75,12 +75,12 @@ export default function AboutPage() {
 
 function VisionCard({ title, desc, icon }: any) {
     return (
-        <div className="glass-panel p-12 rounded-[4rem] border border-white/5 space-y-8 group hover:border-emerald-500/20 transition-all">
-            <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-[#030712] transition-all">
+        <div className="glass-panel p-12 rounded-[4rem] border border-border space-y-8 group hover:border-emerald-500/20 transition-all">
+            <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all">
                 {icon}
             </div>
-            <h3 className="text-2xl font-black text-white uppercase tracking-tighter">{title}</h3>
-            <p className="text-slate-400 font-medium leading-relaxed italic">{desc}</p>
+            <h3 className="text-2xl font-black text-foreground uppercase tracking-tighter">{title}</h3>
+            <p className="text-muted-foreground font-medium leading-relaxed italic">{desc}</p>
         </div>
     );
 }
@@ -89,9 +89,9 @@ function StatCircle({ value, label }: any) {
     return (
         <div className="text-center">
             <div className="w-24 h-24 rounded-full border-2 border-emerald-500/30 flex items-center justify-center mb-4">
-                <span className="text-xl font-black text-white tracking-tighter uppercase">{value}</span>
+                <span className="text-xl font-black text-foreground tracking-tighter uppercase">{value}</span>
             </div>
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{label}</span>
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{label}</span>
         </div>
     );
 }

@@ -25,7 +25,7 @@ export function NotificationDropdown({ storeId, isOpen, onClose }: { storeId: st
     const fetchNotifications = async (silent = false) => {
         try {
             if (!silent) setLoading(true);
-            const res = await api.get(`/analytics/notifications/${storeId}`);
+            const res = await api.get(`analytics/notifications/${storeId}`);
             setNotifications(res.data);
         } catch (err) {
             console.error('Failed to fetch notifications:', err);

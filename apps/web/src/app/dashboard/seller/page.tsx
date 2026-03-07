@@ -50,9 +50,12 @@ export default function SellerDashboardPage() {
     const socket = useSocket(user?.id, store?.id);
 
     const fetchStats = async () => {
-        if (!store?.id) return;
+        if (!store?.id) {
+            setLoading(false);
+            return;
+        }
         try {
-            const res = await api.get(`/stores/${store.id}/stats`);
+            const res = await api.get(`stores/${store.id}/stats`);
             setStats(res.data);
         } catch (err) {
             console.error('Failed to fetch stats:', err);
@@ -62,7 +65,11 @@ export default function SellerDashboardPage() {
     };
 
     useEffect(() => {
-        if (!store?.id) return;
+        // If there's no store and we're not loading auth state, stop spinning
+        if (!store?.id) {
+            setLoading(false);
+            return;
+        }
         fetchStats();
     }, [store?.id]);
 
@@ -80,6 +87,23 @@ export default function SellerDashboardPage() {
     }, [socket]);
 
     if (!user) return null;
+
+    // Handle non-seller users who might have navigated here (like riders)
+    if (!store && !loading) {
+        return (
+            <div className="h-[60vh] flex flex-col items-center justify-center space-y-4">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+                    <ShieldCheck className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h2 className="text-xl font-bold">Limited Dashboard Access</h2>
+                <p className="text-muted-foreground">This dashboard is only available for active store owners.</p>
+                <Link href={user.role === 'DISPATCH' ? '/dashboard/dispatch' : '/'}
+                    className="px-6 py-2 bg-primary text-white rounded-lg font-bold">
+                    Go to my Portal
+                </Link>
+            </div>
+        );
+    }
 
     if (loading) {
         return (
@@ -356,7 +380,7 @@ function NotificationsWidget({ storeId }: { storeId: string }) {
 
     const fetchNotifications = async () => {
         try {
-            const res = await api.get(`/analytics/notifications/${storeId}`);
+            const res = await api.get(`analytics/notifications/${storeId}`);
             setNotifications(res.data || []);
         } catch (err) {
             console.error('Failed to fetch notifications:', err);

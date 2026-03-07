@@ -10,7 +10,7 @@ const syncToBackend = async (items: any[]) => {
     try {
         // Dynamic import to avoid cycles or unnecessary loads
         const api = (await import('@/lib/api')).default;
-        await api.post('/users/cart/sync', { items, merge: false });
+        await api.post('users/cart/sync', { items, merge: false });
     } catch (e) {
         console.error("Cart auto-sync failed:", e);
     }

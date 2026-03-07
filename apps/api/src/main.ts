@@ -1,4 +1,4 @@
-import 'dotenv/config'; // RESTART_V4: 2026-02-14 11:42
+import 'dotenv/config'; // RESTART_V5: 2026-03-07
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as dns from 'dns';

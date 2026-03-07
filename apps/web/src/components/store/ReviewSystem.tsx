@@ -37,8 +37,8 @@ export function ReviewSystem({ productId, productName }: ReviewSystemProps) {
     const fetchReviews = async () => {
         try {
             const [reviewsRes, statsRes] = await Promise.all([
-                api.get(`/reviews/product/${productId}`),
-                api.get(`/reviews/rating/${productId}`)
+                api.get(`reviews/product/${productId}`),
+                api.get(`reviews/rating/${productId}`)
             ]);
             setReviews(reviewsRes.data);
             setStats(statsRes.data);
@@ -62,7 +62,7 @@ export function ReviewSystem({ productId, productName }: ReviewSystemProps) {
 
         setSubmitting(true);
         try {
-            await api.post(`/reviews/${productId}`, { rating, comment });
+            await api.post(`reviews/${productId}`, { rating, comment });
             setRating(5);
             setComment('');
             setShowForm(false);

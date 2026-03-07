@@ -21,7 +21,7 @@ export default function ThemesPage() {
         setMessage(null);
 
         try {
-            const response = await api.patch(`/stores/${store.id}`, { theme: themeId });
+            const response = await api.patch(`stores/${store.id}`, { theme: themeId });
             setStore(response.data);
             setMessage({ type: 'success', text: `Theme ${themeId.replace(/_/g, ' ')} activated!` });
             setTimeout(() => window.location.reload(), 800);

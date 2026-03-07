@@ -8,7 +8,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('ADMIN')
 export class AdminController {
-  constructor(private adminService: AdminService) {}
+  constructor(private adminService: AdminService) { }
 
   @Get('stats')
   async getStats() {
@@ -33,5 +33,15 @@ export class AdminController {
   @Get('orders')
   async getOrders() {
     return this.adminService.getOrders();
+  }
+
+  @Get('logistics')
+  async getLogistics() {
+    return this.adminService.getLogistics();
+  }
+
+  @Get('logistics/:id/approve')
+  async approveLogistics(@Param('id') id: string) {
+    return this.adminService.approveLogistics(id);
   }
 }

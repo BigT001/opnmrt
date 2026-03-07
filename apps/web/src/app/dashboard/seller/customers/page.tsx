@@ -19,8 +19,8 @@ export default function CustomersPage() {
             if (!store?.id) return;
             try {
                 const [customersRes, statsRes] = await Promise.all([
-                    api.get(`/stores/${store.id}/customers`),
-                    api.get(`/stores/${store.id}/customer-stats`),
+                    api.get(`stores/${store.id}/customers`),
+                    api.get(`stores/${store.id}/customer-stats`),
                 ]);
                 setCustomers(customersRes.data);
                 setStats(statsRes.data);
@@ -43,7 +43,7 @@ export default function CustomersPage() {
         setExpandedId(customerId);
         setDetailsLoading(true);
         try {
-            const res = await api.get(`/stores/${store!.id}/customers/${customerId}`);
+            const res = await api.get(`stores/${store!.id}/customers/${customerId}`);
             setDetails(res.data);
         } catch (err) {
             console.error(err);

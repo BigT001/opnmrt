@@ -68,7 +68,7 @@ export default function ProductsPage() {
     const fetchProducts = async () => {
         try {
             setLoading(true);
-            const res = await api.get('/products/seller');
+            const res = await api.get('products/seller');
             setProducts(res.data);
         } catch (error) {
             console.error('Failed to fetch products', error);
@@ -463,7 +463,7 @@ function ProductDetailView({ product, onClose, onUpdate, storeCategories = [] }:
     const handleAiAnalyze = async () => {
         try {
             setAiLoading(true);
-            const res = await api.post('/products/analyze', {
+            const res = await api.post('products/analyze', {
                 name,
                 category,
                 description,
@@ -814,7 +814,7 @@ function AddProductModal({ isOpen, onClose, onSuccess, storeId, storeCategories 
         }
         try {
             setAiLoading(true);
-            const res = await api.post('/products/analyze', {
+            const res = await api.post('products/analyze', {
                 name: formData.name,
                 category: formData.category,
                 description: formData.description,

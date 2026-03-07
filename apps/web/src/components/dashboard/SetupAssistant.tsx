@@ -28,7 +28,7 @@ export function SetupAssistant({ stats, storeId, onDismiss }: { stats: Onboardin
 
     const handleDismiss = async () => {
         try {
-            await api.patch(`/stores/${storeId}`, { onboardingDismissed: true });
+            await api.patch(`stores/${storeId}`, { onboardingDismissed: true });
             onDismiss();
         } catch (err) {
             console.error('Failed to dismiss onboarding', err);

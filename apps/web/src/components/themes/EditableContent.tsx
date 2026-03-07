@@ -178,7 +178,7 @@ export function EditableImage({ src, onSave, isPreview, className = '', aspectRa
         formData.append('file', file);
 
         try {
-            const res = await api.post('/stores/upload', formData, {
+            const res = await api.post('stores/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setTempUrl(res.data.url);

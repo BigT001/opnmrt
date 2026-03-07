@@ -46,15 +46,15 @@ export function AppifyChatDrawer() {
         async function initChat() {
             try {
                 // 1. Resolve store info
-                const storeRes = await api.get(`/stores/resolve?subdomain=${subdomain}`);
+                const storeRes = await api.get(`stores/resolve?subdomain=${subdomain}`);
                 setStoreInfo(storeRes.data);
 
                 // 2. Fetch messages
-                const msgRes = await api.get(`/chat/messages?storeId=${storeRes.data.id}`);
+                const msgRes = await api.get(`chat/messages?storeId=${storeRes.data.id}`);
                 setMessages(msgRes.data);
 
                 // 3. Mark as read
-                await api.post('/chat/read', {
+                await api.post('chat/read', {
                     otherUserId: storeRes.data.ownerId,
                     storeId: storeRes.data.id
                 });
@@ -85,7 +85,7 @@ export function AppifyChatDrawer() {
 
                 if (message.senderRole === 'SELLER') {
                     incrementUnread();
-                    api.post('/chat/read', {
+                    api.post('chat/read', {
                         otherUserId: message.senderId,
                         storeId: message.storeId
                     });
@@ -138,7 +138,7 @@ export function AppifyChatDrawer() {
         setMessages(prev => [...prev, optimisticMsg]);
 
         try {
-            const res = await api.post('/chat/send', {
+            const res = await api.post('chat/send', {
                 content,
                 storeId: storeInfo.id,
             });

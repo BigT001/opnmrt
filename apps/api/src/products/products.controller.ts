@@ -125,6 +125,11 @@ export class ProductsController {
     return this.productsService.findAll(subdomain);
   }
 
+  @Get('store/:storeId')
+  async findByStore(@Param('storeId') storeId: string) {
+    return this.productsService.findByStoreId(storeId);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);

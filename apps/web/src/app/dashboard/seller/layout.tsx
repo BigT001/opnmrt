@@ -43,7 +43,7 @@ export default function SellerLayout({
     const fetchNotifications = async () => {
         if (!store?.id) return;
         try {
-            const res = await api.get(`/analytics/notifications/${store.id}`);
+            const res = await api.get(`analytics/notifications/${store.id}`);
             setNotifications(res.data);
         } catch (err) {
             console.error('Failed to fetch notifications:', err);
@@ -71,7 +71,7 @@ export default function SellerLayout({
         if (!user) return;
         const fetchUnread = async () => {
             try {
-                const res = await api.get('/chat/unread-count');
+                const res = await api.get('chat/unread-count');
                 setUnreadCount(res.data.count);
             } catch (err) {
                 console.error('Failed to fetch unread count:', err);
@@ -361,6 +361,7 @@ function SidebarNav({ pathname, unreadCount, isCollapsed = false, setIsMobileMen
                     onClick={handleLinkClick}
                 />
                 <SidebarLink href="/dashboard/seller/customers" icon="👥" label="Customers" active={pathname === '/dashboard/seller/customers'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
+                <SidebarLink href="/dashboard/seller/logistics" icon="🚚" label="Logistics Hub" active={pathname === '/dashboard/seller/logistics'} isCollapsed={isCollapsed} onClick={handleLinkClick} />
             </nav>
 
             <div className="my-0.5 border-t border-slate-900/5 mx-2" />
@@ -374,6 +375,22 @@ function SidebarNav({ pathname, unreadCount, isCollapsed = false, setIsMobileMen
                     isCollapsed={isCollapsed}
                     onClick={handleLinkClick}
                     status="ACTIVE"
+                />
+                <SidebarLink
+                    href="/dashboard/seller/vat"
+                    icon="🧾"
+                    label="VAT Reports"
+                    active={pathname === '/dashboard/seller/vat'}
+                    isCollapsed={isCollapsed}
+                    onClick={handleLinkClick}
+                />
+                <SidebarLink
+                    href="/dashboard/seller/marketing"
+                    icon="✨"
+                    label="BigT AI Marketing"
+                    active={pathname === '/dashboard/seller/marketing'}
+                    isCollapsed={isCollapsed}
+                    onClick={handleLinkClick}
                 />
             </nav>
 

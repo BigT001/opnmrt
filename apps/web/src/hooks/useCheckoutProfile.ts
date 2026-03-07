@@ -25,7 +25,7 @@ export const useCheckoutProfile = (initialData: CheckoutFormData) => {
             return;
         }
 
-        api.get('/users/profile').then(res => {
+        api.get('users/profile').then(res => {
             const user = res.data;
             const splitName = user.name ? user.name.split(' ') : ['', ''];
 
@@ -55,7 +55,7 @@ export const useCheckoutProfile = (initialData: CheckoutFormData) => {
         const name = formData.fullName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim();
         const splitName = name.split(' ');
 
-        await api.patch('/users/profile-json', {
+        await api.patch('users/profile-json', {
             shippingAddress: {
                 firstName: formData.firstName || splitName[0] || '',
                 lastName: formData.lastName || splitName.slice(1).join(' ') || '',

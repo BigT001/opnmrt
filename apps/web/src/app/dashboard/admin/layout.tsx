@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Logo } from '@/components/ui/Logo';
 
 export default function AdminLayout({
     children,
@@ -80,26 +81,18 @@ export default function AdminLayout({
             >
                 <div className="flex-1 flex flex-col overflow-y-auto no-scrollbar">
                     <div className="p-5 pb-2">
-                        <div className={`flex items-center space-x-3 text-white mb-8 overflow-hidden ${isCollapsed ? 'justify-center pr-0' : ''}`}>
-                            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-900/20 shrink-0">
-                                <span className="text-white text-xl font-black italic">A</span>
-                            </div>
-                            {!isCollapsed && (
-                                <div className="flex flex-col">
-                                    <span className="text-lg font-black tracking-tighter leading-none">OPNMRT</span>
-                                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">Admin Central</span>
-                                </div>
-                            )}
+                        <div className={`flex items-center space-x-3 text-white mb-12 overflow-hidden ${isCollapsed ? 'justify-center pr-0' : 'px-2'}`}>
+                            <Logo size={isCollapsed ? 'md' : 'lg'} showText={!isCollapsed} />
                         </div>
 
                         <div className="space-y-6">
                             <div>
-                                {!isCollapsed && <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 mb-2">Management</p>}
                                 <nav className="space-y-1">
                                     <SidebarLink href="/dashboard/admin" icon="🏢" label="Overview" active={pathname === '/dashboard/admin'} isCollapsed={isCollapsed} />
                                     <SidebarLink href="/dashboard/admin/sellers" icon="👨‍💼" label="Manage Sellers" active={pathname === '/dashboard/admin/sellers'} isCollapsed={isCollapsed} />
                                     <SidebarLink href="/dashboard/admin/buyers" icon="👥" label="Manage Buyers" active={pathname === '/dashboard/admin/buyers'} isCollapsed={isCollapsed} />
                                     <SidebarLink href="/dashboard/admin/orders" icon="📦" label="Global Orders" active={pathname === '/dashboard/admin/orders'} isCollapsed={isCollapsed} />
+                                    <SidebarLink href="/dashboard/admin/logistics" icon="🚚" label="Logistics" active={pathname === '/dashboard/admin/logistics'} isCollapsed={isCollapsed} />
                                 </nav>
                             </div>
 
@@ -121,11 +114,11 @@ export default function AdminLayout({
 
                     {!isCollapsed && (
                         <div className="p-5 mt-auto space-y-4">
-                            <div className="bg-indigo-600/10 rounded-2xl p-4 border border-indigo-500/20">
-                                <p className="text-[10px] font-bold text-indigo-400 uppercase mb-2">System Status</p>
+                            <div className="bg-emerald-500/5 rounded-2xl p-4 border border-emerald-500/10">
+                                <p className="text-[10px] font-bold text-emerald-500/60 uppercase mb-2 tracking-widest">Intelligence</p>
                                 <div className="flex items-center space-x-2">
                                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                                    <span className="text-xs font-semibold text-slate-300">All Systems Nominal</span>
+                                    <span className="text-[11px] font-black uppercase text-slate-300 tracking-tight">System Nominal</span>
                                 </div>
                             </div>
 
@@ -181,15 +174,15 @@ function SidebarLink({ href, icon, label, active = false, isCollapsed = false }:
     return (
         <Link
             href={href}
-            className={`flex items-center p-3 rounded-xl transition-all group ${isCollapsed ? 'justify-center' : 'space-x-3'} ${active
-                ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-900/20'
+            className={`flex items-center p-3.5 rounded-[1.25rem] transition-all group ${isCollapsed ? 'justify-center' : 'space-x-4'} ${active
+                ? 'bg-emerald-500 text-[#030712] shadow-xl shadow-emerald-500/20'
                 : 'text-slate-500 hover:bg-slate-800/50 hover:text-slate-200'
                 }`}
         >
-            <span className={`text-lg shrink-0 ${active ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'}`}>{icon}</span>
-            {!isCollapsed && <span className="text-[13px] font-bold truncate tracking-tight">{label}</span>}
+            <span className={`text-xl shrink-0 ${active ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'}`}>{icon}</span>
+            {!isCollapsed && <span className="text-[13px] font-black uppercase tracking-tight">{label}</span>}
             {!isCollapsed && active && (
-                <div className="ml-auto w-1 h-3.5 bg-white/40 rounded-full shrink-0" />
+                <div className="ml-auto w-1 h-4 bg-[#030712]/40 rounded-full shrink-0" />
             )}
         </Link>
     );

@@ -29,7 +29,7 @@ export function FloatingAiAdvisor({ storeId }: { storeId: string }) {
         setIsLoading(true);
 
         try {
-            const res = await api.post(`/analytics/ai-ask/${storeId}`, { question: userMsg });
+            const res = await api.post(`analytics/ai-ask/${storeId}`, { question: userMsg });
             setMessages(prev => [...prev, { role: 'ai', content: res.data.answer }]);
         } catch (err) {
             setMessages(prev => [...prev, { role: 'ai', content: "I'm sorry, I'm having trouble connecting to my brain right now." }]);

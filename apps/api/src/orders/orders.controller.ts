@@ -4,27 +4,32 @@ import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from '../common/decorators/get-user.decorator';
 
 @Controller('orders')
-@UseGuards(AuthGuard('jwt'))
 export class OrdersController {
   constructor(private ordersService: OrdersService) { }
 
   @Get('my-orders')
+  @UseGuards(AuthGuard('jwt'))
   async getMyOrders(@GetUser('userId') userId: string) {
     return this.ordersService.findByBuyerId(userId);
   }
 
   @Get('seller')
+  @UseGuards(AuthGuard('jwt'))
   async getSellerOrders(@GetUser('userId') userId: string) {
     return this.ordersService.findBySellerUserId(userId);
   }
 
   @Post()
+  @UseGuards(AuthGuard('jwt'))
   async createOrder(
     @GetUser('userId') userId: string,
     @Body()
     data: {
       storeId: string;
       totalAmount: number;
+      vatAmount?: number;
+      customerName?: string;
+      customerEmail?: string;
       items: { productId: string; quantity: number; price: number }[];
     },
   ) {
@@ -32,6 +37,7 @@ export class OrdersController {
   }
 
   @Post('offline')
+  @UseGuards(AuthGuard('jwt'))
   async createOfflineOrder(
     @GetUser('userId') userId: string,
     @Body()
@@ -43,6 +49,7 @@ export class OrdersController {
       paymentMethod?: string;
       discount?: number;
       totalAmount: number;
+      vatAmount?: number;
       items: { productId: string; quantity: number; price: number }[];
     },
   ) {
@@ -57,6 +64,7 @@ export class OrdersController {
     return this.ordersService.trackAbandonment(orderId, data.reason);
   }
   @Patch(':orderId/status')
+  @UseGuards(AuthGuard('jwt'))
   async updateStatus(
     @GetUser('userId') userId: string,
     @Param('orderId') orderId: string,

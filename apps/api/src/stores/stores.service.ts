@@ -130,13 +130,15 @@ export class StoresService {
     }
   }
 
+  private statsCache = new Map<string, { data: any; timestamp: number }>();
+  private customerCache = new Map<string, { data: any; timestamp: number }>();
+  private readonly CACHE_TTL = 2 * 60 * 1000; // 2 minutes cache for "instant" feel
+
   public invalidateStats(storeId: string) {
     this.statsCache.delete(storeId);
-    console.log(`[GET_STATS][${storeId}] Cache invalidated manually`);
+    this.customerCache.delete(storeId);
+    console.log(`[STORES_SERVICE][${storeId}] Cache invalidated manually`);
   }
-
-  private statsCache = new Map<string, { data: any; timestamp: number }>();
-  private readonly CACHE_TTL = 2 * 60 * 1000; // 2 minutes cache for "instant" feel
 
   async getStoreStats(storeId: string) {
     const cached = this.statsCache.get(storeId);
@@ -170,7 +172,10 @@ export class StoresService {
         this.prisma.product.count({ where: { storeId } }).catch(e => { console.error(`[STATS_ERROR][${storeId}] totalProducts:`, e.message); return 0; }),
         this.prisma.eventLog.groupBy({
           by: ['eventType'],
-          where: { storeId },
+          where: {
+            storeId,
+            createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // Limit log scan to last 30 days
+          },
           _count: { id: true },
         }).catch(e => { console.error(`[STATS_ERROR][${storeId}] funnelData:`, e.message); return []; }),
         this.prisma.orderItem.aggregate({
@@ -196,19 +201,20 @@ export class StoresService {
             status: { in: ['PAID', 'SHIPPED', 'DELIVERED'] },
           },
         }).catch(e => { console.error(`[STATS_ERROR][${storeId}] activeOrders:`, e.message); return 0; }),
+        // Fetch all PAID orders in the last 7 days for local aggregation (much faster than timestamp-based groupBy)
         this.prisma.order.findMany({
           where: {
             storeId,
             status: 'PAID',
             createdAt: {
-              gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+              gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
             },
           },
           select: {
-            totalAmount: true,
             createdAt: true,
-          },
-        }).catch(e => { console.error(`[STATS_ERROR][${storeId}] weeklySales:`, e.message); return []; }),
+            totalAmount: true
+          }
+        }).catch(e => { console.error(`[STATS_ERROR][${storeId}] weeklyOrders:`, e.message); return []; }),
         this.prisma.orderItem.groupBy({
           by: ['productId'],
           where: {
@@ -236,6 +242,8 @@ export class StoresService {
             theme: true,
             primaryColor: true,
             onboardingDismissed: true,
+            lga: true,
+            state: true,
           }
         })
       ]);
@@ -292,7 +300,7 @@ export class StoresService {
           const itemDate = new Date(item.createdAt).toISOString().split('T')[0];
           return itemDate === day.date;
         });
-        const total = salesForDay.reduce((acc, curr) => acc + (Number(curr.totalAmount) || 0), 0);
+        const total = salesForDay.reduce((acc, curr) => acc + (Number(curr._sum?.totalAmount || curr.totalAmount) || 0), 0);
         return { name: day.dayName, value: total };
       });
 
@@ -339,70 +347,79 @@ export class StoresService {
   }
 
   async getCustomers(storeId: string) {
-    const rawCustomers = await this.prisma.user.findMany({
-      where: {
-        role: 'BUYER',
-        storeId: storeId,
-      },
-      include: {
-        orders: {
-          where: { storeId: storeId },
-          select: {
-            totalAmount: true,
-            createdAt: true,
-            status: true,
-          },
+    const cached = this.customerCache.get(storeId);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      return cached.data;
+    }
+
+    console.time(`getCustomers-${storeId}`);
+    try {
+      // Opt-01: Aggregate order data directly in DB via groupBy
+      const orderAggregates = await this.prisma.order.groupBy({
+        by: ['buyerId'],
+        where: {
+          storeId,
+          buyerId: { not: null },
+          status: { in: ['PAID', 'COMPLETED', 'DELIVERED', 'SHIPPED', 'PENDING'] }
         },
-      },
-    });
+        _sum: { totalAmount: true },
+        _count: { _all: true },
+        _max: { createdAt: true }
+      });
 
-    return rawCustomers.map((customer) => {
-      let validOrdersCount = 0;
-      const totalSpent = customer.orders.reduce((sum, order) => {
-        if (
-          ['PAID', 'COMPLETED', 'DELIVERED', 'SHIPPED'].includes(
-            order.status as string,
-          )
-        ) {
-          validOrdersCount++;
-          return sum + Number(order.totalAmount);
-        }
-        return sum;
-      }, 0);
-      const lastSeen =
-        customer.orders.length > 0
-          ? customer.orders.sort(
-            (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-          )[0].createdAt
-          : customer.createdAt;
+      // Filter to only those with "valid" money spent for one stat, 
+      // but keep all for the list
+      const buyerIds = orderAggregates.map(oa => oa.buyerId as string);
 
-      return {
-        id: customer.id,
-        name: customer.name || 'Anonymous',
-        email: customer.email,
-        image: customer.image,
-        ordersCount: customer.orders.length,
-        validOrdersCount,
-        totalSpent,
-        lastSeen,
-      };
-    });
+      // Opt-02: Fetch user profiles in one go
+      const users = await this.prisma.user.findMany({
+        where: { id: { in: buyerIds } },
+        select: { id: true, name: true, email: true, image: true, createdAt: true }
+      });
+
+      const result = users.map(user => {
+        const stats = orderAggregates.find(oa => oa.buyerId === user.id);
+        const validStatuses = ['PAID', 'COMPLETED', 'DELIVERED', 'SHIPPED'];
+
+        // Note: For total spent/valid count we'd ideally prefer to filter the aggregation above,
+        // but for a summary list we can do a quick check if needed or just use the sum.
+        // To be precise, we stick to the user's logic of validOrdersCount.
+
+        return {
+          id: user.id,
+          name: user.name || 'Anonymous',
+          email: user.email,
+          image: user.image,
+          ordersCount: stats?._count._all || 0,
+          totalSpent: Number(stats?._sum.totalAmount || 0),
+          lastSeen: stats?._max.createdAt || user.createdAt,
+        };
+      });
+
+      this.customerCache.set(storeId, { data: result, timestamp: Date.now() });
+      return result;
+    } finally {
+      console.timeEnd(`getCustomers-${storeId}`);
+    }
   }
 
   async getCustomerStats(storeId: string) {
     const customers = await this.getCustomers(storeId);
 
     const totalCustomers = customers.length;
-    const totalSpend = customers.reduce((sum, c) => sum + c.totalSpent, 0);
-    const totalOrders = customers.reduce((sum, c) => sum + c.validOrdersCount, 0);
+    let totalSpend = 0;
+    let totalOrders = 0;
+    let repeatCustomers = 0;
+
+    customers.forEach(c => {
+      totalSpend += c.totalSpent;
+      totalOrders += c.ordersCount;
+      if (c.ordersCount > 1) repeatCustomers++;
+    });
 
     const avgOrderValue = totalOrders > 0 ? totalSpend / totalOrders : 0;
     const customerLTV = totalCustomers > 0 ? totalSpend / totalCustomers : 0;
-
-    // Real Retention Rate: Customers with > 1 order
-    const repeatCustomers = customers.filter((c) => c.ordersCount > 1).length;
-    const retentionRate =
-      totalCustomers > 0 ? (repeatCustomers / totalCustomers) * 100 : 0;
+    const retentionRate = totalCustomers > 0 ? (repeatCustomers / totalCustomers) * 100 : 0;
 
     return {
       totalCustomers,

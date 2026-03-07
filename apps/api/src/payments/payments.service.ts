@@ -80,18 +80,24 @@ export class PaymentsService {
     storeId: string;
     metadata?: Record<string, any>;
   }) {
+    console.log(`[PAYMENTS_DEBUG] 🚀 Initializing payment for order ${data.orderId}, store ${data.storeId}`);
     const keys = await this.getStoreKeys(data.storeId);
-    if (!keys) throw new NotFoundException('Store not found');
+    if (!keys) {
+      console.error(`[PAYMENTS_DEBUG] ❌ Store ${data.storeId} not found`);
+      throw new NotFoundException('Store not found');
+    }
 
     const { secretKey, publicKey, store } = keys;
 
     if (!secretKey || !publicKey) {
+      console.error(`[PAYMENTS_DEBUG] ❌ Keys missing for store ${data.storeId}`);
       throw new BadRequestException(
         'Store payment account is not configured. Please provide your Paystack API keys.',
       );
     }
 
     const reference = `OPNMRT_${data.orderId}_${Date.now()}`;
+    console.log(`[PAYMENTS_DEBUG] 🏷️ Generated reference: ${reference}`);
 
     try {
       const payload: any = {
@@ -105,15 +111,19 @@ export class PaymentsService {
         },
       };
 
+      console.log(`[PAYMENTS_DEBUG] 📡 Calling Paystack initialize...`);
       const response = await axios.post(
         `${this.paystackBaseUrl}/transaction/initialize`,
         payload,
         { headers: { Authorization: `Bearer ${secretKey}`, 'Content-Type': 'application/json' } },
       );
+      console.log(`[PAYMENTS_DEBUG] ✅ Paystack response received (status: ${response.status})`);
 
-      // Create a pending payment record
+      // FIX: Use orderId as the unique key for upsert since orderId is @unique in the schema.
+      // This prevents "Unique constraint failed" errors when a user retries payment for the same order.
+      console.log(`[PAYMENTS_DEBUG] 💾 Upserting payment record for order ${data.orderId}...`);
       await this.prisma.payment.upsert({
-        where: { reference },
+        where: { orderId: data.orderId },
         create: {
           tenantId: store.tenantId,
           storeId: data.storeId,
@@ -122,8 +132,13 @@ export class PaymentsService {
           amount: data.amount / 100, // store in Naira
           status: 'pending',
         } as any,
-        update: {},
+        update: {
+          reference, // Update with the new reference for this attempt
+          amount: data.amount / 100,
+          status: 'pending',
+        },
       });
+      console.log(`[PAYMENTS_DEBUG] ✨ Payment record upserted successfully`);
 
       return {
         authorizationUrl: response.data.data.authorization_url,
@@ -132,9 +147,12 @@ export class PaymentsService {
         publicKey,
       };
     } catch (error) {
-      const errMsg =
-        error.response?.data?.message || 'Payment initialization failed';
-      this.logger.error(`Payment init failed for order ${data.orderId}: ${errMsg}`);
+      const errData = error.response?.data;
+      const errMsg = errData?.message || error.message || 'Payment initialization failed';
+      console.error(`[PAYMENTS_DEBUG] ❌ FAILED: ${errMsg}`, JSON.stringify(errData || error.message));
+      this.logger.error(
+        `Payment init failed for order ${data.orderId}. Paystack response: ${JSON.stringify(errData || error.message)}`,
+      );
       throw new BadRequestException(errMsg);
     }
   }
@@ -180,17 +198,19 @@ export class PaymentsService {
     return { received: true };
   }
 
-  private async processSuccessfulCharge(data: any) {
+  private async processSuccessfulCharge(data: any, preVerifiedData?: any) {
     const reference = data.reference;
     if (!reference) return;
 
-    // IDEMPOTENCY CHECK — prevent duplicate processing
+    console.log(`[PAYMENTS_DEBUG] 📦 Processing success for ref ${reference}`);
+
+    // 1. IDEMPOTENCY CHECK — prevent duplicate processing
     const existing = await this.prisma.payment.findUnique({
       where: { reference },
     });
 
     if (existing && existing.status === 'success') {
-      this.logger.log(`Duplicate webhook for reference ${reference}, skipping`);
+      console.log(`[PAYMENTS_DEBUG] ⏩ Payment ${reference} already marked success. Skipping.`);
       return;
     }
 
@@ -198,7 +218,7 @@ export class PaymentsService {
     const storeId = metadata.storeId || existing?.storeId;
 
     if (!storeId) {
-      this.logger.error(`Missing storeId in webhook for reference ${reference}`);
+      console.error(`[PAYMENTS_DEBUG] ❌ Missing storeId in payload for ref ${reference}`);
       return;
     }
 
@@ -207,20 +227,25 @@ export class PaymentsService {
 
     const { secretKey: secretToUse, store } = keys;
 
-    let verifiedData: any;
-    try {
-      const response = await axios.get(
-        `${this.paystackBaseUrl}/transaction/verify/${reference}`,
-        { headers: { Authorization: `Bearer ${secretToUse}` } },
-      );
-      verifiedData = response.data.data;
-    } catch (error) {
-      this.logger.error(`Verification failed for reference ${reference}: ${error.message}`);
-      return;
+    let verifiedData = preVerifiedData;
+
+    // 2. Fetch fresh data if not provided (webhook path)
+    if (!verifiedData) {
+      try {
+        console.log(`[PAYMENTS_DEBUG] 📡 Webhook: Fetching fresh verification for ref ${reference}`);
+        const response = await axios.get(
+          `${this.paystackBaseUrl}/transaction/verify/${reference}`,
+          { headers: { Authorization: `Bearer ${secretToUse}` } },
+        );
+        verifiedData = response.data.data;
+      } catch (error) {
+        console.error(`[PAYMENTS_DEBUG] ❌ Background verification check failed for ref ${reference}`);
+        return;
+      }
     }
 
     if (verifiedData.status !== 'success') {
-      this.logger.warn(`Transaction ${reference} status is not success: ${verifiedData.status}`);
+      console.warn(`[PAYMENTS_DEBUG] ⚠️ Transaction ${reference} status is not success: ${verifiedData.status}`);
       return;
     }
 
@@ -232,45 +257,59 @@ export class PaymentsService {
     const orderId = metadata.orderId || existing?.orderId;
 
     if (!orderId) {
-      this.logger.error(`Missing orderId in webhook for reference ${reference}`);
+      console.error(`[PAYMENTS_DEBUG] ❌ Missing orderId for ref ${reference}`);
       return;
     }
 
-    // 4. Update payment record with full breakdown
-    await this.prisma.payment.upsert({
-      where: { reference },
-      create: {
-        tenantId: store.tenantId,
-        storeId,
-        orderId,
-        reference,
-        amount: amountGross / 100,
-        amountGross: amountGross / 100,
-        paystackFee: paystackFee / 100,
-        amountNet: amountNet / 100,
-        paymentMethod,
-        status: 'success',
-        settlementStatus: 'settled', // Directly to merchant account
-        metadata: verifiedData,
-      } as any,
-      update: {
-        amount: amountGross / 100,
-        amountGross: amountGross / 100,
-        paystackFee: paystackFee / 100,
-        amountNet: amountNet / 100,
-        paymentMethod,
-        status: 'success',
-        settlementStatus: 'pending',
-        metadata: verifiedData,
-      } as any,
-    });
+    console.log(`[PAYMENTS_DEBUG] 💳 Completing transaction in database for order ${orderId}...`);
 
-    // 5. Mark order as PAID
+    // 4. ATOMIC FULFILLMENT: Payment Update + Order Update
     try {
-      await this.ordersService.updateOrderStatus(orderId, 'PAID', reference);
-      this.logger.log(`Order ${orderId} marked PAID via webhook`);
+      console.log(`[PAYMENTS_DEBUG] ⛓️ Starting atomic transaction for order ${orderId}...`);
+      await this.prisma.$transaction(async (tx) => {
+        console.log(`[PAYMENTS_DEBUG] 📝 [Step 1/2] Upserting payment for order ${orderId}`);
+        // a. Update/Create payment record
+        await tx.payment.upsert({
+          where: { orderId: orderId },
+          create: {
+            tenantId: store.tenantId,
+            storeId,
+            orderId,
+            reference,
+            amount: amountGross / 100,
+            amountGross: amountGross / 100,
+            paystackFee: paystackFee / 100,
+            amountNet: amountNet / 100,
+            paymentMethod,
+            status: 'success',
+            settlementStatus: 'settled',
+            metadata: verifiedData,
+          } as any,
+          update: {
+            reference,
+            amount: amountGross / 100,
+            amountGross: amountGross / 100,
+            paystackFee: paystackFee / 100,
+            amountNet: amountNet / 100,
+            paymentMethod,
+            status: 'success',
+            settlementStatus: 'pending',
+            metadata: verifiedData,
+          } as any,
+        });
+
+        console.log(`[PAYMENTS_DEBUG] 🔄 [Step 2/2] Triggering status update for order ${orderId}`);
+        // b. Mark order as PAID (passing the transaction client)
+        await this.ordersService.updateOrderStatus(orderId, 'PAID', reference, tx);
+        console.log(`[PAYMENTS_DEBUG] 🏁 Atomic transaction steps completed for order ${orderId}`);
+      }, { timeout: 20000 }); // 20s timeout
+
+      console.log(`[PAYMENTS_DEBUG] ✅ Transaction ${reference} (Order: ${orderId}) FULFILLED`);
+      this.logger.log(`Order ${orderId} marked PAID successfully`);
     } catch (error) {
-      this.logger.error(`Failed to update order ${orderId} status: ${error.message}`);
+      console.error(`[PAYMENTS_DEBUG] ❌ ATOMIC FULFILLMENT FAILED for order ${orderId}:`, error.message);
+      this.logger.error(`Failed to fulfill order ${orderId}: ${error.message}`);
+      throw error;
     }
   }
 
@@ -278,6 +317,7 @@ export class PaymentsService {
   // 6. SERVER-SIDE VERIFICATION (for redirect callback)
   // ─────────────────────────────────────────────────────────
   async verifyPayment(reference: string, orderId?: string) {
+    console.log(`[PAYMENTS_DEBUG] 🔍 Verifying payment reference: ${reference}...`);
     try {
       // 1. Try to find local payment record to get storeId
       const payment = await this.prisma.payment.findUnique({ where: { reference } });
@@ -288,20 +328,26 @@ export class PaymentsService {
         if (keys) secretToUse = keys.secretKey;
       }
 
+      console.log(`[PAYMENTS_DEBUG] 📡 Verify: Calling Paystack API for ref ${reference}...`);
       const response = await axios.get(
         `${this.paystackBaseUrl}/transaction/verify/${reference}`,
         { headers: { Authorization: `Bearer ${secretToUse}` } },
       );
 
       const paymentData = response.data.data;
+      console.log(`[PAYMENTS_DEBUG] ✅ Paystack verify status: ${paymentData.status}`);
 
       if (paymentData.status === 'success' && orderId) {
-        // Also trigger processSuccessfulCharge for safety (idempotent)
-        await this.processSuccessfulCharge(paymentData);
+        console.log(`[PAYMENTS_DEBUG] 🎉 Verification successful, processing fulfillment...`);
+        // Trigger fulfillment with the ALREADY FETCHED data to save an API call
+        await this.processSuccessfulCharge(paymentData, paymentData);
+        console.log(`[PAYMENTS_DEBUG] ✅ Fulfillment finished for order ${orderId}`);
       }
 
+      console.log(`[PAYMENTS_DEBUG] 📤 Returning Paystack verification results to client for ref: ${reference}`);
       return response.data;
     } catch (error) {
+      console.error(`[PAYMENTS_DEBUG] ❌ Verification call failed: ${error.message}`);
       throw new BadRequestException('Payment verification failed');
     }
   }

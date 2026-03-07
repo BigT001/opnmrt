@@ -69,7 +69,9 @@ export class PaymentsController {
       metadata?: Record<string, any>;
     },
   ) {
-    return this.paymentsService.initializePayment(data);
+    const result = await this.paymentsService.initializePayment(data);
+    console.log(`[PAYMENTS_DEBUG] 📤 Returning initialization result for order ${data.orderId}`);
+    return result;
   }
 
   // ── Verify Payment (server-side, after redirect) ──
@@ -78,6 +80,7 @@ export class PaymentsController {
   async verify(
     @Body() data: { reference: string; orderId?: string },
   ) {
+    console.log(`[PAYMENTS_DEBUG] 📥 Received verify request for order ${data.orderId} (ref: ${data.reference})`);
     return this.paymentsService.verifyPayment(data.reference, data.orderId);
   }
 

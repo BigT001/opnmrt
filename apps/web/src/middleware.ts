@@ -17,16 +17,21 @@ export async function middleware(request: NextRequest) {
     const cleanHostname = rawHostname.toLowerCase().split(':')[0]; // Force lowercase and strip port
     const baseDomain = (process.env.NEXT_PUBLIC_APP_BASE_DOMAIN || 'localhost:3000').toLowerCase().split(':')[0];
 
-    // We only rewrite if the hostname ends with .baseDomain and is not just baseDomain or www.baseDomain
-    if (cleanHostname !== baseDomain && cleanHostname.endsWith(`.${baseDomain}`)) {
-        const subdomain = cleanHostname.replace(`.${baseDomain}`, '');
+    let subdomain = '';
 
-        // Skip 'www' and empty subdomains
-        if (subdomain && subdomain !== 'www') {
-            const rewriteUrl = `/store/${subdomain}${path}${searchParams ? `?${searchParams}` : ''}`;
-            console.log(`[MIDDLEWARE] Subdomain rewrite: ${cleanHostname}${path} -> ${rewriteUrl}`);
-            return NextResponse.rewrite(new URL(rewriteUrl, request.url));
-        }
+    // Priority 1: Handle *.localhost for local development
+    if (cleanHostname.endsWith('.localhost')) {
+        subdomain = cleanHostname.replace('.localhost', '');
+    }
+    // Priority 2: Handle production domains (e.g., store.opnmrt.com)
+    else if (cleanHostname !== baseDomain && cleanHostname.endsWith(`.${baseDomain}`)) {
+        subdomain = cleanHostname.replace(`.${baseDomain}`, '');
+    }
+
+    if (subdomain && subdomain !== 'www') {
+        const rewriteUrl = `/store/${subdomain}${path}${searchParams ? `?${searchParams}` : ''}`;
+        console.log(`[MIDDLEWARE] Subdomain rewrite: ${cleanHostname}${path} -> ${rewriteUrl}`);
+        return NextResponse.rewrite(new URL(rewriteUrl, request.url));
     }
 
     return NextResponse.next();

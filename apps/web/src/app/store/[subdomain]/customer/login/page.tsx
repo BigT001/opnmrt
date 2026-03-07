@@ -40,7 +40,7 @@ export default function CustomerAuthPage() {
 
     useEffect(() => {
         if (subdomain) {
-            api.get(`/stores/resolve?subdomain=${subdomain}`)
+            api.get(`stores/resolve?subdomain=${subdomain}`)
                 .then(res => {
                     const storeData = res.data;
                     setStoreName(storeData.name || 'Store');
@@ -66,7 +66,7 @@ export default function CustomerAuthPage() {
         }
 
         try {
-            await api.post('/auth/send-otp', { email: formData.email, subdomain });
+            await api.post('auth/send-otp', { email: formData.email, subdomain });
             setOtpSent(true);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to send verification code.');
@@ -80,7 +80,7 @@ export default function CustomerAuthPage() {
         setLoading(true);
         setError(null);
         try {
-            await api.post('/auth/verify-otp', { email: formData.email, otp, subdomain });
+            await api.post('auth/verify-otp', { email: formData.email, otp, subdomain });
             setOtpVerified(true);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Invalid code.');
@@ -101,7 +101,7 @@ export default function CustomerAuthPage() {
                 return;
             }
 
-            const endpoint = isLogin ? '/auth/login' : '/auth/register';
+            const endpoint = isLogin ? 'auth/login' : 'auth/register';
             const payload = isLogin
                 ? { email: formData.email, password: formData.password, subdomain }
                 : { ...formData, role: 'BUYER', subdomain };
@@ -114,7 +114,7 @@ export default function CustomerAuthPage() {
                 setStore(response.data.store);
 
                 // Sync Cart
-                api.post('/users/cart/sync', { items: localItems })
+                api.post('users/cart/sync', { items: localItems })
                     .then(cartRes => setItems(cartRes.data))
                     .catch(e => console.error("Failed to sync cart:", e));
 

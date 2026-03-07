@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Sun, Moon, ArrowRight, Sparkles, Zap, Shield } from 'lucide-react';
+import { Sun, Moon, ArrowRight, Sparkles, Zap, Shield, Bike } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Logo } from '@/components/ui/Logo';
 
@@ -32,6 +32,7 @@ export function LandingNavbar() {
 
     const navLinks = [
         { name: 'Intelligence', path: '/features', icon: <Sparkles className="w-5 h-5" />, badge: 'Live' },
+        { name: 'Logistics Hub', path: '/riders', icon: <Bike className="w-5 h-5" />, badge: 'New' },
         { name: 'Tiers', path: '/pricing', icon: <Zap className="w-5 h-5" /> },
         { name: 'Ecosystem', path: '/about', icon: <Shield className="w-5 h-5" /> },
     ];
@@ -44,7 +45,7 @@ export function LandingNavbar() {
             {/* ─── Desktop & Mobile Top Bar ─── */}
             <nav
                 className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${showBackground
-                    ? 'h-16 bg-[#030712]/90 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/20'
+                    ? 'h-16 bg-background/90 backdrop-blur-xl border-b border-border shadow-lg'
                     : 'h-20 bg-transparent'
                     }`}
             >
@@ -103,7 +104,7 @@ export function LandingNavbar() {
                     initial={{ y: 100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 200, delay: 0.5 }}
-                    className="flex items-center gap-2 px-4 py-3 bg-[#030712]/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl shadow-black/50"
+                    className="flex items-center gap-2 px-4 py-3 bg-background/95 backdrop-blur-2xl border border-border rounded-[2rem] shadow-2xl"
                 >
                     {/* Nav items */}
                     {navLinks.map((link) => (
@@ -111,19 +112,19 @@ export function LandingNavbar() {
                             key={link.name}
                             href={link.path}
                             className={`relative flex flex-col items-center justify-center px-4 py-2 rounded-2xl transition-all active:scale-90 ${isActive(link.path)
-                                ? 'bg-emerald-500 text-[#030712]'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                                ? 'bg-emerald-500 text-white'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                                 }`}
                         >
                             {link.icon}
                             <span className="text-[9px] font-black uppercase tracking-widest mt-1">{link.name}</span>
                             {link.badge && (
-                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full border border-[#030712]" />
+                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full border border-background" />
                             )}
                         </Link>
                     ))}
 
-                    <div className="w-px h-8 bg-white/10 mx-1" />
+                    <div className="w-px h-8 bg-border mx-1" />
 
                     {/* Menu button with animated hamburger */}
                     <button

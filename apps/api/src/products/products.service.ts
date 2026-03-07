@@ -251,7 +251,7 @@ export class ProductsService {
     });
 
     if (!store) {
-      throw new NotFoundException('Store not found for this seller');
+      return [];
     }
 
     return this.findByStoreId(store.id);

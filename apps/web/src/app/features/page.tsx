@@ -10,7 +10,7 @@ import { FeatureIllustration } from '@/components/landing/FeatureIllustration';
 
 export default function FeaturesPage() {
     return (
-        <div className="min-h-screen bg-[#020617] text-slate-200 overflow-x-hidden relative">
+        <div className="min-h-screen bg-background text-foreground transition-colors duration-500 overflow-x-hidden relative">
             <LandingBackground />
             <LandingNavbar />
 
@@ -22,10 +22,10 @@ export default function FeaturesPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="max-w-4xl mx-auto"
                     >
-                        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-8 uppercase">
+                        <h1 className="text-5xl md:text-7xl font-black text-foreground tracking-tighter mb-8 uppercase">
                             The Engine of <span className="text-emerald-500 italic">Tomorrow.</span>
                         </h1>
-                        <p className="text-xl text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed">
+                        <p className="text-xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed">
                             OPNMRT isn't just a platform; it's a high-performance commerce engine driven by neural intelligence and sovereign architecture.
                         </p>
                     </motion.div>
@@ -74,9 +74,9 @@ export default function FeaturesPage() {
                 </section>
 
                 {/* Technical Specs Grid */}
-                <section className="bg-slate-900/50 py-40 border-y border-white/5">
+                <section className="bg-muted/30 py-40 border-y border-border">
                     <div className="max-w-7xl mx-auto px-6">
-                        <h2 className="text-3xl font-black text-white mb-20 tracking-tighter uppercase text-center">Technical Specifications</h2>
+                        <h2 className="text-3xl font-black text-foreground mb-20 tracking-tighter uppercase text-center">Technical Specifications</h2>
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
                             <SpecItem label="Core Runtime" value="Next.js 15" />
                             <SpecItem label="Database" value="Postgres" />
@@ -102,18 +102,18 @@ function FeatureSection({ title, subtitle, description, items, illustration, rev
             <div className="flex-1 space-y-8">
                 <div>
                     <span className="text-emerald-500 font-black tracking-[0.3em] text-[10px] uppercase">{subtitle}</span>
-                    <h2 className="text-4xl font-black text-white tracking-tighter mt-2 uppercase">{title}</h2>
+                    <h2 className="text-4xl font-black text-foreground tracking-tighter mt-2 uppercase">{title}</h2>
                 </div>
-                <p className="text-slate-400 font-medium leading-relaxed italic">{description}</p>
+                <p className="text-muted-foreground font-medium leading-relaxed italic">{description}</p>
                 <div className="space-y-6 pt-4">
                     {items.map((item: any, i: number) => (
                         <div key={i} className="flex items-start space-x-4 group">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-[#030712] transition-colors">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
                                 {React.cloneElement(item.icon, { size: 18 })}
                             </div>
                             <div>
-                                <h4 className="text-sm font-black text-white uppercase tracking-tight">{item.title}</h4>
-                                <p className="text-xs text-slate-500 font-bold">{item.desc}</p>
+                                <h4 className="text-sm font-black text-foreground uppercase tracking-tight">{item.title}</h4>
+                                <p className="text-xs text-muted-foreground font-bold">{item.desc}</p>
                             </div>
                         </div>
                     ))}
@@ -129,8 +129,8 @@ function FeatureSection({ title, subtitle, description, items, illustration, rev
 function SpecItem({ label, value }: { label: string; value: string }) {
     return (
         <div className="border-l-2 border-emerald-500/30 pl-6 space-y-1">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{label}</p>
-            <p className="text-2xl font-black text-white tracking-tighter">{value}</p>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{label}</p>
+            <p className="text-2xl font-black text-foreground tracking-tighter">{value}</p>
         </div>
     );
 }

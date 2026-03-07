@@ -29,6 +29,7 @@ model User {
   reviews         Review[]
   passwordHistory PasswordHistory[]
   managedStore    Store?            @relation("StoreOwner")
+  dispatchProfile DispatchProfile?
 
   @@unique([email, storeId])
   @@unique([phone, storeId])
@@ -84,6 +85,10 @@ model Store {
   aiInventory             Boolean     @default(false)
   aiStrategy              Boolean     @default(false)
   aiFinancials            Boolean     @default(false)
+  
+  // VAT Settings
+  vatEnabled              Boolean     @default(false)
+  vatRate                 Decimal     @default(7.5) @db.Decimal(5, 2)
   categories              Json?       // Array of store category strings
   onboardingDismissed     Boolean     @default(false)
   state                   String?
@@ -154,6 +159,7 @@ model Order {
   paymentMethod  String?     // CASH | BANK_TRANSFER | POS | ONLINE
   discount       Decimal?    @db.Decimal(10, 2) @default(0)
   totalAmount    Decimal     @db.Decimal(10, 2)
+  vatAmount      Decimal?    @default(0) @db.Decimal(10, 2)
   status         String      @default("PENDING")
   paymentRef     String?
   retryCount     Int         @default(0)        // Track payment retry attempts
@@ -166,6 +172,7 @@ model Order {
   store          Store       @relation(fields: [storeId], references: [id])
   items          OrderItem[]
   payment        Payment?
+  dispatchTask   DispatchTask?
 
   @@index([tenantId])
   @@index([storeId])
@@ -266,6 +273,7 @@ enum UserRole {
   ADMIN
   SELLER
   BUYER
+  DISPATCH
 }
 
 model Review {
@@ -305,4 +313,73 @@ model AiMessage {
   conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
+}
+
+model DispatchProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  companyName     String
+  phone           String
+  address         String?
+  state           String?
+  lga             String?
+  country         String?   @default("Nigeria")
+  coverageAreas   Json?    // Array of locations/cities
+  baseRates       Json?    // e.g., { "bike": 1500, "van": 5000 }
+  vehicleTypes    Json?    // Array of strings: ["BIKE", "VAN"]
+  isInterstate    Boolean  @default(false)
+  bankDetails     Json?    // For direct seller-to-rider payments
+  utilityBill     String?  // Verification: NEPA bill / Utility bill
+  cacDocument     String?  // Verification: CAC Registration Doc
+  cacNumber       String?  // CAC Registration Number
+  logo            String?  // Hub Branding Logo
+  isVerified      Boolean  @default(false)
+  
+  riders          Rider[]
+  tasks           DispatchTask[]
+  user            User     @relation(fields: [userId], references: [id])
+}
+
+model DispatchTask {
+  id                 String   @id @default(cuid())
+  orderId            String   @unique
+  dispatchProfileId  String?  // Nullable until a hub accepts
+  riderId            String?  // Nullable until a hub assigns a rider
+  
+  status             String   @default("PENDING") // PENDING, ACCEPTED, AT_PICKUP, IN_TRANSIT, ARRIVED, DELIVERED
+  
+  pickupAddress      String
+  dropoffAddress     String
+  deliveryFee        Decimal  @db.Decimal(10, 2)
+  paymentStatus      String   @default("UNPAID")  // UNPAID, PAID (Marked by Seller/Rider)
+  
+  deliveryPin        String?  // 4-digit PIN for buyer to give to rider
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  
+  order              Order    @relation(fields: [orderId], references: [id])
+  dispatch           DispatchProfile? @relation(fields: [dispatchProfileId], references: [id])
+  rider              Rider?   @relation(fields: [riderId], references: [id])
+}
+
+model Rider {
+  id                String          @id @default(cuid())
+  dispatchProfileId String
+  staffId           String?         // Internal Company ID
+  name              String
+  phone             String
+  email             String?
+  vehicleType       String?         // BIKE, VAN, TRUCK
+  address           String?         // Residential Address
+  emergencyName     String?
+  emergencyPhone    String?
+  status            String          @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  dispatchProfile   DispatchProfile @relation(fields: [dispatchProfileId], references: [id])
+  tasks             DispatchTask[]
+
+  @@index([dispatchProfileId])
 }

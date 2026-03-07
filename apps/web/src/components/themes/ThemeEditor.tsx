@@ -3,6 +3,7 @@
 import React from 'react';
 import { ThemeConfig } from './types';
 import api from '@/lib/api';
+import { APP_BASE_DOMAIN } from '@/lib/config';
 import {
     Layout,
     Type,
@@ -144,7 +145,7 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
         formData.append('file', file);
 
         try {
-            const res = await api.post('/stores/upload', formData, {
+            const res = await api.post('stores/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             handleChange('logo', res.data.url);
@@ -726,7 +727,11 @@ export function ThemeEditor({ config, onChange, onSave, onClose, isSaving, subdo
 
             <div className="px-5 py-4 border-t border-slate-100 bg-white flex gap-2">
                 <button
-                    onClick={() => isMobile ? onClose?.() : window.open(`https://${subdomain}.opnmrt.com`, '_blank')}
+                    onClick={() => {
+                        if (isMobile) return onClose?.();
+                        const protocol = window.location.protocol;
+                        window.open(`${protocol}//${subdomain}.${APP_BASE_DOMAIN}`, '_blank');
+                    }}
                     className="flex-1 h-11 bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300 rounded-xl transition-all flex items-center justify-center gap-2 group"
                 >
                     <Eye className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-500 transition-colors" />

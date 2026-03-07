@@ -62,6 +62,9 @@ export interface StoreData {
     utilityBill?: string | null;
     verificationStatus?: string | null;
     hiddenSections?: string[];
+    plan?: string;
+    vatEnabled?: boolean;
+    vatRate?: number;
 }
 
 // Product data structure

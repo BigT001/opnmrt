@@ -37,7 +37,7 @@ export default function InventoryPage() {
     const fetchInventory = async () => {
         try {
             setLoading(true);
-            const res = await api.get('/products/seller');
+            const res = await api.get('products/seller');
             setProducts(res.data);
         } catch (err) {
             console.error('Failed to fetch inventory:', err);
@@ -54,7 +54,7 @@ export default function InventoryPage() {
     const fetchHistory = async (productId: string) => {
         try {
             setIsHistoryLoading(true);
-            const res = await api.get(`/inventory/history/${productId}`);
+            const res = await api.get(`inventory/history/${productId}`);
             setHistory(res.data);
         } catch (err) {
             console.error('Failed to fetch history:', err);
@@ -80,7 +80,7 @@ export default function InventoryPage() {
         if (localStock === null) return;
         try {
             setIsUpdating(true);
-            const res = await api.patch(`/products/${productId}`, { stock: localStock });
+            const res = await api.patch(`products/${productId}`, { stock: localStock });
             const updatedProduct = res.data;
 
             setProducts(prev => prev.map(p =>
@@ -132,7 +132,7 @@ export default function InventoryPage() {
 
         try {
             setAnalyzingIds(prev => new Set(prev).add(productId));
-            const res = await api.get(`/analytics/ai-inventory-insight/${productId}`);
+            const res = await api.get(`analytics/ai-inventory-insight/${productId}`);
             if (res.data) {
                 setProductInsights(prev => ({ ...prev, [productId]: res.data }));
                 if (expandedId !== productId) {

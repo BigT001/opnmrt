@@ -35,6 +35,8 @@ export default function SettingsPage() {
         aiInventory: false,
         aiStrategy: false,
         aiFinancials: false,
+        vatEnabled: false,
+        vatRate: 7.5,
     });
     const [categories, setCategories] = useState<string[]>([]);
     const [categoryInput, setCategoryInput] = useState('');
@@ -62,6 +64,8 @@ export default function SettingsPage() {
                 aiInventory: (store as any).aiInventory || false,
                 aiStrategy: (store as any).aiStrategy || false,
                 aiFinancials: (store as any).aiFinancials || false,
+                vatEnabled: (store as any).vatEnabled || false,
+                vatRate: (store as any).vatRate || 7.5,
             });
             // Load saved categories
             try {
@@ -92,7 +96,7 @@ export default function SettingsPage() {
         uploadData.append('file', file);
 
         try {
-            const res = await api.post('/stores/upload', uploadData, {
+            const res = await api.post('stores/upload', uploadData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setFormData(prev => ({ ...prev, logo: res.data.url }));
@@ -128,7 +132,7 @@ export default function SettingsPage() {
 
             submitData.set('whatsappNumber', formData.whatsappNumber);
 
-            const response = await api.patch(`/stores/${store.id}`, submitData, {
+            const response = await api.patch(`stores/${store.id}`, submitData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
@@ -146,6 +150,7 @@ export default function SettingsPage() {
         { id: 'general', label: 'General' },
         { id: 'store-profile', label: 'Store Profile' },
         { id: 'ai-assistant', label: 'AI Assistant' },
+        { id: 'vat-tax', label: 'VAT & Tax' },
         { id: 'domains', label: 'Domains' },
         { id: 'payments', label: 'Payments' },
     ];
@@ -524,6 +529,74 @@ export default function SettingsPage() {
                         </section>
                     )}
 
+                    {activeTab === 'vat-tax' && (
+                        <div className="space-y-8">
+                            <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
+                                        <CreditCard size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black text-slate-900 flex items-center gap-3">
+                                            VAT & Tax Configuration
+                                        </h3>
+                                        <p className="text-xs text-slate-500 mt-1">Configure your value added tax settings.</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-8">
+                                    <div className={`p-6 rounded-[2rem] border transition-all flex items-center justify-between gap-6 ${formData.vatEnabled ? 'bg-emerald-50/50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-2xl shrink-0">
+                                                💰
+                                            </div>
+                                            <div>
+                                                <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight mb-1">Enable VAT Calculation</h4>
+                                                <p className="text-[10px] text-slate-500 font-medium leading-relaxed max-w-sm">Automatically calculate and add VAT to customer orders at checkout.</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => setFormData(f => ({ ...f, vatEnabled: !f.vatEnabled }))}
+                                            className={`w-14 h-8 rounded-full relative transition-colors duration-300 shrink-0 ${formData.vatEnabled ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-slate-200'}`}
+                                        >
+                                            <motion.div
+                                                animate={{ x: formData.vatEnabled ? 28 : 4 }}
+                                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-sm"
+                                            />
+                                        </button>
+                                    </div>
+
+                                    {formData.vatEnabled && (
+                                        <div className="bg-slate-50 p-6 rounded-2xl space-y-4">
+                                            <InputGroup
+                                                label="VAT Rate (%)"
+                                                name="vatRate"
+                                                value={formData.vatRate.toString()}
+                                                onChange={handleInputChange}
+                                                placeholder="7.5"
+                                            />
+                                            <p className="text-[10px] text-slate-500">VAT is calculated at checkout based on the subtotal of the cart. It is currently exclusive.</p>
+                                        </div>
+                                    )}
+
+                                </div>
+                            </section>
+                            {store?.plan !== 'PRO' && store?.plan !== 'ENTERPRISE' && store?.plan !== 'ASCEND' && store?.plan !== 'APEX' && (
+                                <section className="p-8 rounded-[2.5rem] bg-slate-900 text-white relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl" />
+                                    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                                        <div className="max-w-md">
+                                            <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2">Ascend Pro Feature</p>
+                                            <h3 className="text-2xl font-black tracking-tight mb-2">Automate Your Tax Compliance</h3>
+                                            <p className="text-sm text-slate-400 font-medium leading-relaxed">VAT calculations and reporting are exclusively available to Ascend Pro subscribers. Upgrade now to unlock this feature.</p>
+                                        </div>
+                                        <button className="h-14 px-8 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-xl shadow-emerald-600/20 whitespace-nowrap">Upgrade to Pro</button>
+                                    </div>
+                                </section>
+                            )}
+                        </div>
+                    )}
+
                     {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                         PAYMENTS TAB — Full Subaccount Architecture
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
@@ -554,6 +627,8 @@ export default function SettingsPage() {
                                             aiInventory: (store as any).aiInventory || false,
                                             aiStrategy: (store as any).aiStrategy || false,
                                             aiFinancials: (store as any).aiFinancials || false,
+                                            vatEnabled: (store as any).vatEnabled || false,
+                                            vatRate: (store as any).vatRate || 7.5,
                                         });
                                     }
                                 }}
@@ -610,7 +685,7 @@ function PaymentsSection({ store, user }: { store: any; user: any }) {
         setSubmitting(true);
         setMessage(null);
         try {
-            const res = await api.patch(`/stores/${store.id}`, formData);
+            const res = await api.patch(`stores/${store.id}`, formData);
             setStore(res.data);
             setMessage({ type: 'success', text: 'Paystack keys updated successfully!' });
         } catch (err: any) {

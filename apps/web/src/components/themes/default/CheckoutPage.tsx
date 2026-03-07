@@ -12,18 +12,18 @@ import dynamic from 'next/dynamic';
 import api from '@/lib/api';
 import { useCheckoutProfile } from '@/hooks/useCheckoutProfile';
 
-const BackendPaystack = dynamic(() => import('../PaystackPayment'), { ssr: false });
+import { useCheckoutPayment } from '@/hooks/useCheckoutPayment';
+
+// const BackendPaystack = dynamic(() => import('../PaystackPayment'), { ssr: false });
 
 export function DefaultCheckout({ store, subdomain }: CheckoutProps) {
     const params = useParams<{ subdomain: string }>();
     const { storeItems: items, subtotal, clearStoreCart } = useStoreCart(store.id);
     const [mounted, setMounted] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { processCheckout, isSubmitting: payLoading, error: payError } = useCheckoutPayment();
     const [isSuccess, setIsSuccess] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [orderNumber, setOrderNumber] = useState('');
     const router = useRouter();
-    const activeOrderId = useRef<string | null>(null);
 
     const { formData, setFormData, syncProfile, isLoaded } = useCheckoutProfile({
         email: '',
@@ -36,6 +36,8 @@ export function DefaultCheckout({ store, subdomain }: CheckoutProps) {
     });
 
     const activeSubdomain = subdomain || store.subdomain || params?.subdomain;
+    const primaryColor = store?.primaryColor || '#000000';
+    const accentColor = `${primaryColor}15`;
 
     useEffect(() => {
         setMounted(true);
@@ -45,74 +47,52 @@ export function DefaultCheckout({ store, subdomain }: CheckoutProps) {
         }
     }, [items.length, params?.subdomain, router, isSuccess]);
 
-    const handlePaymentSuccess = async (reference: string) => {
-        if (!activeOrderId.current) return;
-        try {
-            await api.post('/payments/verify', {
-                reference,
-                orderId: activeOrderId.current,
-            });
-            setIsSuccess(true);
-            clearStoreCart(store.id);
-        } catch (err: any) {
-            setError('Payment verified by Paystack but our server could not confirm. Please contact support.');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handlePaymentClose = () => {
-        setIsSubmitting(false);
-    };
-
-    const handleProcessOrder = async (e: React.FormEvent, initPay: () => Promise<void>) => {
+    const handleProcessOrder = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSubmitting(true);
-        setError(null);
 
         try {
             await syncProfile();
-
-            const orderRes = await api.post('/orders', {
+            const fullName = formData.fullName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim();
+            await processCheckout({
                 storeId: store.id,
-                totalAmount: subtotal,
-                items: items.map(p => ({
-                    productId: p.id,
-                    quantity: p.quantity,
-                    price: p.price
-                }))
+                items,
+                amount: subtotal,
+                email: formData.email,
+                customerName: fullName || undefined,
+                customerEmail: formData.email,
+                onSuccess: (ref) => {
+                    setIsSuccess(true);
+                    clearStoreCart(store.id);
+                }
             });
-
-            activeOrderId.current = orderRes.data.id;
-            await initPay(); // backend-initialized — safe
-
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to initialize order. Please try again.');
-            setIsSubmitting(false);
+            console.error('Checkout error:', err);
         }
     };
 
     if (!mounted) return null;
 
     if (isSuccess) {
+        console.log('%c[UI_CHECKOUT] ✨ Rendering SUCCESS screen', 'color: #10b981; font-weight: bold;');
         return (
-            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
+            <div className="min-h-screen bg-muted/30 flex flex-col items-center justify-center p-6">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="max-w-lg w-full bg-white rounded-3xl p-12 text-center shadow-xl border border-gray-100"
+                    className="max-w-lg w-full bg-background rounded-3xl p-12 text-center shadow-xl border border-border"
                 >
-                    <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-8">
-                        <CheckCircle className="w-10 h-10" />
+                    <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner" style={{ backgroundColor: accentColor }}>
+                        <CheckCircle className="w-10 h-10" style={{ color: primaryColor }} />
                     </div>
-                    <h1 className="text-3xl font-black text-gray-900 mb-4 uppercase tracking-tight">Order Confirmed!</h1>
-                    <p className="text-gray-500 mb-8 font-medium">
+                    <h1 className="text-3xl font-black text-foreground mb-4 uppercase tracking-tight">Order Confirmed!</h1>
+                    <p className="text-muted-foreground mb-8 font-medium">
                         Your order has been placed successfully.
                         We'll send you an email confirmation shortly.
                     </p>
                     <Link
                         href={`/store/${activeSubdomain}`}
-                        className="inline-block w-full py-4 bg-gray-900 text-white font-black uppercase tracking-widest text-sm rounded-xl hover:bg-black transition-all shadow-lg"
+                        style={{ backgroundColor: primaryColor }}
+                        className="inline-block w-full py-4 text-white font-black uppercase tracking-widest text-sm rounded-xl hover:opacity-90 transition-all shadow-lg"
                     >
                         Back to Shopping
                     </Link>
@@ -150,170 +130,159 @@ export function DefaultCheckout({ store, subdomain }: CheckoutProps) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
                     <div className="lg:col-span-7">
-                        <BackendPaystack
-                            email={formData.email}
-                            amount={subtotal}
-                            orderId={activeOrderId.current || ''}
-                            storeId={store.id}
-                            onSuccess={handlePaymentSuccess}
-                            onClose={handlePaymentClose}
-                        >
-                            {(initPay, payLoading) => (
-                                <form onSubmit={(e) => handleProcessOrder(e, initPay)} className="space-y-12">
-                                    <section>
-                                        <div className="flex items-center gap-3 mb-8">
-                                            <div className="w-8 h-8 bg-gray-900 text-white rounded-lg flex items-center justify-center text-xs font-black">1</div>
-                                            <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Contact Information</h2>
+                        <form onSubmit={handleProcessOrder} className="space-y-12">
+                            <section>
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="w-8 h-8 bg-gray-900 text-white rounded-lg flex items-center justify-center text-xs font-black">1</div>
+                                    <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Contact Information</h2>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Email Address</label>
+                                            <input
+                                                type="email"
+                                                required
+                                                className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
+                                                placeholder="you@example.com"
+                                                value={formData.email}
+                                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            />
                                         </div>
-                                        <div className="space-y-4">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Email Address</label>
-                                                    <input
-                                                        type="email"
-                                                        required
-                                                        className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
-                                                        placeholder="you@example.com"
-                                                        value={formData.email}
-                                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Phone Number</label>
-                                                    <input
-                                                        type="tel"
-                                                        required
-                                                        className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
-                                                        placeholder="Phone Number"
-                                                        value={formData.phone}
-                                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                                    />
-                                                </div>
-                                            </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Phone Number</label>
+                                            <input
+                                                type="tel"
+                                                required
+                                                className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
+                                                placeholder="Phone Number"
+                                                value={formData.phone}
+                                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            />
                                         </div>
-                                    </section>
+                                    </div>
+                                </div>
+                            </section>
 
-                                    <section>
-                                        <div className="flex items-center gap-3 mb-8">
-                                            <div className="w-8 h-8 bg-gray-900 text-white rounded-lg flex items-center justify-center text-xs font-black">2</div>
-                                            <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Shipping Address</h2>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">First Name</label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
-                                                    value={formData.firstName}
-                                                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Last Name</label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
-                                                    value={formData.lastName}
-                                                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                                />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Address</label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
-                                                    value={formData.address}
-                                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">City</label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
-                                                    value={formData.city}
-                                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Postal Code</label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
-                                                    value={formData.postalCode}
-                                                    onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    </section>
+                            <section>
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="w-8 h-8 bg-gray-900 text-white rounded-lg flex items-center justify-center text-xs font-black">2</div>
+                                    <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Shipping Address</h2>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">First Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
+                                            value={formData.firstName}
+                                            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Last Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
+                                            value={formData.lastName}
+                                            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Address</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
+                                            value={formData.address}
+                                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">City</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
+                                            value={formData.city}
+                                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Postal Code</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            className="w-full h-14 px-5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
+                                            value={formData.postalCode}
+                                            onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                            </section>
 
-                                    <section>
-                                        <div className="flex items-center gap-3 mb-8">
-                                            <div className="w-8 h-8 bg-gray-900 text-white rounded-lg flex items-center justify-center text-xs font-black">3</div>
-                                            <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Payment Method</h2>
+                            <section>
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="w-8 h-8 bg-gray-900 text-white rounded-lg flex items-center justify-center text-xs font-black">3</div>
+                                    <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Payment Method</h2>
+                                </div>
+                                <div className="p-8 border-2 border-emerald-500 bg-emerald-50/10 rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-emerald-50/20 transition-all">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center">
+                                            <Lock className="w-6 h-6 text-emerald-600" />
                                         </div>
-                                        <div className="p-8 border-2 border-emerald-500 bg-emerald-50/10 rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-emerald-50/20 transition-all">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center">
-                                                    <Lock className="w-6 h-6 text-emerald-600" />
-                                                </div>
-                                                <div>
-                                                    <span className="font-black text-sm uppercase tracking-tight block">Secure Paystack Gateway</span>
-                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Encrypted Payment Processing</span>
-                                                </div>
-                                            </div>
-                                            <CreditCard className="w-6 h-6 text-gray-300 group-hover:text-emerald-500 transition-colors" />
+                                        <div>
+                                            <span className="font-black text-sm uppercase tracking-tight block">Secure Paystack Gateway</span>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Encrypted Payment Processing</span>
                                         </div>
-                                    </section>
+                                    </div>
+                                    <CreditCard className="w-6 h-6 text-gray-300 group-hover:text-emerald-500 transition-colors" />
+                                </div>
+                            </section>
 
-                                    {error && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: -10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600"
-                                        >
-                                            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                                            <p className="text-xs font-bold uppercase tracking-widest">{error}</p>
-                                        </motion.div>
-                                    )}
-
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting || payLoading}
-                                        className="w-full py-6 bg-gray-900 text-white text-sm font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-black transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl relative overflow-hidden group"
-                                    >
-                                        <AnimatePresence mode="wait">
-                                            {(isSubmitting || payLoading) ? (
-                                                <motion.div
-                                                    key="loading"
-                                                    initial={{ opacity: 0, y: 20 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, y: -20 }}
-                                                    className="flex items-center gap-3"
-                                                >
-                                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                                    <span>Initializing...</span>
-                                                </motion.div>
-                                            ) : (
-                                                <motion.span
-                                                    key="text"
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                >
-                                                    Pay Now • {formatPrice(subtotal)}
-                                                </motion.span>
-                                            )}
-                                        </AnimatePresence>
-                                        <div className="absolute inset-0 bg-white/10 -translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
-                                    </button>
-                                </form>
+                            {payError && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600"
+                                >
+                                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                                    <p className="text-xs font-bold uppercase tracking-widest">{payError}</p>
+                                </motion.div>
                             )}
-                        </BackendPaystack>
+
+                            <button
+                                type="submit"
+                                disabled={payLoading}
+                                className="w-full py-6 bg-gray-900 text-white text-sm font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-black transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl relative overflow-hidden group"
+                            >
+                                <AnimatePresence mode="wait">
+                                    {payLoading ? (
+                                        <motion.div
+                                            key="loading"
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -20 }}
+                                            className="flex items-center gap-3"
+                                        >
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            <span>Initializing...</span>
+                                        </motion.div>
+                                    ) : (
+                                        <motion.span
+                                            key="text"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                        >
+                                            Pay Now • {formatPrice(subtotal)}
+                                        </motion.span>
+                                    )}
+                                </AnimatePresence>
+                                <div className="absolute inset-0 bg-white/10 -translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
+                            </button>
+                        </form>
                     </div>
 
                     <div className="lg:col-span-5">

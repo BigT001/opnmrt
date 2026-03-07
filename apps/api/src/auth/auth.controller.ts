@@ -20,6 +20,15 @@ import { z } from 'zod';
 const ExtendedRegisterSchema = RegisterSchema.extend({
   subdomain: z.string().optional(),
   storeName: z.string().optional(),
+  companyName: z.string().optional(),
+  vehicleType: z.string().optional(),
+  biography: z.string().optional(),
+  address: z.string().optional(),
+  state: z.string().optional(),
+  lga: z.string().optional(),
+  utilityBill: z.string().optional(),
+  cacDocument: z.string().optional(),
+  cacNumber: z.string().optional(),
 });
 
 @Controller('auth')

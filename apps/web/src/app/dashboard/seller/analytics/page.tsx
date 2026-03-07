@@ -121,7 +121,7 @@ export default function AnalyticsPage() {
 
     const fetchConversations = async () => {
         try {
-            const res = await api.get(`/analytics/ai-chat/conversations/${store?.id}`);
+            const res = await api.get(`analytics/ai-chat/conversations/${store?.id}`);
             const convs = res.data || [];
             setConversations(convs);
         } catch (err) { console.error('History failed', err); }
@@ -129,21 +129,21 @@ export default function AnalyticsPage() {
 
     const fetchNotifications = async () => {
         try {
-            const res = await api.get(`/analytics/notifications/${store?.id}`);
+            const res = await api.get(`analytics/notifications/${store?.id}`);
             setNotifications(res.data || []);
         } catch (err) { console.warn('Pulse failed', err); }
     };
 
     const fetchLiveAdvice = async () => {
         try {
-            const res = await api.get(`/analytics/ai-chat/live-advice/${store?.id}`);
+            const res = await api.get(`analytics/ai-chat/live-advice/${store?.id}`);
             setAdvices(res.data || []);
         } catch (err) { console.warn('Advice failed', err); }
     };
 
     const fetchAiStatus = async () => {
         try {
-            const res = await api.get('/analytics/ai-status');
+            const res = await api.get('analytics/ai-status');
             setAiStatus(res.data);
         } catch (err) { console.warn('Status check failed', err); }
     };
@@ -152,7 +152,7 @@ export default function AnalyticsPage() {
         setCurrentSessionId(id);
         setLoading(true);
         try {
-            const res = await api.get(`/analytics/ai-chat/history/${store?.id}/${id}`);
+            const res = await api.get(`analytics/ai-chat/history/${store?.id}/${id}`);
             setMessages(res.data?.messages || []);
         } catch (err) {
             console.error('Session load failed', err);
@@ -164,7 +164,7 @@ export default function AnalyticsPage() {
     const handleNewChat = async () => {
         setLoading(true);
         try {
-            const res = await api.post(`/analytics/ai-chat/new/${store?.id}`, { title: 'New Analysis' });
+            const res = await api.post(`analytics/ai-chat/new/${store?.id}`, { title: 'New Analysis' });
             setConversations(prev => [res.data, ...prev]);
             setCurrentSessionId(res.data.id);
             setMessages([]);
@@ -186,7 +186,7 @@ export default function AnalyticsPage() {
         setLoading(true);
 
         try {
-            const res = await api.post('/analytics/ai-chat/message', {
+            const res = await api.post('analytics/ai-chat/message', {
                 storeId: store?.id,
                 message: userMsg,
                 conversationId: currentSessionId

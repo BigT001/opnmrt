@@ -4,9 +4,10 @@ import React, { useEffect, useState, Fragment } from 'react';
 import api from '@/lib/api';
 import { format } from 'date-fns';
 import { formatPrice } from '@/lib/utils';
-import { Loader2, ChevronDown, Package, CheckCircle, XCircle, Clock, ShoppingBag, Search, Filter, Download, Plus } from 'lucide-react';
+import { Loader2, ChevronDown, Package, CheckCircle, XCircle, Clock, ShoppingBag, Search, Filter, Download, Plus, Truck, Navigation } from 'lucide-react';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/useAuthStore';
+import { toast } from 'react-hot-toast';
 
 interface Order {
     id: string;
@@ -34,6 +35,18 @@ interface Order {
             images: string[];
         };
     }[];
+    dispatchTask?: {
+        id: string;
+        status: string;
+        pickupAddress: string;
+        dropoffAddress: string;
+        deliveryFee: string;
+        dispatch?: {
+            id: string;
+            companyName: string;
+            logo?: string;
+        };
+    } | null;
 }
 
 export default function OrdersPage() {
@@ -48,7 +61,7 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/orders/seller');
+            const response = await api.get('orders/seller');
             setOrders(response.data);
         } catch (error) {
             console.error('Failed to fetch orders:', error);
@@ -115,10 +128,28 @@ export default function OrdersPage() {
     const handleStatusUpdate = async (orderId: string, newStatus: string) => {
         try {
             setLoading(true);
-            await api.patch(`/orders/${orderId}/status`, { status: newStatus });
+            await api.patch(`orders/${orderId}/status`, { status: newStatus });
             setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
         } catch (error) {
             console.error('Failed to update status:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePingRadar = async (order: Order) => {
+        try {
+            setLoading(true);
+            await api.post('dispatch/broadcast', {
+                orderId: order.id,
+                fee: 1500,
+                pickup: "Store Location",
+                dropoff: "Customer Address"
+            });
+            toast.success('Radar pinged! Looking for riders...');
+            fetchOrders();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Failed to ping radar');
         } finally {
             setLoading(false);
         }
@@ -294,6 +325,7 @@ export default function OrdersPage() {
                                     isExpanded={expandedOrderId === order.id}
                                     onToggle={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
                                     onStatusUpdate={handleStatusUpdate}
+                                    onPingRadar={handlePingRadar}
                                     customerHistory={getCustomerHistory(order)}
                                 />
                             ))}
@@ -316,7 +348,7 @@ export default function OrdersPage() {
     );
 }
 
-function OrderListItem({ order, isExpanded, onToggle, onStatusUpdate, customerHistory, loading }: any) {
+function OrderListItem({ order, isExpanded, onToggle, onStatusUpdate, onPingRadar, customerHistory, loading }: any) {
     return (
         <div className={`bg-white rounded-[1.5rem] sm:rounded-[2.5rem] border transition-all duration-300 overflow-hidden ${isExpanded ? 'border-slate-900 shadow-2xl ring-4 ring-slate-100 ring-opacity-50' : 'border-slate-100 hover:border-slate-200 hover:shadow-xl'}`}>
             {/* Header / Summary Row */}
@@ -475,6 +507,53 @@ function OrderListItem({ order, isExpanded, onToggle, onStatusUpdate, customerHi
                                 </div>
                             </div>
 
+                            {/* Logistics & Dispatch */}
+                            <div className="space-y-6">
+                                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-900 flex items-center gap-3 border-b border-slate-200/60 pb-4">
+                                    <Truck className="w-5 h-5" /> Logistics & Dispatch
+                                </h3>
+                                {order.dispatchTask ? (
+                                    <div className="p-5 bg-emerald-50/50 border border-emerald-100 rounded-2xl space-y-4 shadow-sm">
+                                        <div className="flex items-center justify-between border-b border-emerald-100 pb-3">
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-900">Task Status</span>
+                                            <span className="text-[9px] font-black bg-emerald-100 text-emerald-600 px-2.5 py-1 rounded-lg uppercase tracking-wider">{order.dispatchTask.status.replace('_', ' ')}</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 pt-1">
+                                            <div className="w-10 h-10 bg-white rounded-xl border border-emerald-100 flex items-center justify-center overflow-hidden shrink-0">
+                                                {order.dispatchTask.dispatch?.logo ? (
+                                                    <img src={order.dispatchTask.dispatch.logo} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Truck className="w-5 h-5 text-emerald-500" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Assigned Hub</p>
+                                                <p className="text-xs font-black text-emerald-950 uppercase tracking-tight">{order.dispatchTask.dispatch?.companyName || 'Hub Assigned'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="p-5 bg-indigo-50/50 border border-indigo-100 rounded-2xl flex flex-col items-center justify-center text-center space-y-3 relative overflow-hidden group hover:border-indigo-300 transition-colors">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-xl -mr-6 -mt-6 group-hover:bg-indigo-500/10 transition-colors" />
+                                        <div className="w-10 h-10 bg-indigo-100 text-indigo-500 rounded-full flex items-center justify-center relative z-10">
+                                            <Navigation className="w-5 h-5" />
+                                        </div>
+                                        <div className="relative z-10">
+                                            <p className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Need Delivery?</p>
+                                            <p className="text-[9px] text-indigo-500/80 font-bold mt-1 leading-relaxed">Broadcast order to local riders</p>
+                                        </div>
+                                        <button
+                                            onClick={() => onPingRadar(order)}
+                                            disabled={loading}
+                                            className="relative z-10 mt-2 w-full h-10 bg-indigo-500 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-500/20 hover:bg-indigo-600 active:scale-95 transition-all disabled:opacity-50"
+                                        >
+                                            {loading ? 'Pinging...' : 'Ping Radar'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
                             {/* Customer History */}
                             <div className="space-y-6">
                                 <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-900 flex items-center gap-3 border-b border-slate-200/60 pb-4">
@@ -541,7 +620,7 @@ function CreateOrderModal({ isOpen, onClose, onSuccess }: { isOpen: boolean; onC
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const res = await api.get('/products/seller');
+                const res = await api.get('products/seller');
                 setProducts(res.data);
             } catch (err) {
                 console.error('Failed to fetch products', err);
@@ -581,7 +660,7 @@ function CreateOrderModal({ isOpen, onClose, onSuccess }: { isOpen: boolean; onC
         if (e) e.preventDefault();
         try {
             setLoading(true);
-            await api.post('/orders/offline', {
+            await api.post('orders/offline', {
                 storeId: store.id,
                 customerName,
                 customerEmail,

@@ -35,13 +35,12 @@ export default function LandingPage() {
 
             {/* Hidden for users, visible to Google crawlers for SEO ranking */}
             <p className="sr-only">
-              OPNMRT is the ultimate multi-tenant commerce engine for Africa and beyond.
-              The most reliable alternative to Shopify and Bumpa for independent brands.
+              OPNMRT is a complete commerce engine designed for independent brands to build and scale their digital legacy.
+              A professional and reliable alternative for merchants who want total ownership of their storefronts, data, and logistics.
             </p>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 font-medium leading-relaxed">
-              The world's first independent commerce engine (OPNMRT Engine) with built-in AI.
-              Own your brand, own your customers, and let our tools handle the complexity.
+              OPNMRT is an all-in-one commerce engine built for independent brands. From AI-driven storefronts to integrated logistics hubs—we give you the tools to take total control of your business and own your success.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
@@ -111,27 +110,27 @@ export default function LandingPage() {
               className="space-y-8"
             >
               <h2 className="text-5xl md:text-7xl font-black text-foreground leading-[0.9] tracking-tighter uppercase whitespace-pre-line">
-                The Brain <br />
-                <span className="text-emerald-500">Behind Your Brand.</span>
+                The Engine <br />
+                <span className="text-emerald-500">Behind Your Success.</span>
               </h2>
               <p className="text-xl text-muted-foreground font-medium leading-relaxed max-w-xl">
-                We didn't just build a shop. We built a smart engine that learns what your customers like and helps you grow without the stress.
+                Every brand needs a reliable engine. We built OPNMRT to do more than just display products—it handles the heavy lifting of logistics, pricing, and growth so you can focus on your craft.
               </p>
 
               <div className="space-y-6">
                 <IntelligenceItem
-                  title="Smart Suggestions"
-                  desc="Tells you exactly what's selling and what to buy next."
+                  title="Market Insights"
+                  desc="Understand exactly what your customers need through data-driven performance tracking."
                   icon={<Sparkles className="w-5 h-5 text-emerald-400" />}
                 />
                 <IntelligenceItem
-                  title="Auto-Pilot Mode"
-                  desc="Fixes pricing and stock levels so you don't have to."
+                  title="Logistics Control"
+                  desc="Seamlessly connect with delivery networks to handle fulfillment at scale."
                   icon={<Cpu className="w-5 h-5 text-indigo-400" />}
                 />
                 <IntelligenceItem
-                  title="Safe & Secure"
-                  desc="Keeps your data private and your money safe."
+                  title="Complete Ownership"
+                  desc="You own the brand, the customer list, and every bit of data. Forever."
                   icon={<Shield className="w-5 h-5 text-amber-400" />}
                 />
               </div>
@@ -163,7 +162,7 @@ export default function LandingPage() {
         </section>
 
         {/* Results Section */}
-        <section className="py-40 bg-slate-900/5 dark:bg-slate-950 px-6">
+        <section className="py-40 bg-muted/20 px-6 border-y border-border">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-24">
               <h2 className="text-4xl md:text-5xl font-black text-foreground mb-4 tracking-tighter uppercase">Results you can <span className="text-emerald-500">Feel</span></h2>
@@ -172,19 +171,19 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
               <ResultCard
-                value="2 Minutes"
-                label="Average Set-Up Time"
-                desc="Go from zero to selling faster than you can make a cup of coffee."
+                value="Fast"
+                label="Engine Deployment"
+                desc="Deploy your professional storefront instantly without any technical complexity."
               />
               <ResultCard
-                value="35%"
-                label="Sales Increase"
-                desc="Our AI insights help you put the right products in front of the right buyers."
+                value="Total"
+                label="Brand Ownership"
+                desc="Complete control over your customer data, domain, and delivery networks."
               />
               <ResultCard
-                value="0.00$"
-                label="Hidden Fees"
-                desc="Keep what you earn. Transparent pricing with no surprises at the end of the month."
+                value="Fixed"
+                label="Honest Pricing"
+                desc="Transparent subscription tiers with zero hidden transaction fees on your sales."
               />
             </div>
           </div>
@@ -256,7 +255,7 @@ export default function LandingPage() {
                   Start your 14-day free journey today.
                 </p>
                 <div className="flex flex-wrap justify-center lg:justify-start gap-6">
-                  <Link href="/register" className="px-10 py-5 bg-emerald-500 text-white dark:text-[#030712] rounded-2xl text-lg font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl">
+                  <Link href="/register" className="px-10 py-5 bg-emerald-500 text-white rounded-2xl text-lg font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-emerald-500/20">
                     Get Started Free
                   </Link>
                   <Link href="/pricing" className="px-10 py-5 bg-transparent border-2 border-border text-foreground rounded-2xl text-lg font-black uppercase tracking-widest hover:bg-white/5 transition-all">
@@ -289,9 +288,9 @@ function IntelligenceItem({ title, desc, icon }: { title: string; desc: string; 
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
-      className="flex items-start space-x-4 p-4 rounded-3xl hover:bg-emerald-500/5 transition-colors cursor-default"
+      className="flex items-start space-x-4 p-4 rounded-3xl hover:bg-muted/20 transition-colors cursor-default"
     >
-      <div className="mt-1 w-8 h-8 rounded-xl bg-white/5 dark:bg-card flex items-center justify-center shrink-0 border border-border">
+      <div className="mt-1 w-8 h-8 rounded-xl bg-muted/30 flex items-center justify-center shrink-0 border border-border">
         {icon}
       </div>
       <div>
@@ -304,7 +303,7 @@ function IntelligenceItem({ title, desc, icon }: { title: string; desc: string; 
 
 function ResultCard({ value, label, desc }: { value: string; label: string; desc: string }) {
   return (
-    <div className="glass-panel p-10 rounded-[3rem] text-center border-none shadow-none bg-transparent hover:bg-white/5 transition-colors group">
+    <div className="glass-panel p-10 rounded-[3rem] text-center border-none shadow-none bg-transparent hover:bg-muted transition-colors group">
       <div className="text-6xl md:text-7xl font-black text-emerald-500 mb-4 tracking-tighter group-hover:scale-110 transition-transform duration-500">{value}</div>
       <h3 className="text-xl font-black text-foreground mb-4 uppercase tracking-tighter">{label}</h3>
       <p className="text-muted-foreground font-medium italic">{desc}</p>
@@ -327,7 +326,7 @@ function FeatureCard({ icon, title, description, color }: { icon: React.ReactNod
       whileHover={{ y: -10 }}
       className={`glass-panel p-10 rounded-[3rem] border ${colors[color]} hover:border-emerald-500/40 transition-all group`}
     >
-      <div className="w-14 h-14 rounded-2xl bg-white/5 dark:bg-card flex items-center justify-center mb-10 group-hover:scale-110 transition-transform">
+      <div className="w-14 h-14 rounded-2xl bg-muted/30 flex items-center justify-center mb-10 group-hover:scale-110 transition-transform">
         {icon}
       </div>
       <h3 className="text-xl font-black text-foreground mb-4 uppercase tracking-tighter">{title}</h3>

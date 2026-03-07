@@ -35,7 +35,7 @@ export function SearchModal({ isOpen, onClose, storeId }: SearchModalProps) {
             }
             setLoading(true);
             try {
-                const res = await api.get(`/search/global?storeId=${storeId}&q=${query}`);
+                const res = await api.get(`search/global?storeId=${storeId}&q=${query}`);
                 setResults(res.data);
             } catch (err) {
                 console.error('Search failed:', err);

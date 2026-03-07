@@ -4,6 +4,7 @@ import { useCartStore } from '@/store/useCartStore';
 import { ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { APP_BASE_DOMAIN } from '@/lib/config';
 
 interface Product {
     id: string;
@@ -30,7 +31,7 @@ export function ProductCard({ product, storeId, subdomain }: ProductCardProps) {
         if (typeof window !== 'undefined') {
             const hostname = window.location.hostname;
             // Check if we are on a subdomain (e.g., samstar.localhost or samstar.opnmrt.com)
-            const isSubdomain = hostname.includes(subdomain) && (hostname.includes('localhost') || hostname.includes('opnmrt.com'));
+            const isSubdomain = hostname.includes(`${subdomain}.${APP_BASE_DOMAIN.split(':')[0]}`);
 
             if (isSubdomain) {
                 // If on subdomain, use direct path

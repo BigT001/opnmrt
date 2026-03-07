@@ -48,7 +48,7 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
     React.useEffect(() => {
         if (isOrdersOpen && user) {
             setLoadingOrders(true);
-            api.get('/orders/my-orders')
+            api.get('orders/my-orders')
                 .then(res => setOrders(res.data))
                 .catch(err => console.error("Orders fetch error:", err))
                 .finally(() => setLoadingOrders(false));
@@ -58,7 +58,7 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
     React.useEffect(() => {
         if (isChatOpen && user) {
             setLoadingMessages(true);
-            api.get(`/chat/messages?storeId=${storeId}`)
+            api.get(`chat/messages?storeId=${storeId}`)
                 .then(res => setMessages(res.data))
                 .catch(err => console.error("Chat fetch error:", err))
                 .finally(() => setLoadingMessages(false));
@@ -71,7 +71,7 @@ export function VantageNavbar({ storeName, logo, storeId, isPreview, primaryColo
 
         setSendingMessage(true);
         try {
-            const res = await api.post('/chat/send', {
+            const res = await api.post('chat/send', {
                 content: newMessage,
                 storeId: storeId,
             });

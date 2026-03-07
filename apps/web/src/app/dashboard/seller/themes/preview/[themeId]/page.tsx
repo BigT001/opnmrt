@@ -93,7 +93,7 @@ export default function ThemePreviewPage() {
         const fetchData = async () => {
             if (!store?.subdomain) return;
             try {
-                const res = await api.get(`/products?subdomain=${store.subdomain}`);
+                const res = await api.get(`products?subdomain=${store.subdomain}`);
                 setProducts(res.data);
             } catch (err) {
                 console.error('Failed to fetch products for preview:', err);
@@ -108,7 +108,7 @@ export default function ThemePreviewPage() {
         if (!store?.id) return;
         setIsSaving(true);
         try {
-            const response = await api.patch(`/stores/${store.id}`, {
+            const response = await api.patch(`stores/${store.id}`, {
                 theme: themeName,
                 themeConfig: tempConfig,
                 heroTitle: tempConfig.heroTitle,

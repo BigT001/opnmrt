@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Roles and Enums
-export const UserRole = z.enum(['ADMIN', 'SELLER', 'BUYER']);
+export const UserRole = z.enum(['ADMIN', 'SELLER', 'BUYER', 'DISPATCH']);
 export type UserRole = z.infer<typeof UserRole>;
 
 export const StorePlan = z.enum(['FREE', 'PAID']);

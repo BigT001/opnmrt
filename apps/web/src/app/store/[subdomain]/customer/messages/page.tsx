@@ -25,15 +25,15 @@ export default function CustomerMessagesPage() {
         async function initChat() {
             try {
                 // 1. Resolve store info
-                const storeRes = await api.get(`/stores/resolve?subdomain=${subdomain}`);
+                const storeRes = await api.get(`stores/resolve?subdomain=${subdomain}`);
                 setStoreInfo(storeRes.data);
 
                 // 2. Fetch messages
-                const msgRes = await api.get(`/chat/messages?storeId=${storeRes.data.id}`);
+                const msgRes = await api.get(`chat/messages?storeId=${storeRes.data.id}`);
                 setMessages(msgRes.data);
 
                 // 3. Mark as read
-                await api.post('/chat/read', {
+                await api.post('chat/read', {
                     otherUserId: storeRes.data.ownerId,
                     storeId: storeRes.data.id
                 });
@@ -54,7 +54,7 @@ export default function CustomerMessagesPage() {
 
             // Mark as read if it's from the store
             if (message.senderRole === 'SELLER') {
-                api.post('/chat/read', {
+                api.post('chat/read', {
                     otherUserId: message.senderId,
                     storeId: message.storeId
                 });
@@ -78,7 +78,7 @@ export default function CustomerMessagesPage() {
 
         setSending(true);
         try {
-            const res = await api.post('/chat/send', {
+            const res = await api.post('chat/send', {
                 content: newMessage,
                 storeId: storeInfo.id,
             });
